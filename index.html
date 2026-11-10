@@ -11,30 +11,56 @@
   #gl{position:fixed;inset:0}
   #gl canvas{display:block}
   button{font-family:inherit;cursor:pointer}
-  /* ---------- top bar ---------- */
-  #topbar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;flex-wrap:wrap;gap:6px;align-items:center;
-    padding:8px 10px;background:linear-gradient(#3a7d2c,#2f6b24);border-bottom:4px solid #1e4d16;color:#fff}
-  #topbar .brand{font-weight:900;font-size:17px;letter-spacing:.3px;text-shadow:2px 2px 0 #1e4d16;white-space:nowrap}
-  #topbar .brand small{font-weight:700;font-size:12px;opacity:.9}
-  #floorbar{display:flex;gap:4px;margin-left:8px}
+  /* ---------- top bar: exactly two rows at 1280px (round 7) ----------
+     Row 1: brand + floors + primary actions + More + Clear/New.
+     Row 2 (.camrow): camera + tools + sun + touch + project name.
+     Everything else lives in the More menu — one click away, never nested. */
+  #topbar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;flex-wrap:wrap;gap:4px;align-items:center;
+    padding:6px 8px;background:linear-gradient(#3a7d2c,#2f6b24);border-bottom:4px solid #1e4d16;color:#fff}
+  #topbar .brand{font-weight:900;font-size:15px;letter-spacing:.3px;text-shadow:2px 2px 0 #1e4d16;white-space:nowrap}
+  #floorbar{display:flex;gap:4px;margin-left:6px}
   #floorbar button,.actions button,.camrow button{
-    border:3px solid #1e4d16;border-radius:4px;background:#7ec850;color:#12300c;font-weight:800;font-size:13px;
-    padding:5px 9px;box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.25)}
+    border:3px solid #1e4d16;border-radius:4px;background:#7ec850;color:#12300c;font-weight:800;font-size:12px;
+    padding:4px 7px;box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.25)}
   #floorbar button.on,.camrow button.on{background:#ffd83d;color:#4a3200}
   .actions{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
   .actions button{background:#e8e8e8}
   .actions button.on{background:#ffd83d;color:#4a3200}
   .actions button.warn{background:#ff9d5c}
-  .actions .sep{width:2px;background:rgba(255,255,255,.35);margin:3px 2px}
+  .actions .sep{width:2px;background:rgba(255,255,255,.35);margin:2px 2px}
   #btnClearMeasures{display:none}
   .camrow{display:flex;gap:4px;align-items:center;flex-basis:100%;flex-wrap:wrap}
-  .camrow .lbl{font-size:12px;font-weight:800;opacity:.95}
+  .camrow .lbl{font-size:12px;font-weight:800;opacity:.95;white-space:nowrap}
   .camrow button{background:#c9ecff;color:#0b3550;border-color:#14506e}
   .camrow button.on{background:#ffd83d;color:#4a3200}
-  #toolSeg{display:flex;gap:0;margin-left:10px;flex-wrap:wrap}
-  #toolSeg button{border-radius:0}
+  #toolSeg{display:flex;gap:0;flex-wrap:wrap}
+  #toolSeg button{border-radius:0;padding:4px 6px}
   #toolSeg button:first-child{border-radius:4px 0 0 4px}
   #toolSeg button:last-child{border-radius:0 4px 4px 0}
+  /* ---------- More + Sun dropdown menus ---------- */
+  #moreMenu,#sunMenu{position:fixed;z-index:30;display:none;flex-direction:column;background:#222;color:#fff;
+    border:3px solid #ffd83d;border-radius:8px;padding:5px;min-width:210px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  #moreMenu.on,#sunMenu.on{display:flex}
+  #moreMenu .mm-title,#sunMenu .sm-title{font-size:11px;font-weight:800;color:#ffd83d;padding:3px 8px 5px}
+  #moreMenu button{background:transparent;border:0;color:#fff;text-align:left;font-weight:700;font-size:14px;
+    padding:7px 10px;border-radius:5px;width:100%}
+  #moreMenu button:hover{background:#444}
+  #moreMenu button.on{background:#3a7d2c}
+  #moreMenu button.warn{background:#7a3a1a}
+  #moreMenu .msep{height:2px;background:rgba(255,255,255,.2);margin:4px 6px}
+  #sunMenu .sm-row{display:flex;gap:6px;align-items:center;padding:4px 8px;color:#fff;font-size:12px;font-weight:700}
+  #sunMenu button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:6px 9px;color:#222}
+  #sunMenu button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #sunMenu input[type=range]{flex:1;accent-color:#ffd83d}
+  #sunMenu .sm-time{color:#ffd83d;font-weight:800;min-width:44px;text-align:right}
+  /* ---------- touch mode: bigger targets for fingers ---------- */
+  body.touch #topbar button{font-size:15px;padding:9px 12px}
+  body.touch #topbar .brand{font-size:17px}
+  body.touch #palette button{width:78px;font-size:11px;padding:6px 2px}
+  body.touch #palette button canvas{width:44px;height:44px}
+  body.touch #walkHint button{padding:8px 14px;font-size:16px}
+  body.touch #moreMenu button,body.touch #sunMenu button{font-size:16px;padding:10px 12px}
   /* ---------- palette ---------- */
   #palette{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:10;display:flex;gap:6px;
     background:rgba(0,0,0,.45);padding:7px;border-radius:8px;border:3px solid rgba(0,0,0,.55)}
@@ -142,7 +168,7 @@
 <div id="gl"></div>
 
 <div id="topbar">
-  <div class="brand">⛏️ Minecraft Home Designer <small>· <span id="projName">My Build</span></small></div>
+  <div class="brand">⛏️ Minecraft Home Designer</div>
   <div id="floorbar"></div>
   <div class="actions">
     <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
@@ -153,34 +179,14 @@
     <span class="sep"></span>
     <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
     <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
-    <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
-    <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
-    <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
     <span class="sep"></span>
-    <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
-    <button id="btnImport" title="Open a project JSON">⬆ Import</button>
-    <span class="sep"></span>
-    <button id="btnTemplates" title="Start from a ready-made build">🏠 Templates</button>
-    <button id="btnBlueprints" title="Save a selection as a reusable blueprint">💾 Blueprints</button>
-    <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
-    <span class="sep"></span>
-    <button id="btnMirror" title="Mirror the build or a selection, live symmetry">🪞 Mirror</button>
-    <button id="btnReplace" title="Replace one material with another">🔄 Replace</button>
-    <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
-    <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
-    <button id="btnLabels" class="on" title="Show / hide the white wall dimension labels (H)">🏷️ Labels ✓</button>
-    <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
-    <span class="sep"></span>
-    <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
-    <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
+    <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
   <div class="camrow">
-    <span class="lbl">Camera:</span>
     <button data-cam="iso" class="on">Angle</button>
     <button data-cam="top">Top</button>
     <button data-cam="front">Front</button>
     <button data-cam="eye">Eye 5'6"</button>
-    <span class="lbl">Tool:</span>
     <span id="toolSeg">
       <button data-tool="build" class="on" title="Click a face to place a block (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
@@ -194,8 +200,46 @@
       <button data-tool="dropper" title="Click a block to pick its type (I) — Alt+click in Build does the same">💧 Dropper</button>
       <button data-tool="flood" title="Click a block to repaint its whole connected run of the same material (U)">🪣 Flood</button>
     </span>
-    <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
+    <button id="btnSun" title="Day / evening / night lighting">☀️ Day</button>
+    <button id="btnTouch" title="Touch mode — bigger buttons, tap to build, long-press a block to erase">📱 Touch</button>
+    <span class="lbl" style="margin-left:auto">· <span id="projName">My Build</span></span>
   </div>
+</div>
+
+<div id="moreMenu">
+  <div class="mm-title">More tools &amp; views</div>
+  <button id="btnTemplates" title="Start from a ready-made build">🏠 Templates</button>
+  <button id="btnBlueprints" title="Save a selection as a reusable blueprint">💾 Blueprints</button>
+  <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
+  <div class="msep"></div>
+  <button id="btnMirror" title="Mirror the build or a selection, live symmetry">🪞 Mirror</button>
+  <button id="btnReplace" title="Replace one material with another">🔄 Replace</button>
+  <div class="msep"></div>
+  <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
+  <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
+  <button id="btnLabels" class="on" title="Show / hide the white wall dimension labels (H)">🏷️ Labels ✓</button>
+  <div class="msep"></div>
+  <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
+  <div class="msep"></div>
+  <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
+  <button id="btnImport" title="Open a project JSON">⬆ Import</button>
+  <div class="msep"></div>
+  <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
+  <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
+  <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
+  <div class="msep"></div>
+  <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
+  <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
+</div>
+
+<div id="sunMenu">
+  <div class="sm-title">Sunlight — time of day</div>
+  <div class="sm-row">
+    <button data-sun="day">☀️ Day</button>
+    <button data-sun="evening">🌇 Evening</button>
+    <button data-sun="night">🌙 Night</button>
+  </div>
+  <div class="sm-row"><input id="sunSlider" type="range" min="0" max="24" step="0.5" value="12"> <span class="sm-time" id="sunTime">12:00</span></div>
 </div>
 
 <div id="palette"></div>
@@ -220,7 +264,8 @@
   <b>I</b> dropper · <b>U</b> flood · <b>Alt+click</b> pick a type<br>
   <b>Ctrl+C / V</b> copy / paste · <b>R</b> rotate<br>
   <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo<br>
-  <b>?</b> all shortcuts · <b>H</b> labels on / off
+  <b>?</b> all shortcuts · <b>H</b> labels on / off<br>
+  <b>☀️</b> sun · <b>📱</b> touch in the top bar · <b>F</b> first-person in Walk
 </div>
 
 <div id="presetPanel">
@@ -320,6 +365,10 @@
     <b>Del</b><span>Delete the selection</span>
     <b>Ctrl + Z / Y</b><span>Undo / redo (one drag or fill = one step)</span>
     <b>V</b><span>Walk mode on / off</span>
+    <b>F (in Walk)</b><span>First-person view, eye 5'6" — Esc back to third-person</span>
+    <b>☀️ Sun</b><span>Day / evening / night lighting (top bar)</span>
+    <b>📱 Touch</b><span>Touch mode — bigger buttons, tap to build, long-press to erase</span>
+    <b>Room labels</b><span>Click a room label to rename it · H hides all labels</span>
     <b>W A S D · Q / E</b><span>Fly · down / up (Shift = faster)</span>
     <b>Drag · Scroll</b><span>Look around · zoom</span>
     <b>Right-click</b><span>Tool menu</span>
@@ -355,7 +404,7 @@
 </div>
 <div id="selBox"></div>
 
-<div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnExitWalk">✕ Exit walk</button></div>
+<div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnWalkFP" title="First-person view, eye 5'6&quot; (F)">👁 First-person</button> <button id="btnExitWalk">✕ Exit walk</button></div>
 <div id="hoverTag"></div>
 <div id="toast"></div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
@@ -533,6 +582,7 @@ let mirrorLine=null;                 // magenta bar on the ground marking the mi
 
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
+let sunLight=null, hemiLight=null;   // the sun + sky fill — the Day / Evening / Night control moves these
 const instMeshes = [];             // per type: {mesh, keys[]}
 const groundMeshes = [];
 let ghost, floorBand, multiGhost, selGroup;
@@ -551,8 +601,10 @@ function initScene(){
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
   scene.fog = new THREE.Fog(0x87ceeb, 180, 420);
-  scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x8a6a45, 0.95));
-  const sun = new THREE.DirectionalLight(0xfff2d0, 1.6);
+  hemiLight = new THREE.HemisphereLight(0xcfe8ff, 0x8a6a45, 0.95);
+  scene.add(hemiLight);
+  sunLight = new THREE.DirectionalLight(0xfff2d0, 1.6);
+  const sun = sunLight;
   sun.position.set(60, 110, 40); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left=-90; sun.shadow.camera.right=90;
@@ -603,6 +655,9 @@ function initScene(){
 
   // always-on wall dimension labels (dimension line + ft/in tag above each wall)
   wallLabelGroup = new THREE.Group(); scene.add(wallLabelGroup);
+
+  // room area labels (one tag per enclosed room, floating above its walls)
+  roomLabelGroup = new THREE.Group(); scene.add(roomLabelGroup);
 
   // mirror plane marker: a thin magenta bar on the ground, shown while
   // live symmetry is on or the Mirror panel is open
@@ -717,6 +772,7 @@ function rebuild(){
     mesh.computeBoundingSphere();
   });
   updateWallLabels();
+  updateRoomLabels();
 }
 
 /* ================= undo / redo (single op or {batch:[ops]}) ================= */
@@ -739,14 +795,15 @@ function clearBlocks(){ cancelMove(); cancelFillDrag(); cancelLine();
   if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   measures.length=0; renderMeasures(); updateMeasuresBtn();
   blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
-function buildEmpty(){ clearBlocks(); rebuild(); updateStats(); scheduleSave(); }
+function buildEmpty(){ clearBlocks(); roomNames.clear(); rebuild(); updateStats(); scheduleSave(); }
 
 /* ================= floors ================= */
 function setFloor(i, focus=false){
   activeFloor = clamp(i,0,FLOORS.length-1);
   const f=FLOORS[activeFloor];
   $$('#floorbar button').forEach((b,bi)=>b.classList.toggle('on', bi===activeFloor));
-  $('#activeFloorLbl').textContent = 'Building on: '+f.name+'  ·  floor top '+ftin((f.base+1)*FT)+' — 1 block = 6 in';
+  const fl=$('#activeFloorLbl');   // removed in the round-7 toolbar regroup; the readout panel shows the floor now
+  if(fl) fl.textContent = 'Building on: '+f.name+'  ·  floor top '+ftin((f.base+1)*FT)+' — 1 block = 6 in';
   if(focus){
     controls.target.y = f.base + 10;
     camera.position.y = f.base + 55;
@@ -800,6 +857,9 @@ function updateStats(){
 /* ================= always-on wall dimension labels ================= */
 let wallLabelGroup=null;
 const wallLabelSprites=new Map();   // wall key -> {sprite, info}
+let roomLabelGroup=null;
+const roomLabelSprites=new Map();   // room key -> {sprite, info}
+const roomNames=new Map();          // room key -> custom name (default "Room")
 function drawLabelCanvas(g, text){
   g.clearRect(0,0,256,64);
   g.fillStyle='#fffbe6'; g.fillRect(0,0,256,64);
@@ -888,11 +948,15 @@ function updateWallLabels(){
 
 /* per-frame screen-space dedup: two white tags must never cover each
    other. Every frame each tag's real on-screen size is measured (tags
-   shrink as you zoom out), the biggest wall wins, and any tag whose box
-   would overlap a kept tag is hidden until the camera moves them apart. */
+   shrink as you zoom out); room tags win over wall tags (a room tag
+   carries a name + an area, and there are only a few), then the biggest
+   wall wins, and any tag whose box would overlap a kept tag is hidden
+   until the camera moves them apart. */
 function updateLabelVisibility(){
-  if(!wallLabelGroup || !wallLabelGroup.visible) return;
-  const sprites=[...wallLabelGroup.children].filter(c=>c.isSprite);
+  const anyVisible=(wallLabelGroup && wallLabelGroup.visible) || (roomLabelGroup && roomLabelGroup.visible);
+  if(!anyVisible) return;
+  const sprites=[ ...(wallLabelGroup?wallLabelGroup.children:[]),
+    ...(roomLabelGroup?roomLabelGroup.children:[]) ].filter(c=>c.isSprite);
   if(!sprites.length) return;
   const halfH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
   const items=[];
@@ -905,7 +969,7 @@ function updateLabelVisibility(){
     items.push({ sp, x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight,
       hw:11*pxPerUnit/2, hh:2.75*pxPerUnit/2, area:sp.userData.area||0 });
   }
-  items.sort((a,b)=>b.area-a.area);
+  items.sort((a,b)=>((b.sp.userData.isRoom?1:0)-(a.sp.userData.isRoom?1:0)) || (b.area-a.area));
   const kept=[];
   for(const it of items){
     const clash=kept.some(k=> Math.abs(k.x-it.x)<(k.hw+it.hw)+8 && Math.abs(k.y-it.y)<(k.hh+it.hh)+8);
@@ -921,6 +985,7 @@ function setLabels(on){
   labelsOn=!!on;
   try{ localStorage.setItem(LABELS_KEY, labelsOn?'on':'off'); }catch(e){}
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
+  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
   const b=$('#btnLabels');
   if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
   if(!labelsOn) toast('Wall labels hidden — click Labels to show them again');
@@ -929,8 +994,255 @@ function setLabels(on){
 function loadLabelsPref(){
   try{ if(localStorage.getItem(LABELS_KEY)==='off') labelsOn=false; }catch(e){}
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
+  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
   const b=$('#btnLabels');
   if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
+}
+
+/* ================= room area labels (round 7) ================= */
+/* A room is an enclosed patch of walkable floor on one floor: take the
+   floor's blocks, project every wall column down (a column counts as wall
+   if it holds any block from the floor level up to 8 ft — so a doorway,
+   which always has wall above it, still closes the room, while a
+   genuinely missing wall leaves it open), flood the outside from the
+   bounding-box border, and whatever empty floor is left is rooms.
+   Area = cells × 0.25 sq ft (1 block = 6 in × 6 in). */
+function roomAreaText(a){ const v=Math.round(a*10)/10; return v+' sq ft'; }
+function detectRooms(){
+  const rooms=[];
+  for(let fi=0; fi<FLOORS.length; fi++){
+    const b=floorBBox(fi); if(!b) continue;
+    const y0=FLOORS[fi].base+2, y1=FLOORS[fi].base+17;   // floor level .. 8 ft up
+    const x0=b.x0-2, x1=b.x1+2, z0=b.z0-2, z1=b.z1+2;
+    const k2=(x,z)=>x+','+z;
+    const isWall=(x,z)=>{
+      for(let y=y0;y<=y1;y++) if(getBlock(x,y,z)) return true;
+      return false;
+    };
+    // exterior flood from the border ring (always empty: the box is the
+    // floor's own bounding box, expanded by 2)
+    const ext=new Set();
+    const q=[];
+    for(let x=x0;x<=x1;x++){ q.push([x,z0]); q.push([x,z1]); }
+    for(let z=z0;z<=z1;z++){ q.push([x0,z]); q.push([x1,z]); }
+    while(q.length){
+      const [x,z]=q.pop(); const k=k2(x,z);
+      if(ext.has(k)||isWall(x,z)) continue;
+      ext.add(k);
+      for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=x+dx, nz=z+dz;
+        if(nx>=x0&&nx<=x1&&nz>=z0&&nz<=z1&&!ext.has(k2(nx,nz))) q.push([nx,nz]);
+      }
+    }
+    const seen=new Set();
+    for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
+      if(isWall(x,z)||ext.has(k2(x,z))||seen.has(k2(x,z))) continue;
+      const comp=[]; const cq=[[x,z]]; seen.add(k2(x,z));
+      while(cq.length){
+        const [cx,cz]=cq.pop(); comp.push([cx,cz]);
+        for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const nx=cx+dx, nz=cz+dz;
+          if(nx<x0||nx>x1||nz<z0||nz>z1) continue;
+          const nk=k2(nx,nz);
+          if(seen.has(nk)||ext.has(nk)||isWall(nx,nz)) continue;
+          seen.add(nk); cq.push([nx,nz]);
+        }
+      }
+      if(comp.length<4) continue;   // at least 1 sq ft to count as a room
+      let mx=1e9,mz=1e9,sx=0,sz=0,maxY=y0;
+      for(const [cx,cz] of comp){
+        sx+=cx; sz+=cz;
+        if(cz<mz||(cz===mz&&cx<mx)){ mx=cx; mz=cz; }
+        for(let y=y0;y<=FLOORS[fi].base+20;y++) if(getBlock(cx,y,cz)) maxY=Math.max(maxY,y);
+      }
+      const rkey=fi+'|'+mx+'|'+mz;   // lowest-left cell: stable across small edits
+      rooms.push({ fi, key:rkey, cells:comp.length, areaSqFt:comp.length*FT*FT,
+        cx:sx/comp.length+0.5, cz:sz/comp.length+0.5, maxY,
+        name:roomNames.get(rkey)||'Room' });
+    }
+  }
+  return rooms.sort((a,b)=>b.areaSqFt-a.areaSqFt).slice(0,20);
+}
+function updateRoomLabels(){
+  if(!roomLabelGroup) return;
+  while(roomLabelGroup.children.length){
+    const ch=roomLabelGroup.children[0];
+    roomLabelGroup.remove(ch);
+    ch.traverse(o=>{ if(o.geometry) o.geometry.dispose();
+      if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  }
+  roomLabelSprites.clear();
+  const rooms=detectRooms();
+  for(const r of rooms){
+    if(viewMode==='isolate' && r.fi!==activeFloor) continue;
+    const sp=makeLabelSprite(r.name+' · '+roomAreaText(r.areaSqFt));
+    // float just above the room's tallest block (above the roof, so the
+    // tag is visible from the normal camera); in Dollhouse sit just
+    // above the cut so it stays visible there too
+    const y = viewMode==='dollhouse' ? FLOORS[r.fi].base+DOLL_CUT+1.5 : r.maxY+2.5;
+    sp.position.set(r.cx, y, r.cz);
+    sp.userData.roomKey=r.key;
+    sp.userData.roomName=r.name;
+    sp.userData.area=r.areaSqFt*4;   // block-equivalent, so the dedup compares like with like
+    sp.userData.isRoom=true;
+    roomLabelGroup.add(sp);
+    roomLabelSprites.set(r.key, { sprite:sp, info:r });
+  }
+}
+function renameRoom(key, name){
+  if(!key || name==null) return false;
+  name=String(name).trim().slice(0,24);
+  if(!name) return false;
+  roomNames.set(key, name);
+  updateRoomLabels(); scheduleSave();
+  toast('Room renamed to "'+name+'"');
+  return true;
+}
+/* click on a room label (raycast the sprites) — null when nothing hit */
+function roomLabelHit(e){
+  if(!roomLabelGroup || !roomLabelGroup.visible) return null;
+  setNDC(e);
+  raycaster.setFromCamera(pointerNDC, camera);
+  const sprites=roomLabelGroup.children.filter(c=>c.isSprite && c.visible);
+  const hits=raycaster.intersectObjects(sprites, false);
+  if(!hits.length) return null;
+  return hits[0].object.userData.roomKey || null;
+}
+
+/* ================= day / evening / night sun (round 7) ================= */
+/* Purely visual: sun angle + colour, sky + fog, hemisphere fill. Saved as
+   a view preference (localStorage), never as part of the build data. */
+const SUN_KEY='home-designer-minecraft-sun-v1';
+let sunHour=12, sunPreset='Day';
+const SUN_STOPS=[
+  { h:0,  sky:0x0b1026, sun:0x9db8ff, si:0.35, hi:0.25, pos:[-40,90,-60] },
+  { h:6,  sky:0xffb36b, sun:0xff9a3c, si:0.9,  hi:0.55, pos:[-90,25,30] },
+  { h:12, sky:0x87ceeb, sun:0xfff2d0, si:1.6,  hi:0.95, pos:[60,110,40] },
+  { h:18, sky:0xf77e4a, sun:0xff7a2f, si:1.0,  hi:0.55, pos:[90,25,-30] },
+  { h:24, sky:0x0b1026, sun:0x9db8ff, si:0.35, hi:0.25, pos:[-40,90,-60] },
+];
+function sunTimeStr(h){
+  const hh=Math.floor(h)%24, mm=Math.round((h-hh)*60);
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function applySun(){
+  if(!sunLight || !hemiLight) return;
+  const h=((sunHour%24)+24)%24;
+  let a=SUN_STOPS[0], b=SUN_STOPS[SUN_STOPS.length-1];
+  for(let i=0;i<SUN_STOPS.length-1;i++){
+    if(h>=SUN_STOPS[i].h && h<=SUN_STOPS[i+1].h){ a=SUN_STOPS[i]; b=SUN_STOPS[i+1]; break; }
+  }
+  const t=(h-a.h)/Math.max(0.001,(b.h-a.h));
+  const sky=new THREE.Color(a.sky).lerp(new THREE.Color(b.sky), t);
+  const sunC=new THREE.Color(a.sun).lerp(new THREE.Color(b.sun), t);
+  scene.background.copy(sky);
+  if(scene.fog) scene.fog.color.copy(sky);
+  sunLight.color.copy(sunC);
+  sunLight.intensity=a.si+(b.si-a.si)*t;
+  hemiLight.intensity=a.hi+(b.hi-a.hi)*t;
+  sunLight.position.set(
+    a.pos[0]+(b.pos[0]-a.pos[0])*t,
+    a.pos[1]+(b.pos[1]-a.pos[1])*t,
+    a.pos[2]+(b.pos[2]-a.pos[2])*t);
+  updateSunUI();
+}
+function setSunHour(h, preset){
+  sunHour=clamp(+h||0, 0, 24);
+  sunPreset=preset||null;
+  try{ localStorage.setItem(SUN_KEY, JSON.stringify({ h:sunHour, p:sunPreset })); }catch(e){}
+  applySun();
+  return sunHour;
+}
+function setSunPreset(name){
+  const hours={ Day:12, Evening:18, Night:0 };
+  name=String(name||'');
+  name=name.charAt(0).toUpperCase()+name.slice(1).toLowerCase();
+  if(!(name in hours)) return false;
+  setSunHour(hours[name], name);
+  return true;
+}
+function updateSunUI(){
+  const b=$('#btnSun');
+  if(b){
+    const icon = sunPreset==='Evening' ? '🌇' : sunPreset==='Night' ? '🌙' : '☀️';
+    b.textContent = sunPreset ? icon+' '+sunPreset : '☀️ '+sunTimeStr(sunHour);
+    b.classList.toggle('on', !!sunPreset);
+  }
+  const sl=$('#sunSlider'); if(sl) sl.value=sunHour;
+  const st=$('#sunTime'); if(st) st.textContent=sunTimeStr(sunHour);
+  $$('#sunMenu button[data-sun]').forEach(x=>x.classList.toggle('on', x.dataset.sun.toLowerCase()===String(sunPreset||'').toLowerCase()));
+}
+function loadSunPref(){
+  try{
+    const p=JSON.parse(localStorage.getItem(SUN_KEY)||'null');
+    if(p && Number.isFinite(p.h)){ sunHour=clamp(p.h,0,24); sunPreset=p.p||null; }
+  }catch(e){}
+  applySun();
+}
+function toggleSunMenu(show){
+  const m=$('#sunMenu');
+  const on=show!==undefined?show:!m.classList.contains('on');
+  m.classList.toggle('on',on);
+  if(on){
+    updateSunUI();
+    const r=$('#btnSun').getBoundingClientRect();
+    m.style.top=Math.min(r.bottom+6, innerHeight-140)+'px';
+    m.style.left=Math.max(8, Math.min(r.left, innerWidth-260))+'px';
+  }
+  return on;
+}
+
+/* ================= More menu (round 7) ================= */
+/* The secondary tools live one click away in this dropdown — never nested
+   deeper, and every button keeps its id + handler, so nothing is lost. */
+function toggleMoreMenu(show){
+  const m=$('#moreMenu');
+  const on=show!==undefined?show:!m.classList.contains('on');
+  m.classList.toggle('on',on);
+  $('#btnMore').classList.toggle('on',on);
+  if(on){
+    const r=$('#btnMore').getBoundingClientRect();
+    m.style.top=Math.min(r.bottom+6, innerHeight-40)+'px';
+    m.style.left=Math.max(8, Math.min(r.left, innerWidth-240))+'px';
+  }
+  return on;
+}
+
+/* ================= touch mode (round 7) ================= */
+/* Bigger targets for fingers; tap builds, one-finger drag orbits (the
+   normal OrbitControls behaviour), long-press on a block erases it.
+   Desktop mouse flow is untouched while this is off. */
+let touchMode=false;
+const TOUCH_KEY='home-designer-minecraft-touch-v1';
+function setTouch(on){
+  touchMode=!!on;
+  document.body.classList.toggle('touch', touchMode);
+  const b=$('#btnTouch');
+  if(b){ b.classList.toggle('on', touchMode); b.textContent=touchMode?'📱 Touch ✓':'📱 Touch'; }
+  try{ localStorage.setItem(TOUCH_KEY, touchMode?'on':'off'); }catch(e){}
+  if(touchMode) toast('Touch mode — bigger buttons, tap to build, long-press a block to erase it');
+  return touchMode;
+}
+function loadTouchPref(){
+  try{ if(localStorage.getItem(TOUCH_KEY)==='on') touchMode=true; }catch(e){}
+  document.body.classList.toggle('touch', touchMode);
+  const b=$('#btnTouch');
+  if(b){ b.classList.toggle('on', touchMode); b.textContent=touchMode?'📱 Touch ✓':'📱 Touch'; }
+}
+let lpTimer=null, lpFired=false, lpPos=null;
+function longPressErase(e){
+  const hit=raycastVoxel(e);
+  if(hit && hit.block){
+    const [x,y,z]=hit.block;
+    setBlock(x,y,z,null);
+    toast('Erased (long-press)');
+  } else toast('Long-press a block to erase it');
+  try{ if(navigator.vibrate) navigator.vibrate(15); }catch(err){}
+}
+function longPressAt(x,y,z){
+  if(!getBlock(x,y,z)) return false;
+  setBlock(x,y,z,null);
+  return true;
 }
 
 /* ================= mirror / symmetry / view modes (round 6) ================= */
@@ -1192,7 +1504,8 @@ function saveTimeStr(){ const d=new Date(); return String(d.getHours()).padStart
 function projectData(){
   return { version:2, name:projectName,
     blocks:[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; }),
-    measures: measures.map(m=>({ a:m.a, b:m.b })) };
+    measures: measures.map(m=>({ a:m.a, b:m.b })),
+    rooms: [...roomNames.entries()] };
 }
 function validMeasure(m){
   return m&&Array.isArray(m.a)&&Array.isArray(m.b)&&m.a.length===3&&m.b.length===3
@@ -1206,6 +1519,10 @@ function loadProjectData(p){
   if(Array.isArray(p.measures)) for(const m of p.measures){
     if(validMeasure(m)) measures.push({ a:[...m.a], b:[...m.b],
       ft:Math.hypot(m.b[0]-m.a[0],m.b[1]-m.a[1],m.b[2]-m.a[2])*FT });
+  }
+  roomNames.clear();
+  if(Array.isArray(p.rooms)) for(const r of p.rooms){
+    if(Array.isArray(r)&&r.length===2&&typeof r[0]==='string'&&typeof r[1]==='string') roomNames.set(r[0], r[1]);
   }
   projectName = p.name||'Imported design';
   $('#projName').textContent = projectName;
@@ -1300,7 +1617,7 @@ function encodeShare(){
   const cells=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; })
     .sort((a,b)=> a.y-b.y || a.z-b.z || a.x-b.x);
   const w=BitW();
-  w.varint(1); // version
+  w.varint(2); // version 2: blocks + measures + room names (v1 links still decode)
   const nameBytes=new TextEncoder().encode(projectName||'My Build');
   w.varint(Math.min(nameBytes.length,64));
   for(let i=0;i<Math.min(nameBytes.length,64);i++) w.bits(nameBytes[i],8);
@@ -1317,13 +1634,22 @@ function encodeShare(){
     w.bits(m.a[0]+40,7); w.bits(m.a[1]+30,7); w.bits(m.a[2]+40,8);
     w.bits(m.b[0]+40,7); w.bits(m.b[1]+30,7); w.bits(m.b[2]+40,8);
   }
+  w.varint(roomNames.size);
+  for(const [k,v] of roomNames){
+    const kb=new TextEncoder().encode(k), nb=new TextEncoder().encode(v);
+    w.varint(Math.min(kb.length,32));
+    for(let i=0;i<Math.min(kb.length,32);i++) w.bits(kb[i],8);
+    w.varint(Math.min(nb.length,24));
+    for(let i=0;i<Math.min(nb.length,24);i++) w.bits(nb[i],8);
+  }
   return b64urlEncode(w.bytes());
 }
 function decodeShare(str){
   try{
     const bytes=b64urlDecode(str);
     const r=BitR(bytes);
-    if(r.varint()!==1) return null;
+    const ver=r.varint();
+    if(ver!==1 && ver!==2) return null;
     const nlen=r.varint(); if(nlen>64) return null;
     const nb=[]; for(let i=0;i<nlen;i++) nb.push(r.bits(8));
     const name=new TextDecoder().decode(new Uint8Array(nb))||'Shared build';
@@ -1344,7 +1670,18 @@ function decodeShare(str){
       const b=[r.bits(7)-40, r.bits(7)-30, r.bits(8)-40];
       ms.push({ a, b, ft:Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])*FT });
     }
-    return { name, cells, measures:ms };
+    const rms=[];
+    if(ver===2){
+      const nr=r.varint(); if(nr>100) return null;
+      for(let i=0;i<nr;i++){
+        const kl=r.varint(); if(kl>32) return null;
+        const kb=[]; for(let j=0;j<kl;j++) kb.push(r.bits(8));
+        const nl=r.varint(); if(nl>24) return null;
+        const nb2=[]; for(let j=0;j<nl;j++) nb2.push(r.bits(8));
+        rms.push([new TextDecoder().decode(new Uint8Array(kb)), new TextDecoder().decode(new Uint8Array(nb2))]);
+      }
+    }
+    return { name, cells, measures:ms, rooms:rms };
   }catch(e){ return null; }
 }
 function applyShared(data){
@@ -1352,6 +1689,8 @@ function applyShared(data){
   for(const c of data.cells) blocks.set(key3(c.x,c.y,c.z), { t:c.t, r:c.r||0 });
   measures.length=0;
   for(const m of data.measures||[]) measures.push(m);
+  roomNames.clear();
+  for(const r of data.rooms||[]) if(Array.isArray(r)&&r.length===2) roomNames.set(r[0], r[1]);
   projectName=data.name; $('#projName').textContent=projectName;
   undoStack.length=0; redoStack.length=0;
   clearSelection();
@@ -2337,7 +2676,7 @@ function clearMeasures(){
 }
 function updateMeasuresBtn(){
   const b=$('#btnClearMeasures');
-  b.style.display=measures.length?'':'none';
+  b.style.display=measures.length?'block':'none';
   b.textContent='📏 Clear measures ('+measures.length+')';
   resize();   // the button appearing / disappearing can re-wrap the toolbar
 }
@@ -2487,6 +2826,7 @@ function bindPointer(){
   const el=renderer.domElement;
   el.addEventListener('contextmenu', e=>e.preventDefault());
   el.addEventListener('pointermove', e=>{
+    if(lpTimer && lpPos && Math.hypot(e.clientX-lpPos[0], e.clientY-lpPos[1])>10){ clearTimeout(lpTimer); lpTimer=null; }
     if(WALK.active){
       if(walkDrag){
         WALK.camYaw -= (e.clientX-walkDrag.x)*0.005;
@@ -2505,24 +2845,32 @@ function bindPointer(){
     downPos=[e.clientX,e.clientY]; downTime=Date.now(); downBtn=e.button;
     if(WALK.active){ walkDrag={ x:e.clientX, y:e.clientY }; return; }
     if(ctxMenuOpen()){ hideCtxMenu(); menuJustClosed=true; return; }
+    // touch mode: hold a block to erase it; a drag is an orbit, never a fill/box/expand drag
+    if(touchMode && e.pointerType==='touch'){
+      lpFired=false; lpPos=[e.clientX,e.clientY];
+      clearTimeout(lpTimer);
+      lpTimer=setTimeout(()=>{ lpFired=true; longPressErase(e); }, 450);
+    }
     if(pasteMode || presetMode) return;   // a paste/preset click must not start a drag
-    if(e.button===0 && tool==='fill'){
+    if(e.button===0 && tool==='fill' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
       if(hit) fillStart(e, hit.cell);
     }
-    if(e.button===0 && tool==='select'){
+    if(e.button===0 && tool==='select' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
       if(!hit || !hit.block){
         boxDrag={ x0:e.clientX, y0:e.clientY, x1:e.clientX, y1:e.clientY };
         controls.enabled=false;
       }
     }
-    if(e.button===0 && tool==='expand'){
+    if(e.button===0 && tool==='expand' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
       if(hit && hit.block) expandStart(e, hit);
     }
   });
   el.addEventListener('pointerup', e=>{
+    clearTimeout(lpTimer); lpTimer=null;
+    if(lpFired){ lpFired=false; downPos=null; return; }   // long-press already erased; swallow the tap
     if(WALK.active){ walkDrag=null; return; }
     if(expandDrag){ expandFinish(); downPos=null; return; }
     if(boxDrag){ finishBoxDrag(); downPos=null; return; }
@@ -2534,6 +2882,16 @@ function bindPointer(){
     if(menuJustClosed){ menuJustClosed=false; return; }
     if(moved>6||dt>600) return;   // it was a drag (orbit/pan), not a click
     const hit=raycastVoxel(e);
+    // a click on a room label renames the room instead of placing a block
+    if(e.button===0){
+      const rk=roomLabelHit(e);
+      if(rk){
+        const cur=roomLabelSprites.get(rk);
+        const nm=prompt('Name this room:', cur? cur.info.name : 'Room');
+        if(nm!==null) renameRoom(rk, nm);
+        return;
+      }
+    }
     if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
       showCtxMenu(e.clientX, e.clientY);
       return;
@@ -2665,7 +3023,7 @@ function setCam(name){
 /* ================= walk mode ================= */
 const WALK = {
   active:false, pos:new THREE.Vector3(0,1,0), vy:0, onGround:true,
-  camYaw:Math.PI, camPitch:0.5, dist:32, hw:1.5, h:12,
+  camYaw:Math.PI, camPitch:0.5, dist:32, hw:1.5, h:12, fp:false,
 };
 let walker=null, savedCam=null;
 function buildWalker(){
@@ -2691,6 +3049,7 @@ function walkStart(){
   if(viewMode!=='normal') setView('normal');   // walking needs the whole build visible
   WALK.active=true;
   if(wallLabelGroup) wallLabelGroup.visible=false;
+  if(roomLabelGroup) roomLabelGroup.visible=false;
   savedCam={ pos:camera.position.clone(), tgt:controls.target.clone() };
   controls.enabled=false;
   // spawn on the grass at the origin, facing +z
@@ -2706,12 +3065,36 @@ function walkStart(){
 function walkStop(){
   if(!WALK.active) return;
   WALK.active=false;
+  WALK.fp=false;
   walker.visible=false;
+  const fpb=$('#btnWalkFP');
+  if(fpb){ fpb.classList.remove('on'); fpb.textContent='👁 First-person'; }
+  if(document.pointerLockElement===renderer.domElement){ try{ document.exitPointerLock(); }catch(e){} }
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;   // restore the labels preference, don't force them on
+  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
   controls.enabled=true;
   if(savedCam){ camera.position.copy(savedCam.pos); controls.target.copy(savedCam.tgt); controls.update(); }
   $('#walkHint').style.display='none';
   $('#btnWalk').textContent='🚶 Walk';
+}
+/* first-person walk (round 7): eye height 5'6" (11 blocks), PointerLock
+   mouse-look on desktop, drag-to-look on touch. Third-person stays the
+   default; F or the button switches, Esc drops back to third-person. */
+let fpLockSeen=false;   // only auto-exit FP on lock loss if a lock was ever held
+function setWalkFP(on){
+  if(!WALK.active) return false;
+  WALK.fp=!!on;
+  walker.visible=!WALK.fp;
+  const b=$('#btnWalkFP');
+  if(b){ b.classList.toggle('on', WALK.fp); b.textContent=WALK.fp?'👁 First-person ✓':'👁 First-person'; }
+  if(WALK.fp){
+    try{ renderer.domElement.requestPointerLock(); }catch(e){}
+    toast('First-person — eye 5\'6" · drag to look · F back to third-person · Esc exits');
+  } else if(document.pointerLockElement===renderer.domElement){
+    // leaving first-person releases the mouse, or no later click can land
+    try{ document.exitPointerLock(); }catch(e){}
+  }
+  return WALK.fp;
 }
 function walkCollides(x,y,z){
   const x0=Math.floor(x-WALK.hw), x1=Math.floor(x+WALK.hw);
@@ -2783,6 +3166,15 @@ function walkStep(dt){
   // gentle bob while moving
   const bob=mv.lengthSq()>0 ? Math.sin(performance.now()/90)*0.15 : 0;
   walker.position.set(WALK.pos.x, WALK.pos.y+bob, WALK.pos.z);
+  if(WALK.fp){
+    // first-person: the camera IS the walker's eyes, 5'6" (11 blocks) up
+    const eyeY=WALK.pos.y+11+bob*0.8;
+    camera.position.set(WALK.pos.x, eyeY, WALK.pos.z);
+    const phi=WALK.camPitch-0.55;   // drag down = look down, like the follow camera
+    const fwd=new THREE.Vector3(-Math.sin(WALK.camYaw)*Math.cos(phi), -Math.sin(phi), -Math.cos(WALK.camYaw)*Math.cos(phi));
+    camera.lookAt(camera.position.clone().addScaledVector(fwd, 10));
+    walker.visible=false;
+  } else {
   // follow camera (raycast-clamped so walls don't hide the character)
   // 3/4 over-shoulder view: offset to the walker's right so the steps
   // ahead are visible beside him instead of hidden dead behind him,
@@ -2804,6 +3196,7 @@ function walkStep(dt){
   const camPos=head.clone().addScaledVector(dir.normalize(), d);
   camera.position.lerp(camPos, 1-Math.exp(-12*dt));
   camera.lookAt(lookAt);
+  }
   // floor bar follows the walker
   const wfi=floorOfY(Math.floor(WALK.pos.y));
   if(wfi!==activeFloor) setFloor(wfi);
@@ -2826,7 +3219,9 @@ function bindKeys(){
     if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName||'')) return;
     const k=e.code;
     if(k==='Escape'){
-      if(WALK.active){ walkStop(); }
+      if($('#moreMenu').classList.contains('on')){ toggleMoreMenu(false); return; }
+      if($('#sunMenu').classList.contains('on')){ toggleSunMenu(false); return; }
+      if(WALK.active){ if(WALK.fp) setWalkFP(false); else walkStop(); }
       else if(moveCarry){ cancelMove(); }
       else if(fillDrag){ cancelFillDrag(); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
@@ -2850,6 +3245,7 @@ function bindKeys(){
       return; }
     if((k==='Delete'||k==='Backspace') && !WALK.active && selection.size){ e.preventDefault(); deleteSelection(); return; }
     if(k==='KeyV'){ WALK.active?walkStop():walkStart(); return; }
+    if(WALK.active && k==='KeyF'){ setWalkFP(!WALK.fp); return; }
     if(e.key==='?'){ toggleCheatPanel(); return; }
     if(k==='KeyH'){ setLabels(!labelsOn); return; }
     if(!WALK.active){
@@ -2981,6 +3377,30 @@ function init(){
   $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
   $('#btnExitWalk').onclick=walkStop;
+  $('#btnWalkFP').onclick=()=>setWalkFP(!WALK.fp);
+  $('#btnMore').onclick=()=>toggleMoreMenu();
+  $('#btnSun').onclick=()=>toggleSunMenu();
+  $('#btnTouch').onclick=()=>setTouch(!touchMode);
+  $$('#sunMenu button[data-sun]').forEach(b=>b.onclick=()=>{ setSunPreset(b.dataset.sun); });
+  $('#sunSlider').addEventListener('input', e=>setSunHour(parseFloat(e.target.value), null));
+  // a click on a More-menu item closes the menu (its own handler runs first)
+  $('#moreMenu').addEventListener('click', e=>{ if(e.target.tagName==='BUTTON') toggleMoreMenu(false); });
+  // a click anywhere else closes the open menus
+  document.addEventListener('pointerdown', e=>{
+    if(!e.target.closest('#moreMenu') && !e.target.closest('#btnMore')) toggleMoreMenu(false);
+    if(!e.target.closest('#sunMenu') && !e.target.closest('#btnSun')) toggleSunMenu(false);
+  }, true);
+  // PointerLock mouse-look for first-person walk
+  document.addEventListener('pointerlockchange', ()=>{
+    if(document.pointerLockElement===renderer.domElement) fpLockSeen=true;
+    else if(fpLockSeen && WALK.active && WALK.fp) setWalkFP(false);
+  });
+  document.addEventListener('mousemove', e=>{
+    if(WALK.active && WALK.fp && document.pointerLockElement===renderer.domElement){
+      WALK.camYaw -= (e.movementX||0)*0.0028;
+      WALK.camPitch = clamp(WALK.camPitch + (e.movementY||0)*0.0028, -0.05, 1.1);
+    }
+  });
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
     groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
   $('#btnSnap').onclick=snapshot;
@@ -2997,6 +3417,8 @@ function init(){
   }
   loadSharedFromHash();   // a #s= link replaces whatever was loaded above
   loadLabelsPref();   // wall labels: on by default, remembered choice wins
+  loadSunPref();      // sunlight: Day by default, remembered choice wins
+  loadTouchPref();    // touch mode: off by default, remembered choice wins
   updateUndoBtns();
   resize();   // position the help panel + size bar under the finished toolbar
   window.__ready=true;
@@ -3057,6 +3479,39 @@ window.__mc = {
     total(){ return wallLabelGroup? [...wallLabelGroup.children].filter(c=>c.isSprite).length : 0; },
     visible(){ if(!wallLabelGroup || !wallLabelGroup.visible) return 0;
       return [...wallLabelGroup.children].filter(c=>c.isSprite && c.visible).length; },
+  },
+  sun:{
+    hour(){ return sunHour; },
+    set(h){ return setSunHour(h); },
+    preset(n){ return setSunPreset(n); },
+    presetName(){ return sunPreset; },
+    sunInt(){ return sunLight? sunLight.intensity : null; },
+    sunColor(){ return sunLight? '#'+sunLight.color.getHexString() : null; },
+    sky(){ return scene.background? '#'+scene.background.getHexString() : null; },
+    menuOpen(){ return $('#sunMenu').classList.contains('on'); },
+  },
+  rooms:{
+    list(){ return detectRooms().map(r=>({ key:r.key, fi:r.fi, name:r.name, areaSqFt:Math.round(r.areaSqFt*10)/10, cells:r.cells })); },
+    labelTexts(){ return [...roomLabelSprites.values()].map(v=>v.sprite.userData.text); },
+    labelPos(key){ const s=roomLabelSprites.get(key); if(!s) return null;
+      const p=s.sprite.position; return { x:p.x, y:p.y, z:p.z }; },
+    rename(key,name){ return renameRoom(key,name); },
+    names(){ const o={}; roomNames.forEach((v,k)=>o[k]=v); return o; },
+    visibleCount(){ if(!roomLabelGroup || !roomLabelGroup.visible) return 0;
+      return [...roomLabelGroup.children].filter(c=>c.isSprite && c.visible).length; },
+  },
+  touch:{
+    on(){ return touchMode; },
+    set(on){ return setTouch(on); },
+    longPress(x,y,z){ return longPressAt(x,y,z); },
+  },
+  toolbar:{
+    height(){ return document.querySelector('#topbar').offsetHeight; },
+    rows(){ const tb=document.querySelector('#topbar');
+      return Math.max(...[...tb.children].map(el=>el.offsetTop+el.offsetHeight)); },
+    moreOpen(){ return $('#moreMenu').classList.contains('on'); },
+    openMore(){ return toggleMoreMenu(true); },
+    closeMore(){ return toggleMoreMenu(false); },
   },
   selection(){ return [...selection]; },
   select(x,y,z,add){ selectBlockKey(key3(x,y,z), !!add); },
@@ -3181,6 +3636,10 @@ window.__mc = {
     floor(){ return floorOfY(Math.floor(WALK.pos.y)); },
     setHeading(a){ WALK.camYaw=a; },   // heading: character moves toward (-sin a, 0, -cos a)
     setPos(x,y,z){ WALK.pos.set(x,y,z); WALK.vy=0; },
+    fp(){ return WALK.fp; },
+    setFP(on){ return setWalkFP(on); },
+    camY(){ return camera.position.y; },
+    walkerVisible(){ return walker? walker.visible : false; },
   },
   projectToScreen(x,y,z){ return projectToScreenPoint(x,y,z); },
 };
