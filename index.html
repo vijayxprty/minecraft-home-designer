@@ -24,11 +24,13 @@
   .actions{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
   .actions button{background:#e8e8e8}
   .actions button.warn{background:#ff9d5c}
-  .camrow{display:flex;gap:4px;align-items:center;flex-basis:100%}
+  .actions .sep{width:2px;background:rgba(255,255,255,.35);margin:3px 2px}
+  #btnClearMeasures{display:none}
+  .camrow{display:flex;gap:4px;align-items:center;flex-basis:100%;flex-wrap:wrap}
   .camrow .lbl{font-size:12px;font-weight:800;opacity:.95}
   .camrow button{background:#c9ecff;color:#0b3550;border-color:#14506e}
   .camrow button.on{background:#ffd83d;color:#4a3200}
-  #toolSeg{display:flex;gap:0;margin-left:10px}
+  #toolSeg{display:flex;gap:0;margin-left:10px;flex-wrap:wrap}
   #toolSeg button{border-radius:0}
   #toolSeg button:first-child{border-radius:4px 0 0 4px}
   #toolSeg button:last-child{border-radius:0 4px 4px 0}
@@ -45,6 +47,7 @@
     padding:7px 10px;font-size:13px;line-height:1.5;max-width:300px}
   #readout b{color:#ffd83d}
   #readout .dim{color:#9be36d}
+  #roTool{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #note{position:fixed;right:10px;bottom:10px;z-index:9;font-size:11px;color:#fff;background:rgba(0,0,0,.45);
     padding:4px 8px;border-radius:5px;max-width:260px;text-align:right}
   #hoverTag{position:fixed;z-index:9;pointer-events:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;
@@ -72,6 +75,22 @@
   #presetPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  /* ---------- fill mode panel + exact-size bar ---------- */
+  #fillPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+    background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
+  #fillPanel.on{display:flex}
+  #fillPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #fillPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 10px;color:#222}
+  #fillPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #fillPanel .pp-note{flex-basis:100%;color:#fff;font-size:12px;font-weight:700}
+  #sizeBar{position:fixed;left:10px;top:110px;z-index:11;display:none;align-items:center;gap:8px;
+    background:#fff;color:#222;border:3px solid #1e4d16;border-radius:8px;padding:7px 10px;
+    font-size:13px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  #sizeBar.on{display:flex}
+  #sizeBar input{border:2px solid #555;border-radius:4px;padding:5px 7px;font-weight:800;font-size:13px;width:90px;color:#222;background:#fff}
+  #sizeBar .hint{font-weight:700;font-size:11px;color:#555}
+  #sizeBar #sizeNow{color:#1e6b12}
   /* ---------- right-click tool menu ---------- */
   #ctxMenu{position:fixed;z-index:30;display:none;flex-direction:column;background:#222;color:#fff;
     border:3px solid #ffd83d;border-radius:8px;padding:5px;min-width:170px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -110,12 +129,16 @@
     <button id="btnCopy" title="Copy the selection (Ctrl+C)">⧉ Copy</button>
     <button id="btnPaste" title="Paste what you copied (Ctrl+V)">📋 Paste</button>
     <button id="btnRotate" title="Rotate the selection or the preset ghost 90° (R)">🔄 Rotate</button>
+    <span class="sep"></span>
     <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
     <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
     <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
     <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
+    <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
+    <span class="sep"></span>
     <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
     <button id="btnImport" title="Open a project JSON">⬆ Import</button>
+    <span class="sep"></span>
     <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
     <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
   </div>
@@ -130,9 +153,12 @@
       <button data-tool="build" class="on" title="Click a face to place a block (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
-      <button data-tool="select" title="Click a block to select it, Shift-click to add more, drag a box to select many (L)">⬚ Select</button>
+      <button data-tool="select" title="Click a block to select it, Shift-click to add more, drag a box to select many (S)">⬚ Select</button>
       <button data-tool="expand" title="Click a wall and drag to make it longer or taller (X)">↔ Expand</button>
       <button data-tool="move" title="Click a block to pick it up, click again to drop it — or select many and move them together (M)">🚚 Move</button>
+      <button data-tool="fill" title="Drag two corners to fill a box — Solid, Hollow, Walls, Outline or Keep (F)">📦 Fill</button>
+      <button data-tool="line" title="Click two points for a straight run of blocks (L)">📏 Line</button>
+      <button data-tool="tape" title="Click two points to measure between them — the label stays pinned (T)">📐 Tape</button>
     </span>
     <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
   </div>
@@ -145,6 +171,7 @@
   <div style="white-space:nowrap">📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
+  <div id="roTool" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
 </div>
 
@@ -153,9 +180,10 @@
   <b>Right-click</b> = tool menu<br>
   <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
   <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–9</b> pick block · <b>B / E / P / L / X / M</b> tools<br>
-  <b>M</b> move a block or a selection · <b>Ctrl+C / Ctrl+V</b> copy / paste · <b>R</b> rotate<br>
-  <b>Del</b> delete selection · <b>Ctrl+Z / Ctrl+Y</b> undo / redo
+  <b>1–9</b> pick block · <b>B E P S X M F L T</b> tools<br>
+  <b>F</b> fill a box · <b>L</b> line · <b>T</b> tape measure<br>
+  <b>Ctrl+C / V</b> copy / paste · <b>R</b> rotate<br>
+  <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo
 </div>
 
 <div id="presetPanel">
@@ -182,6 +210,23 @@
   <button id="presetClose">✕ Close</button>
 </div>
 
+<div id="fillPanel">
+  <div class="pp-title">Fill — drag two corners to fill a box, then release · type a length + Enter for an exact size</div>
+  <button data-mode="solid" class="on" title="Fill the whole box, replacing blocks inside">Solid</button>
+  <button data-mode="hollow" title="Outer shell only, and the inside is emptied">Hollow</button>
+  <button data-mode="walls" title="Only the four side walls — no floor, no ceiling">Walls only</button>
+  <button data-mode="outline" title="Outer shell only, leaving whatever is inside alone">Outline</button>
+  <button data-mode="keep" title="Fill only the empty cells — never overwrites your work">Keep</button>
+  <div class="pp-note">Solid and Hollow replace blocks in the box — one Ctrl+Z undoes a whole fill.</div>
+</div>
+
+<div id="sizeBar">
+  <span>Length:</span>
+  <input id="sizeInput" placeholder="10'6&quot;" spellcheck="false" autocomplete="off">
+  <span id="sizeNow"></span>
+  <span class="hint">Enter = apply · Esc = close</span>
+</div>
+
 <div id="ctxMenu">
   <div class="cm-title">Switch tool</div>
   <button data-tool="build">🧱 Build</button>
@@ -190,6 +235,9 @@
   <button data-tool="select">⬚ Select</button>
   <button data-tool="expand">↔ Expand</button>
   <button data-tool="move">🚚 Move</button>
+  <button data-tool="fill">📦 Fill</button>
+  <button data-tool="line">📏 Line</button>
+  <button data-tool="tape">📐 Tape</button>
 </div>
 <div id="selBox"></div>
 
@@ -222,6 +270,25 @@ const key3 = (x,y,z)=>x+','+y+','+z;
 const parseKey = k=>{ const p=k.split(','); return [+p[0],+p[1],+p[2]]; };
 function ftin(ft){ const neg=ft<0; ft=Math.abs(ft); const f=Math.floor(ft+1e-9); const i=Math.round((ft-f)*12*2)/2;
   return (neg?'-':'')+f+"' "+(i%1? i.toFixed(1):i)+'"'; }
+/* parse a typed length like 10'6", 10.5, 10 ft 6 in, 126" -> feet, or null */
+function parseFtIn(str){
+  if(str==null) return null;
+  const s=String(str).trim().toLowerCase().replace(/,/g,'');
+  if(!s) return null;
+  let m=s.match(/^(\d+(?:\.\d+)?)\s*'\s*(\d+(?:\.\d+)?)?\s*"?$/);
+  if(m) return +m[1]+((+m[2]||0)/12);
+  m=s.match(/^(\d+(?:\.\d+)?)\s*ft\s*(\d+(?:\.\d+)?)?\s*in(?:ch(?:es)?)?$/);
+  if(m) return +m[1]+((+m[2]||0)/12);
+  m=s.match(/^(\d+(?:\.\d+)?)\s*ft$/);
+  if(m) return +m[1];
+  m=s.match(/^(\d+(?:\.\d+)?)\s*in(?:ch(?:es)?)?$/);
+  if(m) return +m[1]/12;
+  m=s.match(/^(\d+(?:\.\d+)?)\s*"$/);
+  if(m) return +m[1]/12;
+  m=s.match(/^(\d+(?:\.\d+)?)$/);
+  if(m) return +m[1];
+  return null;
+}
 function floorOfY(y){ let fi=0; for(let i=0;i<FLOORS.length;i++) if(y>=FLOORS[i].base) fi=i; return fi; }
 
 /* ================= seeded random for textures ================= */
@@ -328,6 +395,20 @@ let boxDrag = null;                // {x0,y0,x1,y1} screen coords for box-select
 let moveCarry = null;              // {items:[{x,y,z,t,r}], min:{x0,y0,z0,x1,y1,z1}, valid, target}
 const moveHidden = new Set();      // keys hidden from the renderer while being carried
 
+/* ---- fill / line / tape ---- */
+const FILL_MODES = ['solid','hollow','walls','outline','keep'];
+const FILL_MAX = 8192;             // biggest single fill, in blocks
+let fillMode = 'solid';
+let fillDrag = null;               // {anchor:[x,y,z], cur:[x,y,z]} while dragging a box
+let fillLocked = null;             // {axis, dir, len} typed exact length, kept while dragging
+let lineStart = null;              // [x,y,z] first click of a line
+let lineAim = null;                // [x,y,z] current hover cell while aiming a line
+let lineEnd = null;                // [x,y,z] typed-length end point, if a length was typed
+let lineLockedLen = null;          // blocks — typed exact length, kept while aiming
+let tapeStart = null;              // [x,y,z] first tape point
+let measures = [];                 // [{a:[x,y,z], b:[x,y,z], ft}]
+let measureGroup = null, fillGhost = null, fillGhostMat = null, startMarker = null;
+
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
 const instMeshes = [];             // per type: {mesh, keys[]}
@@ -401,6 +482,18 @@ function initScene(){
   // always-on wall dimension labels (dimension line + ft/in tag above each wall)
   wallLabelGroup = new THREE.Group(); scene.add(wallLabelGroup);
 
+  // fill box ghost (translucent box + dark edges), tape/line start marker, tape measures
+  fillGhost = new THREE.Group();
+  fillGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.25, depthWrite:false });
+  fillGhost.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1), fillGhostMat));
+  fillGhost.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
+    new THREE.LineBasicMaterial({ color:0x1a1a1a })));
+  fillGhost.visible = false; scene.add(fillGhost);
+  startMarker = new THREE.Mesh(new THREE.BoxGeometry(1.04,1.04,1.04),
+    new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.55, depthWrite:false }));
+  startMarker.visible = false; scene.add(startMarker);
+  measureGroup = new THREE.Group(); scene.add(measureGroup);
+
   buildGroundScenery();
   resize();
   window.addEventListener('resize', resize);
@@ -416,6 +509,11 @@ function clockDelta(){ const now=performance.now(); const dt=Math.min((now-_last
 function resize(){
   const w=innerWidth, h=innerHeight;
   renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+  // the help panel and the size bar sit just under the top bar, however
+  // tall the toolbar wraps to at this width
+  const tb=document.querySelector('#topbar');
+  if(tb){ const top=(tb.offsetHeight+10)+'px';
+    $('#help').style.top=top; $('#sizeBar').style.top=top; }
 }
 function buildGroundScenery(){
   // one plain grass base to build on — no plot, no hole, no road.
@@ -508,7 +606,10 @@ function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); u
 function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
 
 /* ================= clear ================= */
-function clearBlocks(){ cancelMove(); blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
+function clearBlocks(){ cancelMove(); cancelFillDrag(); cancelLine();
+  if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
+  measures.length=0; renderMeasures(); updateMeasuresBtn();
+  blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
 function buildEmpty(){ clearBlocks(); rebuild(); updateStats(); scheduleSave(); }
 
 /* ================= floors ================= */
@@ -523,6 +624,7 @@ function setFloor(i, focus=false){
     controls.update();
   }
   updateStats();
+  resize();   // the floor label text can re-wrap the toolbar
 }
 
 /* ================= stats / readouts ================= */
@@ -792,6 +894,38 @@ function updateHover(e){
       : 'Click to place <b>'+currentPresetLabel()+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
     return;
   }
+  // Fill / Line / Tape never place a single block — say what the click does
+  if(tool==='fill' && !fillDrag){
+    ghost.visible=true;
+    ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
+    ghost.material.color.set(0x7CFC00);
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    tag.innerHTML='<b>Fill</b> · drag from here to size a box ('+fillMode+')';
+    $('#roHover').innerHTML='Fill — drag from here to size a box · mode <b>'+fillMode+'</b> · type a length + Enter for exact size';
+    return;
+  }
+  if(tool==='line' && !lineStart){
+    ghost.visible=true;
+    ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
+    ghost.material.color.set(0x7CFC00);
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    tag.innerHTML='<b>Line</b> · click to set the start point';
+    $('#roHover').innerHTML='Line — click to set the start point, then click the end point';
+    return;
+  }
+  if(tool==='tape'){
+    ghost.visible=false;
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    tag.innerHTML='<b>Tape</b> · '+(tapeStart?'click the second point':'click a point to measure from');
+    $('#roHover').innerHTML= tapeStart ? 'Tape — click the second point' : 'Tape — click two points to measure between them';
+    return;
+  }
   const occupied=getBlock(cx,cy,cz)!==null;
   const valid=!occupied&&inBounds(cx,cy,cz);
   hover.valid=valid;
@@ -971,6 +1105,7 @@ function togglePresetPanel(show){
   const on = show!==undefined? show : !p.classList.contains('on');
   p.classList.toggle('on', on);
   $('#btnPresets').classList.toggle('on', on);
+  $('#fillPanel').classList.toggle('on', !on && tool==='fill');
   if(!on) setPresetMode(null);
 }
 
@@ -1166,6 +1301,299 @@ function cancelMove(){
   rebuild(); updateSelectionHighlight();
 }
 
+/* ================= fill / box tool ================= */
+/* Drag two corners to fill a box. Modes (Minecraft /fill + WorldEdit):
+   solid   — fill the whole box, replacing blocks inside
+   hollow  — outer shell only, and the inside is emptied
+   walls   — only the four side walls, no floor, no ceiling
+   outline — outer shell only, leaving whatever is inside alone
+   keep    — fill only the empty cells, never overwrites your work */
+function fillBoxInfo(){
+  const d=fillDrag; if(!d) return null;
+  const x0=Math.min(d.anchor[0],d.cur[0]), x1=Math.max(d.anchor[0],d.cur[0]);
+  const y0=Math.min(d.anchor[1],d.cur[1]), y1=Math.max(d.anchor[1],d.cur[1]);
+  const z0=Math.min(d.anchor[2],d.cur[2]), z1=Math.max(d.anchor[2],d.cur[2]);
+  const w=x1-x0+1, h=y1-y0+1, dep=z1-z0+1;
+  return { x0,x1,y0,y1,z0,z1, w, h, d:dep, cells:w*h*dep, tooBig:w*h*dep>FILL_MAX };
+}
+function fillCells(a,b,mode){
+  const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]);
+  const y0=Math.min(a[1],b[1]), y1=Math.max(a[1],b[1]);
+  const z0=Math.min(a[2],b[2]), z1=Math.max(a[2],b[2]);
+  if((x1-x0+1)*(y1-y0+1)*(z1-z0+1)>FILL_MAX) return null;
+  const cells=[];
+  for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++) for(let z=z0;z<=z1;z++){
+    const shell = x===x0||x===x1||y===y0||y===y1||z===z0||z===z1;
+    const wall = x===x0||x===x1||z===z0||z===z1;
+    const has = getBlock(x,y,z);
+    if(mode==='solid') cells.push({ x,y,z, t:selType, r:0 });
+    else if(mode==='keep'){ if(!has) cells.push({ x,y,z, t:selType, r:0 }); }
+    else if(mode==='hollow'){
+      if(shell) cells.push({ x,y,z, t:selType, r:0 });
+      else if(has) cells.push({ x,y,z, t:null });
+    }
+    else if(mode==='outline'){ if(shell && !has) cells.push({ x,y,z, t:selType, r:0 }); }
+    else if(mode==='walls'){ if(wall && !has) cells.push({ x,y,z, t:selType, r:0 }); }
+  }
+  return cells;
+}
+function fillBox(a,b,mode){
+  const cells=fillCells(a,b,mode||fillMode);
+  if(cells===null){ toast('That box is too big — max '+FILL_MAX.toLocaleString('en-IN')+' blocks at once'); return 0; }
+  const n=applyBatch(cells.filter(c=>inBounds(c.x,c.y,c.z)));
+  if(n) toast('Filled '+n+' block'+(n>1?'s':'')+' ('+(mode||fillMode)+')');
+  return n;
+}
+function updateFillGhost(){
+  const info=fillBoxInfo();
+  if(!info || !fillGhost){ if(fillGhost) fillGhost.visible=false; return; }
+  fillGhost.visible=true;
+  fillGhost.position.set((info.x0+info.x1+1)/2, (info.y0+info.y1+1)/2, (info.z0+info.z1+1)/2);
+  fillGhost.scale.set(info.w, info.h, info.d);
+  fillGhostMat.color.set(info.tooBig?0xff4444:0x7CFC00);
+}
+function refreshFillReadout(){
+  const info=fillBoxInfo(); if(!info) return;
+  const ro=$('#roTool'); ro.style.display='block';
+  ro.textContent='📦 Fill ('+fillMode+'): '+ftin(info.w*FT)+' × '+ftin(info.d*FT)+' × '+ftin(info.h*FT)+' · '+info.cells+' blocks'
+    +(info.tooBig?' — too big, max '+FILL_MAX.toLocaleString('en-IN'):'');
+  $('#sizeNow').textContent='now: '+ftin(Math.max(info.w,info.d,info.h)*FT);
+}
+function fillDragUpdate(e){
+  const d=fillDrag; if(!d) return;
+  const hit=raycastVoxel(e);
+  if(hit) d.cur=[...hit.cell];
+  if(fillLocked) d.cur[fillLocked.axis]=d.anchor[fillLocked.axis]+fillLocked.dir*(fillLocked.len-1);
+  updateFillGhost();
+  refreshFillReadout();
+  $('#roHover').textContent='Release to fill · type a length + Enter for an exact size';
+}
+function fillStart(e, cell){
+  fillDrag={ anchor:[...cell], cur:[...cell] };
+  fillLocked=null;
+  controls.enabled=false;
+  showSizeBar(true);
+  updateFillGhost();
+  fillDragUpdate(e);
+}
+function fillFinish(){
+  const d=fillDrag; fillDrag=null; fillLocked=null;
+  controls.enabled=true; downPos=null;
+  if(fillGhost) fillGhost.visible=false;
+  hideSizeBar();
+  $('#hoverTag').style.display='none';
+  $('#roTool').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+  if(!d) return 0;
+  return fillBox(d.anchor, d.cur, fillMode);
+}
+function cancelFillDrag(){
+  fillDrag=null; fillLocked=null;
+  controls.enabled=true; downPos=null;
+  if(fillGhost) fillGhost.visible=false;
+  hideSizeBar();
+  $('#hoverTag').style.display='none';
+  $('#roTool').style.display='none';
+}
+function updateFillPanel(){
+  $$('#fillPanel button[data-mode]').forEach(b=>b.classList.toggle('on', b.dataset.mode===fillMode));
+}
+
+/* ================= line tool ================= */
+/* 3D Bresenham: the straight run of cells between two corners, any direction */
+function lineCells(a,b){
+  let [x1,y1,z1]=a; const [x2,y2,z2]=b;
+  const dx=Math.abs(x2-x1), dy=Math.abs(y2-y1), dz=Math.abs(z2-z1);
+  const xs=x2>x1?1:-1, ys=y2>y1?1:-1, zs=z2>z1?1:-1;
+  const cells=[[x1,y1,z1]];
+  if(dx>=dy && dx>=dz){
+    let p1=2*dy-dx, p2=2*dz-dx;
+    for(let i=0;i<dx;i++){ x1+=xs;
+      if(p1>=0){ y1+=ys; p1-=2*dx; }
+      if(p2>=0){ z1+=zs; p2-=2*dx; }
+      p1+=2*dy; p2+=2*dz; cells.push([x1,y1,z1]); }
+  } else if(dy>=dx && dy>=dz){
+    let p1=2*dx-dy, p2=2*dz-dy;
+    for(let i=0;i<dy;i++){ y1+=ys;
+      if(p1>=0){ x1+=xs; p1-=2*dy; }
+      if(p2>=0){ z1+=zs; p2-=2*dy; }
+      p1+=2*dx; p2+=2*dz; cells.push([x1,y1,z1]); }
+  } else {
+    let p1=2*dy-dz, p2=2*dx-dz;
+    for(let i=0;i<dz;i++){ z1+=zs;
+      if(p1>=0){ y1+=ys; p1-=2*dz; }
+      if(p2>=0){ x1+=xs; p2-=2*dz; }
+      p1+=2*dy; p2+=2*dx; cells.push([x1,y1,z1]); }
+  }
+  return cells;
+}
+/* a line never overwrites work — cells that are already built are skipped,
+   and the toast says how many were skipped */
+function lineCommit(a,b){
+  const cells=lineCells(a,b).filter(c=>inBounds(c[0],c[1],c[2]));
+  const skipped=cells.filter(c=>getBlock(c[0],c[1],c[2])).length;
+  const n=applyBatch(cells.filter(c=>!getBlock(c[0],c[1],c[2]))
+    .map(c=>({ x:c[0], y:c[1], z:c[2], t:selType, r:0 })));
+  if(n) toast('Line placed — '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+(skipped?' · '+skipped+' skipped (already built)':''));
+  return n;
+}
+function computeLineEnd(){
+  if(lineLockedLen){
+    const d=[lineAim[0]-lineStart[0], lineAim[1]-lineStart[1], lineAim[2]-lineStart[2]];
+    let ax=0; if(Math.abs(d[1])>Math.abs(d[ax])) ax=1; if(Math.abs(d[2])>Math.abs(d[ax])) ax=2;
+    const dir=d[ax]===0?1:Math.sign(d[ax]);
+    lineEnd=[...lineStart]; lineEnd[ax]=lineStart[ax]+dir*(lineLockedLen-1);
+  } else lineEnd=null;
+}
+function updateLinePreview(){
+  if(!lineStart) return;
+  const end=lineEnd||lineAim||lineStart;
+  const cells=lineCells(lineStart,end);
+  showMultiGhost(cells.map(c=>({ x:c[0], y:c[1], z:c[2] })));
+  const n=cells.length;
+  $('#roTool').style.display='block';
+  $('#roTool').textContent='📏 Line: '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+' — click the end point to place · Esc to cancel';
+  $('#sizeNow').textContent='now: '+ftin(n*FT);
+  $('#roHover').textContent='Click the end point to place the line — or type a length + Enter';
+}
+function lineClick(cell){
+  if(!lineStart){
+    lineStart=[...cell]; lineAim=[...cell]; lineEnd=null; lineLockedLen=null;
+    startMarker.position.set(cell[0]+0.5, cell[1]+0.5, cell[2]+0.5);
+    startMarker.visible=true;
+    showSizeBar(true);
+    updateLinePreview();
+    return 0;
+  }
+  const end=lineEnd||cell;
+  const n=lineCommit(lineStart,end);
+  cancelLine();
+  return n;
+}
+function updateLineAim(e){
+  const hit=raycastVoxel(e);
+  if(hit) lineAim=[...hit.cell];
+  computeLineEnd();
+  updateLinePreview();
+}
+function cancelLine(){
+  lineStart=null; lineAim=null; lineEnd=null; lineLockedLen=null;
+  if(startMarker) startMarker.visible=false;
+  hideMultiGhost();
+  hideSizeBar();
+  $('#hoverTag').style.display='none';
+  $('#roTool').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= tape measure ================= */
+/* click two points; the distance stays pinned in 3D until cleared */
+function addMeasure(a,b){
+  const ft=Math.hypot(b[0]-a[0], b[1]-a[1], b[2]-a[2])*FT;
+  measures.push({ a:[...a], b:[...b], ft });
+  renderMeasures();
+  updateMeasuresBtn();
+  $('#roTool').style.display='block';
+  $('#roTool').textContent='📏 Tape: '+measures.length+' measure'+(measures.length>1?'s':'')+' pinned · Esc clears';
+  toast('Measured '+ftin(ft));
+  return ft;
+}
+function renderMeasures(){
+  if(!measureGroup) return;
+  while(measureGroup.children.length){
+    const ch=measureGroup.children[0];
+    measureGroup.remove(ch);
+    ch.traverse(o=>{ if(o.geometry) o.geometry.dispose();
+      if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  }
+  const mat=new THREE.MeshBasicMaterial({ color:0x1a1a1a });
+  for(const m of measures){
+    const a=new THREE.Vector3(m.a[0]+0.5, m.a[1]+0.5, m.a[2]+0.5);
+    const b=new THREE.Vector3(m.b[0]+0.5, m.b[1]+0.5, m.b[2]+0.5);
+    const dir=b.clone().sub(a); const len=dir.length();
+    const mid=a.clone().add(b).multiplyScalar(0.5);
+    if(len>0.01){
+      const bar=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.09,len), mat);
+      bar.position.copy(mid);
+      bar.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), dir.clone().normalize());
+      measureGroup.add(bar);
+    }
+    for(const p of [a,b]){
+      const dot=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.35,0.35), mat);
+      dot.position.copy(p); measureGroup.add(dot);
+    }
+    const sp=makeLabelSprite(ftin(m.ft));
+    sp.position.set(mid.x, mid.y+2, mid.z);
+    measureGroup.add(sp);
+  }
+}
+function clearMeasures(){
+  measures.length=0;
+  renderMeasures();
+  updateMeasuresBtn();
+  toast('Measures cleared');
+}
+function updateMeasuresBtn(){
+  const b=$('#btnClearMeasures');
+  b.style.display=measures.length?'':'none';
+  b.textContent='📏 Clear measures ('+measures.length+')';
+  resize();   // the button appearing / disappearing can re-wrap the toolbar
+}
+function tapeClick(cell){
+  if(!tapeStart){
+    tapeStart=[...cell];
+    startMarker.position.set(cell[0]+0.5, cell[1]+0.5, cell[2]+0.5);
+    startMarker.visible=true;
+    $('#roTool').style.display='block';
+    $('#roTool').textContent='📏 Tape: click the second point';
+    return;
+  }
+  addMeasure(tapeStart, cell);
+  tapeStart=null;
+  startMarker.visible=false;
+  $('#hoverTag').style.display='none';
+}
+
+/* ================= exact size (SketchUp-style value box) ================= */
+function showSizeBar(on){
+  $('#sizeBar').classList.toggle('on', !!on);
+  if(on){ $('#sizeInput').value=''; $('#sizeNow').textContent=''; }
+  else { const i=$('#sizeInput'); if(document.activeElement===i) i.blur(); }
+}
+function hideSizeBar(){ showSizeBar(false); }
+/* type a length like 10'6" or 10.5 and press Enter: the box or line being
+   drawn takes that exact length along the direction it is being drawn */
+function applyExactSize(str){
+  const ft=parseFtIn(str);
+  if(ft==null || ft<=0 || ft>200){ toast("Couldn't read that size — try 10'6\" or 10.5"); return null; }
+  const n=clamp(Math.round(ft*2),1,400);
+  if(fillDrag){
+    const a=fillDrag.anchor, c=fillDrag.cur;
+    const d=[c[0]-a[0], c[1]-a[1], c[2]-a[2]];
+    let ax=0; if(Math.abs(d[1])>Math.abs(d[ax])) ax=1; if(Math.abs(d[2])>Math.abs(d[ax])) ax=2;
+    const dir=d[ax]===0?1:Math.sign(d[ax]);
+    fillLocked={ axis:ax, dir, len:n };
+    fillDrag.cur[ax]=a[ax]+dir*(n-1);
+    updateFillGhost();
+    refreshFillReadout();
+    toast('Length set to '+ftin(n*FT));
+    return { tool:'fill', len:n, ft:n*FT };
+  }
+  if(lineStart){
+    const aim=lineAim||[lineStart[0]+1,lineStart[1],lineStart[2]];
+    const d=[aim[0]-lineStart[0], aim[1]-lineStart[1], aim[2]-lineStart[2]];
+    let ax=0; if(Math.abs(d[1])>Math.abs(d[ax])) ax=1; if(Math.abs(d[2])>Math.abs(d[ax])) ax=2;
+    const dir=d[ax]===0?1:Math.sign(d[ax]);
+    lineLockedLen=n;
+    lineEnd=[...lineStart]; lineEnd[ax]=lineStart[ax]+dir*(n-1);
+    updateLinePreview();
+    toast('Length set to '+ftin(n*FT));
+    return { tool:'line', len:n, ft:n*FT };
+  }
+  toast('Start a box or a line first, then type a length');
+  return null;
+}
+
 /* ================= erase a whole wall / delete / rotate ================= */
 function eraseRun(x,y,z){
   const b=getBlock(x,y,z); if(!b) return 0;
@@ -1214,7 +1642,7 @@ function rotateSelection(){
 function showCtxMenu(x,y){
   const m=$('#ctxMenu');
   m.style.left=Math.min(x, innerWidth-190)+'px';
-  m.style.top=Math.min(y, innerHeight-260)+'px';
+  m.style.top=Math.min(y, innerHeight-360)+'px';
   m.classList.add('on');
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===tool));
 }
@@ -1267,6 +1695,8 @@ function bindPointer(){
     }
     if(expandDrag){ expandDragUpdate(e); return; }
     if(boxDrag){ updateBoxDrag(e); return; }
+    if(fillDrag){ fillDragUpdate(e); return; }
+    if(lineStart){ updateLineAim(e); return; }
     if(!downPos) updateHover(e);
   });
   el.addEventListener('pointerdown', e=>{
@@ -1274,6 +1704,10 @@ function bindPointer(){
     if(WALK.active){ walkDrag={ x:e.clientX, y:e.clientY }; return; }
     if(ctxMenuOpen()){ hideCtxMenu(); menuJustClosed=true; return; }
     if(pasteMode || presetMode) return;   // a paste/preset click must not start a drag
+    if(e.button===0 && tool==='fill'){
+      const hit=raycastVoxel(e);
+      if(hit) fillStart(e, hit.cell);
+    }
     if(e.button===0 && tool==='select'){
       const hit=raycastVoxel(e);
       if(!hit || !hit.block){
@@ -1290,6 +1724,7 @@ function bindPointer(){
     if(WALK.active){ walkDrag=null; return; }
     if(expandDrag){ expandFinish(); downPos=null; return; }
     if(boxDrag){ finishBoxDrag(); downPos=null; return; }
+    if(fillDrag){ fillFinish(); downPos=null; return; }
     if(!downPos) return;
     const moved=Math.hypot(e.clientX-downPos[0], e.clientY-downPos[1]);
     const dt=Date.now()-downTime;
@@ -1304,6 +1739,8 @@ function bindPointer(){
     if(e.button!==0) return;
     if(pasteMode){ if(hit) pasteAt(hit.cell); return; }
     if(presetMode){ if(hit) placeCurrentPreset(hit.cell[0], hit.cell[1], hit.cell[2]); return; }
+    if(tool==='line'){ if(hit) lineClick(hit.cell); return; }
+    if(tool==='tape'){ if(hit) tapeClick(hit.cell); return; }
     if(tool==='move'){
       if(!moveCarry){
         if(hit&&hit.block) startMove(hit.block[0],hit.block[1],hit.block[2]);
@@ -1346,6 +1783,10 @@ function bindPointer(){
     }
     setBlock(cx,cy,cz,selType,r);
   });
+  // a fill drag released outside the canvas still has to finish, or the
+  // controls stay disabled and the ghost stays on screen
+  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); });
+  window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); });
 }
 
 /* ================= palette + floor bar + tools UI ================= */
@@ -1382,9 +1823,16 @@ function buildFloorBar(){
 }
 function setTool(t){
   if(moveCarry) cancelMove();
+  if(fillDrag) cancelFillDrag();
+  if(lineStart) cancelLine();
+  if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   tool=t;
   $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+  // the fill panel and the stair panel share the same bottom-centre spot —
+  // never show both at once
+  $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
+  if(t!=='fill' && t!=='line') hideSizeBar();
   if(pasteMode) setPasteMode(false);
   if(presetMode) setPresetMode(null);
 }
@@ -1549,13 +1997,26 @@ function walkStep(dt){
 window.__keys=new Set();
 function bindKeys(){
   window.addEventListener('keydown', e=>{
+    // while sizing a box or a line, number keys go straight into the size box
+    if((fillDrag||lineStart) && e.target.tagName!=='INPUT' && /^(Digit\d|Quote|Period)$/.test(e.code)){
+      const inp=$('#sizeInput');
+      inp.focus();
+      const ch = e.code==='Quote'?"'": e.code==='Period'?'.': e.code.slice(5);
+      inp.setRangeText(ch, inp.selectionStart??inp.value.length, inp.selectionEnd??inp.value.length, 'end');
+      e.preventDefault();
+      return;
+    }
     if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName||'')) return;
     const k=e.code;
     if(k==='Escape'){
       if(WALK.active){ walkStop(); }
       else if(moveCarry){ cancelMove(); }
+      else if(fillDrag){ cancelFillDrag(); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
       else if(pasteMode){ setPasteMode(false); }
+      else if(lineStart){ cancelLine(); }
+      else if(tapeStart){ tapeStart=null; startMarker.visible=false; $('#roTool').style.display='none'; }
+      else if(tool==='tape' && measures.length){ clearMeasures(); }
       else if(ctxMenuOpen()){ hideCtxMenu(); }
       return;
     }
@@ -1571,9 +2032,13 @@ function bindKeys(){
       if(k==='KeyB') setTool('build');
       if(k==='KeyE') setTool('erase');
       if(k==='KeyP') setTool('pick');
-      if(k==='KeyL') setTool('select');
+      // S is also fly-backward: a tap switches to Select, holding it still flies
+      if(k==='KeyS' && !e.repeat){ setTool('select'); return; }
       if(k==='KeyX') setTool('expand');
       if(k==='KeyM') setTool('move');
+      if(k==='KeyF') setTool('fill');
+      if(k==='KeyL') setTool('line');
+      if(k==='KeyT') setTool('tape');
       if(k==='KeyR'){
         if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
         else rotateSelection();
@@ -1645,6 +2110,16 @@ function init(){
   $('#stairWin').onchange=applyStairWidth;
   updateStairWidthLabel();
   $$('#ctxMenu button').forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); hideCtxMenu(); });
+  $$('#fillPanel button[data-mode]').forEach(b=>b.onclick=()=>{ fillMode=b.dataset.mode; updateFillPanel();
+    if(fillDrag) refreshFillReadout(); });
+  $('#btnClearMeasures').onclick=()=>clearMeasures();
+  const si=$('#sizeInput');
+  si.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); applyExactSize(si.value); si.blur(); }
+    else if(e.key==='Escape'){ e.preventDefault(); si.blur(); }
+    e.stopPropagation();
+  });
+  updateFillPanel();
   $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
   $('#btnExitWalk').onclick=walkStop;
@@ -1663,6 +2138,7 @@ function init(){
     updateStats();
   }
   updateUndoBtns();
+  resize();   // position the help panel + size bar under the finished toolbar
   window.__ready=true;
 }
 
@@ -1736,6 +2212,45 @@ window.__mc = {
     const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
     return expandCommit(run,mode,dir,len,info.height); },
   wallRun(x,y,z){ return wallRun(x,y,z); },
+  fill:{
+    mode(){ return fillMode; },
+    setMode(m){ if(!FILL_MODES.includes(m)) return false; fillMode=m; updateFillPanel(); return true; },
+    cells(a,b,mode){ return fillCells(a,b,mode||fillMode); },
+    box(a,b,mode){ return fillBox(a,b,mode||fillMode); },
+    start(a){ fillDrag={ anchor:[...a], cur:[...a] }; fillLocked=null;
+      updateFillGhost(); showSizeBar(true); return true; },
+    dragTo(c){ if(!fillDrag) return null; fillDrag.cur=[...c];
+      if(fillLocked) fillDrag.cur[fillLocked.axis]=fillDrag.anchor[fillLocked.axis]+fillLocked.dir*(fillLocked.len-1);
+      updateFillGhost(); refreshFillReadout(); return fillBoxInfo(); },
+    info(){ return fillBoxInfo(); },
+    commit(){ return fillFinish(); },
+    cancel(){ cancelFillDrag(); },
+    active(){ return !!fillDrag; },
+  },
+  line:{
+    cells(a,b){ return lineCells(a,b); },
+    start(a){ lineStart=[...a]; lineAim=[...a]; lineEnd=null; lineLockedLen=null;
+      startMarker.position.set(a[0]+0.5, a[1]+0.5, a[2]+0.5); startMarker.visible=true;
+      showSizeBar(true); updateLinePreview(); return true; },
+    aim(c){ if(!lineStart) return null; lineAim=[...c]; computeLineEnd(); updateLinePreview();
+      return lineCells(lineStart, lineEnd||lineAim||lineStart).length; },
+    commit(a,b){ const s=a||lineStart; const e=lineEnd||b||lineAim; if(!s) return 0;
+      const n=lineCommit(s,e); cancelLine(); return n; },
+    active(){ return !!lineStart; },
+    cancel(){ cancelLine(); },
+  },
+  tape:{
+    measure(a,b){ return addMeasure(a,b); },
+    list(){ return measures.map(m=>({ a:[...m.a], b:[...m.b], ft:m.ft })); },
+    clear(){ clearMeasures(); },
+    count(){ return measures.length; },
+    start(a){ tapeStart=[...a];
+      startMarker.position.set(a[0]+0.5, a[1]+0.5, a[2]+0.5); startMarker.visible=true; return true; },
+    pending(){ return !!tapeStart; },
+  },
+  parseSize(s){ return parseFtIn(s); },
+  applySize(s){ return applyExactSize(s); },
+  sizeBarVisible(){ return $('#sizeBar').classList.contains('on'); },
   clearAll(){ clearBlocks(); scheduleSave(); },
   menuOpen(){ return ctxMenuOpen(); },
   showMenu(x,y){ showCtxMenu(x,y); },
