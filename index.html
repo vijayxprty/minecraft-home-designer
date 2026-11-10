@@ -73,11 +73,11 @@
   #palette button .k{font-size:9px;color:#666}
   /* ---------- readouts ---------- */
   #readout{position:fixed;left:10px;bottom:120px;z-index:10;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;
-    padding:7px 10px;font-size:13px;line-height:1.5;max-width:240px}
+    padding:7px 10px;font-size:13px;line-height:1.5;max-width:280px}
   #readout b{color:#ffd83d}
   #readout .dim{color:#9be36d}
   #roTool{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #roFoot,#roArea{white-space:nowrap}   /* a size never splits mid-value; the line may wrap between them */
+  #roFoot,#roArea{white-space:nowrap}   /* a size never splits mid-value; the "Built so far" line is two stacked lines by design (round 12) so it never wraps awkwardly */
   #note{position:fixed;right:10px;bottom:120px;z-index:9;font-size:11px;color:#fff;background:rgba(0,0,0,.45);
     padding:4px 8px;border-radius:5px;max-width:260px;text-align:right}
   #hoverTag{position:fixed;z-index:9;pointer-events:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;
@@ -266,6 +266,7 @@
   #selPanel.on{display:flex}
   #selPanel .sp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
   #selPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;padding:7px 10px;color:#222}
+  #selPanel input{width:46px;background:#fff;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;padding:6px 4px;color:#222;text-align:center}
   /* ---------- save pill + big undo/redo (round 10) ---------- */
   #savePill{position:fixed;right:140px;top:100px;z-index:9;font-size:12px;font-weight:800;color:#dff5c9;background:rgba(0,0,0,.45);border-radius:4px;padding:5px 8px;white-space:nowrap}
   @media (max-width:760px){
@@ -350,6 +351,7 @@
   <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
   <button id="btnMaterials" title="See what this build is made of — counts per material">🧱 Materials</button>
   <button id="btnBuildRoom" title="Build a whole room or a wall from its size in feet and inches">🏠 Build a room</button>
+  <button id="btnSelectFloor" title="Select every block on the floor you are building on">⬚ Select this floor</button>
   <div class="msep"></div>
   <button id="btnMirror" title="Mirror the build or a selection, live symmetry">🪞 Mirror</button>
   <button id="btnReplace" title="Replace one material with another">🔄 Replace</button>
@@ -397,6 +399,10 @@
 <div id="selPanel">
   <div class="sp-title" id="selPanelTitle">Selected: 0 blocks</div>
   <button id="selCopy">📋 Copy</button>
+  <button id="selCut">✂️ Cut</button>
+  <button id="selDuplicate">⧉ Duplicate</button>
+  <button id="selStack">⬆ Stack up ×</button>
+  <input id="selStackN" type="number" min="1" max="10" value="1" title="How many times to copy the selection upward">
   <button id="selMove">🚚 Move</button>
   <button id="selRotate">🔄 Rotate</button>
   <button id="selFlipX">↔ Flip left-right</button>
@@ -408,7 +414,7 @@
 
 <div id="readout">
   <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
-  <div>📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
+  <div id="roBuilt">📐 Built so far: <b id="roFoot">nothing yet</b><br>Area: <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
   <div id="roSym" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
@@ -543,6 +549,10 @@
     <b>Alt + click</b><span>Pick the clicked block's type (in Build)</span>
     <b>R</b><span>Rotate the selection 90° (or the preset ghost)</span>
     <b>Ctrl + C / V</b><span>Copy / paste the selection</span>
+    <b>Ctrl + X</b><span>Cut the selection — paste it somewhere else with Ctrl + V</span>
+    <b>Ctrl + D</b><span>Duplicate the selection one block over</span>
+    <b>⬆ Stack up</b><span>Copy the selection upward, as many times as you type — buttons when blocks are selected</span>
+    <b>⬚ Select this floor</b><span>Select every block on the floor you are on (More menu / right-click)</span>
     <b>Del</b><span>Delete the selection</span>
     <b>Ctrl + Z / Y</b><span>Undo / redo (one drag or fill = one step)</span>
     <b>V</b><span>Walk mode on / off</span>
@@ -669,6 +679,11 @@
   <div style="height:2px;background:rgba(255,255,255,.2);margin:4px 6px"></div>
   <button id="ctxFlipX" title="Flip the selection left-right">↔ Flip left-right</button>
   <button id="ctxFlipZ" title="Flip the selection front-back">↕ Flip front-back</button>
+  <div style="height:2px;background:rgba(255,255,255,.2);margin:4px 6px"></div>
+  <button id="ctxCut" title="Cut the selection — paste it with Ctrl+V">✂️ Cut</button>
+  <button id="ctxDuplicate" title="Duplicate the selection one block over">⧉ Duplicate</button>
+  <button id="ctxStack" title="Copy the selection upward">⬆ Stack up</button>
+  <button id="ctxSelectFloor" title="Select every block on this floor">⬚ Select this floor</button>
 </div>
 <div id="selBox"></div>
 
@@ -849,6 +864,7 @@ let boxDrag = null;                // {x0,y0,x1,y1} screen coords for box-select
 
 /* ---- move tool ---- */
 let moveCarry = null;              // {items:[{x,y,z,t,r}], min:{x0,y0,z0,x1,y1,z1}, valid, target}
+let lastMoveDir = [1,0,0];         // direction of the last real move (+X by default) — Duplicate (Ctrl+D) copies one block over this way (round 12)
 const moveHidden = new Set();      // keys hidden from the renderer while being carried
 
 /* ---- fill / line / tape ---- */
@@ -3593,6 +3609,14 @@ function dropMove(){
   const pairs=m.items.map(it=>({ from:it,
     to:{ x:m.target[0]+(it.x-m.min.x0), y:m.target[1]+(it.y-m.min.y0), z:m.target[2]+(it.z-m.min.z0) } }));
   const moved=pairs.filter(p=> p.from.x!==p.to.x || p.from.y!==p.to.y || p.from.z!==p.to.z);
+  if(moved.length){
+    // remember which way this move went — Duplicate copies one block over in this direction
+    const dx=m.target[0]-m.min.x0, dy=m.target[1]-m.min.y0, dz=m.target[2]-m.min.z0;
+    const ax=Math.abs(dx), ay=Math.abs(dy), az=Math.abs(dz);
+    if(ax>=ay && ax>=az && ax>0) lastMoveDir=[Math.sign(dx),0,0];
+    else if(az>=ay && az>0) lastMoveDir=[0,0,Math.sign(dz)];
+    else if(ay>0) lastMoveDir=[0,Math.sign(dy),0];
+  }
   const newKeys=new Set(pairs.map(p=>key3(p.to.x,p.to.y,p.to.z)));
   moveHidden.clear(); moveCarry=null; hideMultiGhost();
   $('#hoverTag').style.display='none';
@@ -4213,6 +4237,88 @@ function deleteSelection(){
   if(n) toast('Deleted '+n+' blocks');
   return n;
 }
+
+/* ================= cut / duplicate / stack / select-this-floor (round 12) ================= */
+/* Cut: copy the selection to the clipboard AND delete it, in one undo step —
+   the paste ghost then works as usual (Ctrl+V). */
+function cutSelection(){
+  if(!selection.size){ toast('Nothing to cut — select some blocks first'); return 0; }
+  const n=copySelection();
+  if(!n) return 0;
+  const cells=[...selection].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
+  const d=applyBatch(cells);
+  selection.clear(); updateSelectionHighlight();
+  if(d) toast('Cut '+d+' block'+(d>1?'s':'')+' — Ctrl+V to paste them');
+  return d;
+}
+/* Duplicate: instantly copy the selection one block over in the direction of
+   the last move (+X if nothing was moved yet). Blocked cells are skipped;
+   the copy becomes the new selection, so Ctrl+D again steps it along.
+   One undo step. */
+function duplicateSelection(){
+  if(!selection.size){ toast('Select some blocks first — then duplicate them'); return 0; }
+  const [dx,dy,dz]=lastMoveDir;
+  const items=[...selection].map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
+    return b? { x,y,z, t:b.t, r:b.r||0 } : null; }).filter(Boolean);
+  if(!items.length) return 0;
+  const sets=[]; let skipped=0;
+  for(const it of items){
+    const nx=it.x+dx, ny=it.y+dy, nz=it.z+dz;
+    if(!inBounds(nx,ny,nz)){ skipped++; continue; }
+    if(getBlock(nx,ny,nz)){ skipped++; continue; }
+    sets.push({ x:nx, y:ny, z:nz, t:it.t, r:it.r });
+  }
+  if(!sets.length){ toast("Can't duplicate there — that spot is taken"); return 0; }
+  const n=applyBatch(sets);
+  selection=new Set(sets.map(c=>key3(c.x,c.y,c.z))); updateSelectionHighlight();
+  if(n) toast('Duplicated '+n+' block'+(n>1?'s':'')+(skipped?' · '+skipped+' skipped (spot taken)':''));
+  return n;
+}
+/* How many times the Stack button copies upward — the little number box
+   next to it in the selection panel (1–10, default 1). */
+function stackCount(){
+  const el=$('#selStackN');
+  const v=el? parseInt(el.value,10) : NaN;
+  return clamp(isNaN(v)?1:v, 1, 10);
+}
+/* Stack up: copy the selection upward N times, each copy one selection-height
+   above the last (WorldEdit //stack), so a wall or a floor repeats up the
+   building. Occupied / out-of-bounds cells are skipped and counted; the
+   original stays selected. One undo step. */
+function stackSelection(n){
+  n = n==null? stackCount() : clamp(Math.round(n)||1, 1, 10);
+  if(!selection.size){ toast('Select some blocks first — then stack them up'); return 0; }
+  const items=[...selection].map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
+    return b? { x,y,z, t:b.t, r:b.r||0 } : null; }).filter(Boolean);
+  if(!items.length) return 0;
+  const bb=selectionBBox();
+  const h=bb.y1-bb.y0+1;   // the selection's own height is the step between copies
+  const sets=[]; let skipped=0;
+  for(let i=1;i<=n;i++){
+    for(const it of items){
+      const y=it.y+h*i;
+      if(!inBounds(it.x,y,it.z)){ skipped++; continue; }
+      if(getBlock(it.x,y,it.z)){ skipped++; continue; }
+      sets.push({ x:it.x, y, z:it.z, t:it.t, r:it.r });
+    }
+  }
+  const placed=applyBatch(sets);
+  if(placed) toast('Stacked up ×'+n+' — '+placed+' block'+(placed>1?'s':'')+(skipped?' · '+skipped+' skipped (spot taken)':''));
+  else toast('Nothing to stack — the space above is taken');
+  return placed;
+}
+/* Select every block on the floor you are building on (the active floor's
+   20-block band) — and nothing from any other floor. */
+function selectFloorBlocks(){
+  const y0=FLOORS[activeFloor].base, y1=y0+FLOOR_H;
+  let n=0;
+  selection.clear();
+  for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1){ selection.add(k); n++; } }
+  updateSelectionHighlight();
+  if(n) toast('Selected this floor — '+n+' block'+(n>1?'s':'')+' · '+FLOORS[activeFloor].name);
+  else toast('Nothing on this floor yet — '+FLOORS[activeFloor].name+' is empty');
+  return n;
+}
 function rotateSelection(){
   if(selection.size<2){ toast('Select 2 or more blocks to rotate them'); return false; }
   const bb=selectionBBox();
@@ -4497,6 +4603,10 @@ function showCtxMenu(x,y){
   const hasBlock=!!ctxTarget;
   $('#ctxRow').disabled=!hasBlock;
   $('#ctxConnected').disabled=!hasBlock;
+  // cut / duplicate / stack need a selection; select-this-floor always works
+  $('#ctxCut').disabled=!selection.size;
+  $('#ctxDuplicate').disabled=!selection.size;
+  $('#ctxStack').disabled=!selection.size;
 }
 function hideCtxMenu(){ $('#ctxMenu').classList.remove('on'); }
 function ctxMenuOpen(){ return $('#ctxMenu').classList.contains('on'); }
@@ -5197,6 +5307,8 @@ function bindKeys(){
     if((e.ctrlKey||e.metaKey)&&k==='KeyZ'){ e.preventDefault(); e.shiftKey?doRedo():doUndo(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyY'){ e.preventDefault(); doRedo(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyC'){ e.preventDefault(); if(!WALK.active) copySelection(); return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyX'){ e.preventDefault(); if(!WALK.active) cutSelection(); return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyD'){ e.preventDefault(); if(!WALK.active) duplicateSelection(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyV'){ e.preventDefault();
       if(!WALK.active){ if(clipboard.length) setPasteMode(!pasteMode); else toast('Nothing copied yet — select blocks and press Ctrl+C'); }
       return; }
@@ -5286,6 +5398,10 @@ function init(){
   $('#btnAllBlocks').onclick=()=>togglePalette();
   // the contextual selection panel (round 10)
   $('#selCopy').onclick=()=>copySelection();
+  $('#selCut').onclick=()=>cutSelection();
+  $('#selDuplicate').onclick=()=>duplicateSelection();
+  $('#selStack').onclick=()=>stackSelection();
+  $('#selStackN').addEventListener('change', ()=>{ $('#selStackN').value=stackCount(); });
   $('#selMove').onclick=()=>{ setTool('move'); toast('Click one of the selected blocks to pick the whole lot up'); };
   $('#selRotate').onclick=()=>rotateSelection();
   $('#selColour').onclick=()=>{ replaceScope='selection';
@@ -5348,6 +5464,11 @@ function init(){
   // forEach above would have called setTool(undefined) on them)
   $('#ctxRow').onclick=()=>{ hideCtxMenu(); if(!ctxTarget){ toast('Right-click a block first'); return; } setTool('select'); selectRow(ctxTarget[0],ctxTarget[1],ctxTarget[2], true); };
   $('#ctxConnected').onclick=()=>{ hideCtxMenu(); if(!ctxTarget){ toast('Right-click a block first'); return; } setTool('select'); selectConnected(ctxTarget[0],ctxTarget[1],ctxTarget[2], false); };
+  // cut / duplicate / stack / select-this-floor in the right-click menu (round 12)
+  $('#ctxCut').onclick=()=>{ hideCtxMenu(); cutSelection(); };
+  $('#ctxDuplicate').onclick=()=>{ hideCtxMenu(); duplicateSelection(); };
+  $('#ctxStack').onclick=()=>{ hideCtxMenu(); stackSelection(); };
+  $('#ctxSelectFloor').onclick=()=>{ hideCtxMenu(); setTool('select'); selectFloorBlocks(); };
   bindGizmo();
   $$('#fillPanel button[data-mode]').forEach(b=>b.onclick=()=>{ fillMode=b.dataset.mode; updateFillPanel();
     if(fillDrag) refreshFillReadout(); });
@@ -5418,6 +5539,7 @@ function init(){
   $('#btnCopyMaterials').onclick=()=>copyMaterialsList();
   $('#matClose').onclick=()=>toggleMaterialsPanel(false);
   $('#btnBuildRoom').onclick=()=>toggleBuildRoomPanel();
+  $('#btnSelectFloor').onclick=()=>selectFloorBlocks();
   $('#buildRoomClose').onclick=()=>toggleBuildRoomPanel(false);
   $('#btnBuildRoomGo').onclick=()=>buildRoomFromPanel();
   $('#btnBuildWallGo').onclick=()=>buildWallFromPanel();
@@ -5661,6 +5783,12 @@ window.__mc = {
   rotateSel(){ return rotateSelection(); },
   flipSel(axis){ return flipSelection(axis||'x'); },
   deleteSel(){ return deleteSelection(); },
+  stack(n){ return stackSelection(n); },
+  stackCount(){ return stackCount(); },
+  cut(){ return cutSelection(); },
+  duplicate(){ return duplicateSelection(); },
+  selectFloor(){ return selectFloorBlocks(); },
+  lastMoveDir(){ return [...lastMoveDir]; },
   materials:{
     counts(){ return materialCounts(); },
     total(){ return { blocks:blocks.size, areaSqFt:buildAreaSqFt() }; },
