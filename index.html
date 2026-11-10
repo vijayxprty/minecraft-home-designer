@@ -88,7 +88,7 @@
     background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
   #walkHint button{margin-left:10px;background:#ff5c5c;color:#fff;border:2px solid #7a0000;border-radius:4px;
     font-weight:800;padding:4px 10px}
-  #toast{position:fixed;left:50%;top:110px;transform:translateX(-50%);z-index:12;background:#222;color:#fff;
+  #toast{position:fixed;left:50%;top:auto;bottom:96px;transform:translateX(-50%);z-index:30;background:#222;color:#fff;
     padding:8px 16px;border-radius:6px;font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none}
   #toast.on{opacity:1}
   #help{position:fixed;right:10px;top:110px;z-index:9;background:rgba(0,0,0,.5);color:#fff;font-size:12px;line-height:1.6;
@@ -378,15 +378,29 @@ body.panel-collapsed #sidePanel{ display:none; }
 .proj-row:hover{ border-color:#2e7d32; }
 .proj-row.current{ border-color:#2e7d32; background:#e8f5e9; }
 .proj-row .pr-info{ flex:1; min-width:0; }
-.proj-row .pr-name{ font-weight:800; font-size:14px; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.proj-row .pr-name{ font-weight:800; font-size:13px; color:#1a1a1a; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
 .proj-row .pr-meta{ font-size:11px; color:#666; margin-top:2px; }
-.proj-row .pr-btns{ display:flex; gap:2px; flex:none; }
-.proj-row .pr-btns button{ background:none; border:0; font-size:15px; padding:5px 6px; border-radius:6px; color:#444; }
+.proj-row .pr-btns{ display:flex; gap:0; flex:none; }
+.proj-row .pr-btns button{ background:none; border:0; font-size:14px; padding:5px 4px; border-radius:6px; color:#444; }
 .proj-row .pr-btns button:hover{ background:#e0e0e0; }
 .proj-row input.pr-rename{ width:100%; border:2px solid #2e7d32; border-radius:6px; padding:5px 7px; font-weight:800; font-size:14px; color:#1a1a1a; }
+/* ---------- History panel (round 15): photo-editor-style states ---------- */
+.hist-row{ display:flex; align-items:baseline; gap:8px; background:#fff; border:1px solid #d8d8d8;
+  border-radius:8px; padding:8px 10px; margin-bottom:6px; cursor:pointer; color:#1a1a1a; }
+.hist-row:hover{ border-color:#2e7d32; }
+.hist-row.current{ border-color:#2e7d32; background:#e8f5e9; }
+.hist-row.future{ opacity:.55; }
+.hist-row .hs-label{ flex:1; font-size:13px; font-weight:700; color:#1a1a1a; }
+.hist-row.current .hs-label{ font-weight:800; }
+.hist-row .hs-time{ font-size:11px; color:#666; white-space:nowrap; }
+.hist-row .hs-dot{ font-size:11px; color:#1b5e20; }
+/* ---------- phone sheet handle (round 15): hidden on desktop ---------- */
+#sheetHandle{ display:none; background:none; border:0; padding:8px 0 2px; cursor:pointer; flex:none; }
+#sheetHandle .grip{ display:block; width:44px; height:5px; border-radius:3px; background:#bbb; margin:0 auto; }
+#sheetHandle .sh-label{ display:block; font-size:11px; font-weight:800; color:#666; text-align:center; margin-top:3px; }
 /* round 14: project thumbnails on the build rows */
-.pr-thumb{ width:64px; height:48px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
-  display:flex; align-items:center; justify-content:center; font-size:26px; }
+.pr-thumb{ width:52px; height:40px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
+  display:flex; align-items:center; justify-content:center; font-size:22px; }
 .pr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 .layer-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
   border-radius:8px; padding:9px 10px; margin-bottom:6px; cursor:pointer; color:#1a1a1a; }
@@ -420,7 +434,7 @@ body.panel-collapsed #sidePanel{ display:none; }
    every line is nowrap with ellipsis, so nothing ever wraps mid-phrase */
 #readout #roLine1,#readout #roBuilt,#roSelSize{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* ---------- zoom bar (Canva, bottom-right) + note above it ---------- */
-#note{ right:10px; bottom:66px; background:rgba(255,255,255,.92); color:#555; font-size:10px; max-width:230px; }
+#note{ right:10px; bottom:66px; background:rgba(255,255,255,.92); color:#555; font-size:10px; max-width:230px; pointer-events:none; }   /* round 15: clicks pass through to the canvas — the note sits over a plot corner */
 #zoomBar{ position:fixed; right:10px; bottom:10px; z-index:11; display:flex; align-items:center; gap:6px;
   background:#fff; border:1px solid #e0e0e0; border-radius:20px; padding:5px 8px;
   box-shadow:0 2px 10px rgba(0,0,0,.12); color:#1a1a1a; }
@@ -466,6 +480,11 @@ body.touch #zoomBar button{ padding:6px 12px; }
   .rail-btn{ flex:1; padding:4px 2px; }
   #sidePanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-height:62vh;
     border-right:0; border-top:1px solid #e0e0e0; border-radius:14px 14px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.2); }
+  /* round 15: peek mode — shrink the sheet to a strip (handle + title +
+     search + one row of cards) so most of the canvas is visible while
+     browsing; the first card row must be visible so tapping it expands */
+  #sheetHandle{ display:block; }
+  body.sheet-peek #sidePanel{ max-height:205px; }
   /* round 14: while a card is being dragged, the bottom sheet gets out of
      the way so the canvas — and the drop ghost — is actually visible */
   body.card-dragging #sidePanel{ max-height:0; border:0; box-shadow:none; }
@@ -512,9 +531,11 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <button class="rail-btn" data-tab="builds" title="My builds — your saved projects">📁<span>My builds</span></button>
   <button class="rail-btn" data-tab="layers" title="Layers — the 5 floors, show or hide each one">🗂️<span>Layers</span></button>
   <button class="rail-btn" data-tab="tools" title="Tools — build, erase, measure, camera and more">🛠️<span>Tools</span></button>
+  <button class="rail-btn" data-tab="history" title="History — every step you took, tap one to jump back to it">🕘<span>History</span></button>
   <button class="rail-btn" data-tab="help" title="Help — how to build, and keyboard shortcuts">❓<span>Help</span></button>
 </div>
 <div id="sidePanel">
+  <button id="sheetHandle" title="Peek — shrink this panel to a strip, tap again to open it"><span class="grip"></span><span class="sh-label">Peek</span></button>
   <div class="sp-head"><span id="spTitle">Elements</span><button id="spClose" title="Close this panel">✕</button></div>
   <div class="sp-tab on" id="tab-elements">
     <div id="guideCard">
@@ -602,6 +623,11 @@ body.touch #zoomBar button{ padding:6px 12px; }
       <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
       <button id="btnTour" title="Fly a slow cinematic tour around the build — Esc stops">🎥 Tour</button>
     </div>
+  </div>
+  <div class="sp-tab" id="tab-history">
+    <div class="sp-sec">History — tap a step to jump back to it</div>
+    <div id="histList"></div>
+    <div class="sp-note">Undo (Ctrl+Z) and Redo (Ctrl+Y) move through the same list. Building again after jumping back starts a new path — the steps ahead are gone.</div>
   </div>
   <div class="sp-tab" id="tab-help">
     <div class="sp-sec">How to build</div>
@@ -1196,9 +1222,12 @@ function initScene(){
   sun.shadow.bias=-0.0004;
   scene.add(sun);
   camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
-  camera.position.set(62, 78, -27);   // front-right-above the empty grass base
+  // round 15: the grass base is centred at (11, 35) — the old (0, 0) centre
+  // left two plot corners off-screen under the panel; this framing (plus
+  // the view offset) puts the whole plot on the visible canvas
+  camera.position.set(120, 129, -12);   // front-right-above the empty grass base
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 10, 0);
+  controls.target.set(11, 10, 35);
   controls.enableDamping = true; controls.dampingFactor = 0.12;
   controls.maxDistance = 320; controls.minDistance = 4;
   controls.maxPolarAngle = Math.PI*0.96;
@@ -1290,9 +1319,19 @@ function initScene(){
 }
 let _lastT = performance.now();
 function clockDelta(){ const now=performance.now(); const dt=Math.min((now-_lastT)/1000, 0.25); _lastT=now; return dt; }
+/* round 15: centre the projection on the VISIBLE canvas, not the window —
+   the shell (rail + panel) eats --shell-left px on the left, so the picture
+   shifts right by half of that. The orbit centre never moves, only the
+   projection does, so raycasts, the gizmo and zoom-to-cursor stay in step */
+function updateViewOffset(){
+  if(!camera) return;
+  const sl=parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0;
+  if(sl>0) camera.setViewOffset(innerWidth, innerHeight, -sl/2, 0, innerWidth, innerHeight);
+  else camera.clearViewOffset();
+}
 function resize(){
   const w=innerWidth, h=innerHeight;
-  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); updateViewOffset();
   // the size bar sits just under the slim top bar; the gizmo hangs under it too
   const tb=document.querySelector('#topbar');
   if(tb){ const top=(tb.offsetHeight+10)+'px';
@@ -1491,18 +1530,24 @@ function setBlockRaw(x,y,z,t,r=0){
   else blocks.set(k, { t, r });
   return { x,y,z, prev, next: t==null?null:{t,r} };
 }
-function setBlock(x,y,z,t,r=0, record=true){
+function setBlock(x,y,z,t,r=0, record=true, label){
   const op = setBlockRaw(x,y,z,t,r);
   if(!op) return false;
-  if(record) pushUndo(op);
+  if(record) pushUndo(op, label || (t==null? 'Erased 1 block' : 'Placed '+TYPES[t].name));
   rebuild(); scheduleSave(); updateStats();
   return true;
 }
 /* apply a list of desired final states {x,y,z,t,r} as ONE undo step; skips no-ops */
-function applyBatch(list){
+function applyBatch(list, label){
   const ops=[];
   for(const o of list){ const op=setBlockRaw(o.x,o.y,o.z, o.t, o.r||0); if(op) ops.push(op); }
-  if(ops.length){ pushUndo(ops); rebuild(); scheduleSave(); updateStats(); }
+  if(ops.length){
+    if(typeof label==='function') label=label(ops.length);
+    if(!label) label = ops.every(o=>o.next==null)? 'Erased '+ops.length+' block'+(ops.length>1?'s':'')
+      : ops.every(o=>o.prev==null)? 'Placed '+ops.length+' block'+(ops.length>1?'s':'')
+      : 'Changed '+ops.length+' block'+(ops.length>1?'s':'');
+    pushUndo(ops, label); rebuild(); scheduleSave(); updateStats();
+  }
   return ops.length;
 }
 function getBlock(x,y,z){ return blocks.get(key3(x,y,z)) || null; }
@@ -1548,7 +1593,16 @@ function rebuild(){
 }
 
 /* ================= undo / redo (single op or {batch:[ops]}) ================= */
-function pushUndo(op){ undoStack.push(Array.isArray(op)?{batch:op}:op); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); }
+/* round 15: every undo entry carries a plain-words label + the time it
+   happened, so the History panel can list the steps. The label is passed
+   in, or a sensible default is worked out from what changed. */
+function histTime(){ const d=new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function nb(n){ return n+' block'+(n>1?'s':''); }   // history labels: '1 block', 'N blocks'
+function pushUndo(op, label){
+  const e=Array.isArray(op)?{batch:op}:op;
+  e.label=label||'Edit'; e.time=histTime();
+  undoStack.push(e); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); renderHistory(); }
 function applySingle(op, useNext){
   const v = useNext ? op.next : op.prev;
   if(v) blocks.set(key3(op.x,op.y,op.z), { t:v.t, r:v.r||0 });
@@ -1558,16 +1612,75 @@ function applyOp(op, useNext){
   if(op.batch){ op.batch.forEach(o=>applySingle(o,useNext)); return; }
   applySingle(op,useNext);
 }
-function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
-function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
+function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
+function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
 function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
 
+/* ================= history panel (round 15): photo-editor-style states ================= */
+/* The panel lists the steps, newest first — no snapshots, the undo stack
+   already holds the states. Clicking a step jumps the build to that moment
+   by undoing/redoing through the stack. */
+function renderHistory(){
+  const listEl=$('#histList'); if(!listEl) return;
+  // newest first: the undone (redoable) steps, then the done steps, then
+  // the state the build started in
+  const rows=[];
+  for(let i=0;i<redoStack.length;i++) rows.push({ op:redoStack[i], future:true });
+  for(let i=undoStack.length-1;i>=0;i--) rows.push({ op:undoStack[i], future:false });
+  const cur=redoStack.length;   // the row that matches the build right now
+  const total=rows.length+1;    // +1 for the "started" row
+  // cap at 30 rows, keeping the current row visible
+  let start=0;
+  if(total>30) start=Math.min(Math.max(cur-10,0), total-30);
+  const end=Math.min(start+30, total);
+  listEl.innerHTML='';
+  const mkRow=(label, time, cls, idx)=>{
+    const r=document.createElement('div'); r.className='hist-row'+cls;
+    const dot=document.createElement('span'); dot.className='hs-dot'; dot.textContent=cls.includes('current')?'●':'○';
+    const lb=document.createElement('span'); lb.className='hs-label'; lb.textContent=label;
+    const tm=document.createElement('span'); tm.className='hs-time'; tm.textContent=time||'';
+    r.append(dot,lb,tm);
+    if(idx!=null) r.onclick=()=>jumpHistory(idx);
+    listEl.appendChild(r);
+  };
+  for(let i=start;i<end;i++){
+    if(i<rows.length){
+      const row=rows[i];
+      mkRow(row.op.label||'Edit', row.op.time||'', (i===cur?' current':'')+(row.future?' future':''), i);
+    } else {
+      mkRow('Started this build', '', i===cur?' current':'', i);
+    }
+  }
+}
+function jumpHistory(idx){
+  const total=undoStack.length+redoStack.length;
+  const target=total-idx;   // how many steps should stay applied
+  let cur=undoStack.length;
+  while(cur>target){ doUndo(); cur--; }
+  while(cur<target){ doRedo(); cur++; }
+  renderHistory();
+}
+
 /* ================= clear ================= */
-function clearBlocks(){ cancelMove(); cancelFillDrag(); cancelLine(); cancelWallDrag();
+/* the transient bits of a clear (drags, tape, selection) — shared by the
+   full clear, the template load and the undoable clear-all (round 15) */
+function clearTransient(){ cancelMove(); cancelFillDrag(); cancelLine(); cancelWallDrag();
   largeWarned=false;
   if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   measures.length=0; renderMeasures(); updateMeasuresBtn();
-  blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
+  selection.clear(); updateSelectionHighlight(); }
+function clearBlocks(){ clearTransient();
+  blocks.clear(); undoStack.length=0; redoStack.length=0; rebuild(); updateStats(); renderHistory(); }
+/* round 15: clearing the build is one history step — "Cleared everything" —
+   so jumping back to it (or one Ctrl+Z) brings the whole build back */
+function clearAllAction(){
+  const cells=[...blocks.keys()].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
+  clearTransient(); roomNames.clear();
+  const n=applyBatch(cells, 'Cleared everything');
+  rebuild(); updateStats(); scheduleSave();
+  if(n) toast('Cleared everything — Ctrl+Z brings it back');
+  return n;
+}
 function buildEmpty(){ clearBlocks(); roomNames.clear(); rebuild(); updateStats(); scheduleSave(); }
 
 /* ================= floors ================= */
@@ -2449,7 +2562,7 @@ function mirrorWhole(axis, center){
   if(!blocks.size){ toast('Nothing to mirror yet'); return { added:0, skipped:0 }; }
   const src=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; });
   const { cells, blocked }=mirrorOfCells(src, axis, center);
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, 'Mirrored the whole build');
   toast('Mirrored the whole build — +'+n+' block'+(n===1?'':'s')+(blocked?' · '+blocked+' spot'+(blocked>1?'s':'')+' taken':''));
   return { added:n, skipped:blocked };
 }
@@ -2458,7 +2571,7 @@ function mirrorSelection(axis, center){
   if(!keys.length){ toast('Select some blocks first, then mirror them'); return { added:0, skipped:0 }; }
   const src=keys.map(k=>{ const p=parseKey(k); const b=blocks.get(k); return { x:p[0], y:p[1], z:p[2], t:b.t, r:b.r||0 }; });
   const { cells, blocked }=mirrorOfCells(src, axis, center);
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, 'Mirrored the selection');
   toast('Mirrored the selection — +'+n+' block'+(n===1?'':'s')+(blocked?' · '+blocked+' spot'+(blocked>1?'s':'')+' taken':''));
   return { added:n, skipped:blocked };
 }
@@ -2498,7 +2611,8 @@ function placeBuildBlock(cx,cy,cz,t=selType,r=0){
     cells.push(...m.cells);
     if(m.blocked) toast('Mirrored spot is taken — placed one side only');
   }
-  return applyBatch(cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z)));
+  return applyBatch(cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z)),
+    n=> n>1? 'Placed '+n+' blocks' : 'Placed '+TYPES[t].name);
 }
 
 /* ================= eyedropper + replace material (round 6) ================= */
@@ -2519,7 +2633,7 @@ function replaceMaterial(from,to,scope){
   const cells=[];
   for(const k of keys){ const b=blocks.get(k); if(b.t!==from) continue;
     const [x,y,z]=parseKey(k); cells.push({ x,y,z, t:to, r:b.r||0 }); }
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, c=>'Replaced '+nb(c));
   if(n) toast('Replaced '+n+' '+TYPES[from].name+' → '+TYPES[to].name);
   return n;
 }
@@ -2583,7 +2697,7 @@ function floodFillAt(x,y,z){
   if(reg.type===selType){ toast('Already '+TYPES[selType].name); return 0; }
   if(reg.keys.length>FLOOD_MAX){ toast('That region is too big — '+reg.keys.length.toLocaleString('en-IN')+' blocks (max '+FLOOD_MAX.toLocaleString('en-IN')+')'); return 0; }
   const cells=reg.keys.map(k=>{ const [px,py,pz]=parseKey(k); const b=blocks.get(k); return { x:px, y:py, z:pz, t:selType, r:b.r||0 }; });
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, c=>'Flood-filled '+nb(c));
   if(n) toast('Flood-filled '+n+' blocks → '+TYPES[selType].name);
   return n;
 }
@@ -3135,8 +3249,8 @@ function loadSharedFromHash(){
 /* ================= toast ================= */
 let toastTimer=null;
 function toast(msg){ const t=$('#toast'); t.textContent=msg;
-  // sit just below the top bar, so it never covers the toolbar buttons
-  t.style.top=(document.querySelector('#topbar').offsetHeight+10)+'px';
+  // round 15: CSS pins the toast bottom-centre above the zoom controls —
+  // it never covers the middle of the build any more
   t.classList.add('on');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'), 2600); }
 
@@ -3405,8 +3519,10 @@ function pasteCells(origin){
   }
   return cells;
 }
+let pasteLabel=null;   // round 15: a blueprint paste is labelled as one
 function pasteAt(origin){
-  const n=applyBatch(pasteCells(origin));
+  const lbl=pasteLabel; pasteLabel=null;
+  const n=applyBatch(pasteCells(origin), lbl || (c=>'Pasted '+nb(c)));
   if(n) toast('Pasted '+n+' block'+(n>1?'s':''));
   return n;
 }
@@ -3457,7 +3573,7 @@ function currentPresetLabel(){
 function placeCurrentPreset(ox,oy,oz){
   const cells=currentPresetCells().map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
     .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, currentPresetLabel()+' placed');
   if(n) toast(currentPresetLabel()+' placed — '+n+' blocks');
   return n;
 }
@@ -3465,7 +3581,7 @@ function placeStairs(shape, steps, ox,oy,oz, rot=0){
   const cells=stairCells(shape, steps, stairWidthBlocks).map(c=>rotOffset(c, rot))
     .map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
     .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, (shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps placed');
   if(n) toast((shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps placed — '+n+' blocks');
   return n;
 }
@@ -3629,8 +3745,14 @@ function loadTemplate(id, force){
     return 0;
   }
   const info=templateInfo(t);
-  clearBlocks();
-  const n=applyBatch(info.cells);
+  // one undo step that restores the old build AND removes the template:
+  // the template cells land, every old block outside the template is
+  // removed — jumping back to this step brings the old build back whole
+  const tplKeys=new Set(info.cells.map(c=>c.x+','+c.y+','+c.z));
+  const removals=[...blocks.keys()].filter(k=>!tplKeys.has(k))
+    .map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
+  clearTransient();
+  const n=applyBatch([...info.cells, ...removals], 'Loaded '+t.name);
   projectName=t.name; $('#projName').textContent=projectName;
   scheduleSave();
   toast(t.name+' loaded — '+n+' blocks, fully editable');
@@ -3661,6 +3783,7 @@ function placeBlueprint(name){
   const bp=loadBlueprints().find(b=>b.name===name);
   if(!bp||!bp.cells.length) return false;
   clipboard=bp.cells.map(c=>({ ...c }));
+  pasteLabel='Placed blueprint "'+name+'"';
   setPasteMode(true);
   return true;
 }
@@ -3766,7 +3889,7 @@ function expandCells(run, mode, dir, len, height=1){
 }
 function expandCommit(run, mode, dir, len, height=1){
   const cells=expandCells(run, mode, dir, len, height).filter(c=>inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, c=>'Expanded wall — +'+nb(c));
   if(n) toast('Wall expanded +'+n+' blocks');
   return n;
 }
@@ -3891,7 +4014,7 @@ function dropMove(){
   if(!moved.length){ rebuild(); updateSelectionHighlight(); return true; }  // dropped where it was: nothing to do
   const erases=moved.map(p=>({ x:p.from.x, y:p.from.y, z:p.from.z, t:null }));
   const places=moved.map(p=>({ x:p.to.x, y:p.to.y, z:p.to.z, t:p.from.t, r:p.from.r }));
-  const n=applyBatch([...erases, ...places]);
+  const n=applyBatch([...erases, ...places], c=>'Moved '+moved.length+' block'+(moved.length>1?'s':''));
   selection=newKeys; updateSelectionHighlight();
   const fi=floorOfY(Math.min(...pairs.map(p=>p.to.y)));
   if(fi!==activeFloor) setFloor(fi);
@@ -3945,7 +4068,7 @@ function fillCells(a,b,mode){
 function fillBox(a,b,mode){
   const cells=fillCells(a,b,mode||fillMode);
   if(cells===null){ toast('That box is too big — max '+FILL_MAX.toLocaleString('en-IN')+' blocks at once'); return 0; }
-  const n=applyBatch(cells.filter(c=>inBounds(c.x,c.y,c.z)));
+  const n=applyBatch(cells.filter(c=>inBounds(c.x,c.y,c.z)), c=>'Filled '+nb(c));
   if(n) toast('Filled '+n+' block'+(n>1?'s':'')+' ('+(mode||fillMode)+')');
   return n;
 }
@@ -4042,7 +4165,7 @@ function lineCommit(a,b){
     .map(c=>({ x:c[0], y:c[1], z:c[2], t:selType, r:0 }));
   let mirrorBlocked=0;
   if(symmetry.on){ const m=mirrorOfCells(todo, symmetry.axis, mirrorCenter); todo.push(...m.cells); mirrorBlocked=m.blocked; }
-  const n=applyBatch(todo.filter(c=>!getBlock(c.x,c.y,c.z)));
+  const n=applyBatch(todo.filter(c=>!getBlock(c.x,c.y,c.z)), c=>'Line — '+nb(c));
   if(n) toast('Line placed — '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+(skipped?' · '+skipped+' skipped (already built)':'')+(mirrorBlocked?' · '+mirrorBlocked+' mirrored spot'+(mirrorBlocked>1?'s':'')+' taken':''));
   return n;
 }
@@ -4235,7 +4358,7 @@ function wallBuild(){
   const fresh=todo.filter(c=>!getBlock(c.x,c.y,c.z));
   let mirrorBlocked=0;
   if(symmetry.on){ const m=mirrorOfCells(fresh, symmetry.axis, mirrorCenter); fresh.push(...m.cells); mirrorBlocked=m.blocked; }
-  const n=applyBatch(fresh.filter(c=>!getBlock(c.x,c.y,c.z)));
+  const n=applyBatch(fresh.filter(c=>!getBlock(c.x,c.y,c.z)), c=>'Wall — '+nb(c));
   const gapTxt=wallGap==='none'?'':wallGap==='door'?' · door gap 3 ft wide':' · window gap 4 ft wide, sill 3 ft';
   if(n) toast('Wall built — '+n+' blocks · '+ftin(info.len*FT)+' long × '+ftin(wallHeightBlocks*FT)+' high'+gapTxt
     +(skipped?' · '+skipped+' skipped (already built)':'')
@@ -4291,7 +4414,7 @@ function buildRoomPreset(wFt, wIn, dFt, dIn, hFt, hIn, mat){
   const m=mat==null? 4 : clamp(Math.round(mat), 0, TYPES.length-1);
   const cells=roomCells(w, d, h, m);
   const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(fresh);
+  const n=applyBatch(fresh, c=>'Built room '+ftin(w*FT)+' × '+ftin(d*FT));
   if(n) toast('Room built — '+n+' blocks · '+ftin(w*FT)+' × '+ftin(d*FT)+' × '+ftin(h*FT)+' · door gap 3 ft'
     +(cells.length-n?' · '+(cells.length-n)+' skipped (already built)':''));
   else toast('Room is already built there — nothing new to place');
@@ -4306,7 +4429,7 @@ function buildWallPreset(lenFt, lenIn, hFt, hIn, gap, mat){
   const res=wallCells([0,B+1,0],[len-1,B+1,0],h,g,null,m);
   if(!res.cells){ toast(res.error); return 0; }
   const fresh=res.cells.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(fresh);
+  const n=applyBatch(fresh, c=>'Built wall '+ftin(len*FT)+' long');
   const gapTxt=g==='none'?'': g==='door'?' · door gap 3 ft wide':' · window gap 4 ft wide, sill 3 ft';
   if(n) toast('Wall built — '+n+' blocks · '+ftin(len*FT)+' long × '+ftin(h*FT)+' high'+gapTxt
     +(res.cells.length-n?' · '+(res.cells.length-n)+' skipped (already built)':''));
@@ -4492,14 +4615,14 @@ function eraseRun(x,y,z){
     const bx=run.axis==='x'? a : run.fixed, bz=run.axis==='x'? run.fixed : a;
     cells.push({ x:bx, y:run.y, z:bz, t:null });
   }
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, c=>'Erased '+nb(c));
   if(n) toast('Wall removed — '+n+' blocks');
   return n;
 }
 function deleteSelection(){
   if(!selection.size) return 0;
   const cells=[...selection].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
-  const n=applyBatch(cells);
+  const n=applyBatch(cells, c=>'Deleted '+nb(c));
   selection.clear(); updateSelectionHighlight();
   if(n) toast('Deleted '+n+' blocks');
   return n;
@@ -4513,7 +4636,7 @@ function cutSelection(){
   const n=copySelection();
   if(!n) return 0;
   const cells=[...selection].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
-  const d=applyBatch(cells);
+  const d=applyBatch(cells, c=>'Cut '+nb(c));
   selection.clear(); updateSelectionHighlight();
   if(d) toast('Cut '+d+' block'+(d>1?'s':'')+' — Ctrl+V to paste them');
   return d;
@@ -4536,7 +4659,7 @@ function duplicateSelection(){
     sets.push({ x:nx, y:ny, z:nz, t:it.t, r:it.r });
   }
   if(!sets.length){ toast("Can't duplicate there — that spot is taken"); return 0; }
-  const n=applyBatch(sets);
+  const n=applyBatch(sets, c=>'Duplicated '+nb(c));
   selection=new Set(sets.map(c=>key3(c.x,c.y,c.z))); updateSelectionHighlight();
   if(n) toast('Duplicated '+n+' block'+(n>1?'s':'')+(skipped?' · '+skipped+' skipped (spot taken)':''));
   return n;
@@ -4569,7 +4692,7 @@ function stackSelection(n){
       sets.push({ x:it.x, y, z:it.z, t:it.t, r:it.r });
     }
   }
-  const placed=applyBatch(sets);
+  const placed=applyBatch(sets, c=>'Stacked up ×'+n+' — '+nb(c));
   if(placed) toast('Stacked up ×'+n+' — '+placed+' block'+(placed>1?'s':'')+(skipped?' · '+skipped+' skipped (spot taken)':''));
   else toast('Nothing to stack — the space above is taken');
   return placed;
@@ -4603,7 +4726,7 @@ function rotateSelection(){
     sets.push({ x:nx, y:it.y, z:nz, t:it.t, r });
     newKeys.add(nk);
   }
-  const n=applyBatch([...erases, ...sets]);
+  const n=applyBatch([...erases, ...sets], 'Rotated selection 90°');
   selection=newKeys; updateSelectionHighlight();
   if(n) toast('Rotated 90°');
   return n>0;
@@ -4630,7 +4753,7 @@ function flipSelection(axis){
     sets.push({ x:nx, y:it.y, z:nz, t:it.t, r });
     newKeys.add(nk);
   }
-  const n=applyBatch([...erases, ...sets]);
+  const n=applyBatch([...erases, ...sets], 'Flipped selection '+(axis==='x'?'left ↔ right':'front ↔ back'));
   selection=newKeys; updateSelectionHighlight();
   if(n) toast('Flipped '+(axis==='x'?'left ↔ right':'front ↔ back'));
   return n>0;
@@ -4735,7 +4858,7 @@ function updateGizmo(){
 function gizmoSnap(axis){
   if(WALK.active || TOUR.active) return;
   flushOrbitDrift();
-  if(axis==='x'){ camera.position.set(78, 16, 0); controls.target.set(0, 10, 0); controls.update(); }
+  if(axis==='x'){ camera.position.set(89, 16, 35); controls.target.set(11, 10, 35); controls.update(); }
   else if(axis==='y'){ setCam('top'); }
   else if(axis==='z'){ setCam('front'); }
   else { setCam('iso'); }
@@ -5334,11 +5457,13 @@ function flushOrbitDrift(){
 function setCam(name){
   if(WALK.active) return;
   flushOrbitDrift();
-  const c={x:0, z:0};
-  if(name==='iso'){ camera.position.set(c.x+62, 78, c.z-62); controls.target.set(c.x, 10, c.z); }
+  // round 15: every view is centred on the grass base (11, 35), like the
+  // default camera — the old (0, 0) centre hid plot corners under the panel
+  const c={x:11, z:35};
+  if(name==='iso'){ camera.position.set(120, 129, -12); controls.target.set(11, 10, 35); }
   else if(name==='top'){ camera.position.set(c.x, 135, c.z+0.5); controls.target.set(c.x, 0, c.z); }
   else if(name==='front'){ camera.position.set(c.x, 16, c.z-78); controls.target.set(c.x, 10, c.z); }
-  else if(name==='eye'){ camera.position.set(c.x, 12, -12); controls.target.set(c.x, 10, c.z); }
+  else if(name==='eye'){ camera.position.set(c.x, 12, c.z-12); controls.target.set(c.x, 10, c.z); }
   controls.update();
 }
 
@@ -5847,7 +5972,7 @@ function init(){
   $('#ctxFlipZ').onclick=()=>{ hideCtxMenu(); if(!selection.size){ toast('Select some blocks first — then flip them'); return; } flipSelection('z'); };
   $('#btnImport').onclick=()=>$('#importFile').click();
   $('#importFile').addEventListener('change', e=>{ if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
-  $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
+  $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ clearAllAction(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
   // round 14: HTML5 drag from an element card — live ghost while hovering
@@ -5975,7 +6100,7 @@ function openProject(id){
   if(p.data){ try{ loadProjectData(p.data); }catch(e){ buildEmpty(); } }
   else { buildEmpty(); projectName=p.name; const pn=$('#projName'); if(pn) pn.textContent=projectName; }
   hideStartScreen();
-  renderProjectsUI(); renderHomeProjects();
+  renderProjectsUI(); renderHomeProjects(); renderHistory();
   toast('Opened "'+p.name+'"');
   return true;
 }
@@ -5987,7 +6112,7 @@ function createNewProject(name){
   currentProjectId=p.id; setCurrentId(p.id);
   buildEmpty(); projectName=p.name; const pn=$('#projName'); if(pn) pn.textContent=projectName;
   hideStartScreen();
-  renderProjectsUI(); renderHomeProjects();
+  renderProjectsUI(); renderHomeProjects(); renderHistory();
   toast('New empty plot — build something');
   return p;
 }
@@ -6123,6 +6248,23 @@ function cancelProjRename(){
   inp.style.display='none'; span.style.display=''; inp.blur();
 }
 
+/* ---- phone sheet peek mode (round 15): session-only, not forever ---- */
+const SHEET_PEEK_KEY='home-designer-minecraft-sheet-peek-v1';
+let sheetPeek=false;
+function loadSheetPeek(){
+  try{ sheetPeek=sessionStorage.getItem(SHEET_PEEK_KEY)==='1'; }catch(e){ sheetPeek=false; }
+  document.body.classList.toggle('sheet-peek', sheetPeek);
+  const l=document.querySelector('#sheetHandle .sh-label'); if(l) l.textContent=sheetPeek?'Expand':'Peek';
+  return sheetPeek;
+}
+function setSheetPeek(on){
+  sheetPeek=!!on;
+  try{ sessionStorage.setItem(SHEET_PEEK_KEY, sheetPeek?'1':'0'); }catch(e){}
+  document.body.classList.toggle('sheet-peek', sheetPeek);
+  const l=document.querySelector('#sheetHandle .sh-label'); if(l) l.textContent=sheetPeek?'Expand':'Peek';
+  return sheetPeek;
+}
+
 /* ---- collapse the left panel (round 14) ---- */
 const PANEL_COLLAPSE_KEY='home-designer-minecraft-panel-collapsed-v1';
 let panelCollapsed=false, lastRailTab='elements';
@@ -6134,11 +6276,12 @@ function setPanelCollapsed(on){
   if(panelCollapsed) setRailTab(null);
   else setRailTab(lastRailTab||'elements');
   updateCollapseBtn();
+  updateViewOffset();   // the panel collapsing moves the visible canvas (round 15)
   return panelCollapsed;
 }
 
 /* ---- left rail + panel (Canva) ---- */
-const RAIL_TABS={ elements:'Elements', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', help:'Help' };
+const RAIL_TABS={ elements:'Elements', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', history:'History', help:'Help' };
 let railTab='elements';
 function setRailTab(tab, force){
   if(tab && tab===railTab && !force) tab=null;   // tap the active tab again = close the panel
@@ -6154,6 +6297,8 @@ function setRailTab(tab, force){
   if(tab==='templates') renderTplCards();
   if(tab==='builds') renderProjectsUI();
   if(tab==='layers') updateLayersPanel();
+  if(tab==='history') renderHistory();
+  updateViewOffset();   // the panel opening/closing moves the visible canvas (round 15)
   updateCollapseBtn();
   return railTab;
 }
@@ -6405,25 +6550,25 @@ function dropElementAt(elId, sx, sy){
   }
 }
 function placeWallAt(x,y,z){
-  const n=applyBatch(elementCells('wall',x,y,z));   // 10 ft long x 8 ft high, brick
+  const n=applyBatch(elementCells('wall',x,y,z), 'Wall placed — 10\' × 8\'');   // 10 ft long x 8 ft high, brick
   if(n) toast('Wall placed — '+n+' blocks · 10\' 0" long × 8\' 0" high');
   else toast('That spot is taken');
   return n;
 }
 function placeWindowAt(x,y,z){
-  const n=applyBatch(elementCells('window',x,y,z));
+  const n=applyBatch(elementCells('window',x,y,z), 'Window placed — 4\' × 3\'');
   if(n) toast('Window placed — 4\' 0" × 3\' 0", sill 3\' 0"');
   else toast('That spot is taken');
   return n;
 }
 function placeTreeAt(x,y,z){
-  const n=applyBatch(elementCells('tree',x,y,z));
+  const n=applyBatch(elementCells('tree',x,y,z), 'Tree placed');
   if(n) toast('Tree placed');
   else toast('That spot is taken');
   return n;
 }
 function placeShutterAt(x,y,z){
-  const n=applyBatch(elementCells('shutter',x,y,z));
+  const n=applyBatch(elementCells('shutter',x,y,z), 'Shutter door placed — 6\' × 7\'');
   if(n) toast('Shutter door placed — 6\' 0" × 7\' 0"');
   else toast('That spot is taken');
   return n;
@@ -6636,7 +6781,7 @@ window.__mc = {
       const cells=SHUTTER_CELLS.map(c=>rotOffset(c,rot||0))
         .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }))
         .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-      return applyBatch(cells);
+      return applyBatch(cells, 'Shutter door placed');
     }
     return placeStairs(name, currentStepCount(), x,y,z,rot||0);
   },
@@ -6833,7 +6978,7 @@ window.__mc = {
     title(){ return $('#selPanelTitle').textContent; },
   },
   sizeBarVisible(){ return $('#sizeBar').classList.contains('on'); },
-  clearAll(){ clearBlocks(); scheduleSave(); },
+  clearAll(){ clearAllAction(); },
   menuOpen(){ return ctxMenuOpen(); },
   showMenu(x,y){ showCtxMenu(x,y); },
   walk:{
@@ -6954,11 +7099,43 @@ Object.assign(window.__mc, {
     setCollapsed(on){ return setPanelCollapsed(on); },
     chevron(){ return document.querySelector('#panelCollapse').textContent; },
   },
+  history:{
+    list(){ const rows=[];
+      for(let i=0;i<redoStack.length;i++) rows.push({ label:redoStack[i].label||'Edit', time:redoStack[i].time||'', future:true });
+      for(let i=undoStack.length-1;i>=0;i--) rows.push({ label:undoStack[i].label||'Edit', time:undoStack[i].time||'', future:false });
+      rows.push({ label:'Started this build', time:'', future:false });
+      return rows; },
+    current(){ return redoStack.length; },
+    count(){ return undoStack.length+redoStack.length; },
+    jump(i){ jumpHistory(i); return true; },
+    rows(){ return document.querySelectorAll('#histList .hist-row').length; },
+    currentRow(){ const r=document.querySelector('#histList .hist-row.current');
+      return r? r.querySelector('.hs-label').textContent : null; },
+  },
+  sheet:{
+    peek(){ return sheetPeek; },
+    setPeek(on){ return setSheetPeek(on); },
+    handleVisible(){ const h=document.querySelector('#sheetHandle');
+      return !!h && getComputedStyle(h).display!=='none'; },
+    height(){ return document.querySelector('#sidePanel').getBoundingClientRect().height; },
+    sheetTop(){ return document.querySelector('#sidePanel').getBoundingClientRect().top; },
+  },
   thumbs:{
     capture(){ return captureThumb(); },
     of(id){ const p=loadProjects().find(x=>x.id===id); return p&&p.thumb? p.thumb.length : 0; },
   },
 });
+
+/* round 15: sheet peek — the handle toggles it; tapping anywhere else in
+   the sheet while peeked opens it again so the user can browse cards */
+const _sh=document.querySelector('#sheetHandle');
+if(_sh) _sh.addEventListener('click', e=>{ e.stopPropagation(); setSheetPeek(!sheetPeek); });
+const _sp=document.querySelector('#sidePanel');
+if(_sp) _sp.addEventListener('click', e=>{
+  if(sheetPeek && !e.target.closest('#sheetHandle')) setSheetPeek(false);
+});
+loadSheetPeek();
+renderHistory();
 
 init();
 </script>
