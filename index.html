@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Minecraft Home Designer — build anything block by block</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#87ceeb;font-family:"Trebuchet MS",Verdana,system-ui,sans-serif;color:#222}
+  #gl{position:fixed;inset:0}
+  #gl canvas{display:block}
+  button{font-family:inherit;cursor:pointer}
+  /* ---------- top bar ---------- */
+  #topbar{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;flex-wrap:wrap;gap:6px;align-items:center;
+    padding:8px 10px;background:linear-gradient(#3a7d2c,#2f6b24);border-bottom:4px solid #1e4d16;color:#fff}
+  #topbar .brand{font-weight:900;font-size:17px;letter-spacing:.3px;text-shadow:2px 2px 0 #1e4d16;white-space:nowrap}
+  #topbar .brand small{font-weight:700;font-size:12px;opacity:.9}
+  #floorbar{display:flex;gap:4px;margin-left:8px}
+  #floorbar button,.actions button,.camrow button{
+    border:3px solid #1e4d16;border-radius:4px;background:#7ec850;color:#12300c;font-weight:800;font-size:13px;
+    padding:5px 9px;box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(0,0,0,.25)}
+  #floorbar button.on,.camrow button.on{background:#ffd83d;color:#4a3200}
+  .actions{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .actions button{background:#e8e8e8}
+  .actions button.warn{background:#ff9d5c}
+  .camrow{display:flex;gap:4px;align-items:center;flex-basis:100%}
+  .camrow .lbl{font-size:12px;font-weight:800;opacity:.95}
+  .camrow button{background:#c9ecff;color:#0b3550;border-color:#14506e}
+  .camrow button.on{background:#ffd83d;color:#4a3200}
+  #toolSeg{display:flex;gap:0;margin-left:10px}
+  #toolSeg button{border-radius:0}
+  #toolSeg button:first-child{border-radius:4px 0 0 4px}
+  #toolSeg button:last-child{border-radius:0 4px 4px 0}
+  /* ---------- palette ---------- */
+  #palette{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:10;display:flex;gap:6px;
+    background:rgba(0,0,0,.45);padding:7px;border-radius:8px;border:3px solid rgba(0,0,0,.55)}
+  #palette button{display:flex;flex-direction:column;align-items:center;gap:2px;width:64px;padding:4px 2px 3px;
+    background:#d8d8d8;border:3px solid #555;border-radius:4px;font-size:10px;font-weight:800;color:#222}
+  #palette button canvas{width:34px;height:34px;image-rendering:pixelated;border:2px solid #333;background:#999}
+  #palette button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #palette button .k{font-size:9px;color:#666}
+  /* ---------- readouts ---------- */
+  #readout{position:fixed;left:10px;bottom:10px;z-index:10;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;
+    padding:7px 10px;font-size:13px;line-height:1.5;max-width:300px}
+  #readout b{color:#ffd83d}
+  #readout .dim{color:#9be36d}
+  #note{position:fixed;right:10px;bottom:10px;z-index:9;font-size:11px;color:#fff;background:rgba(0,0,0,.45);
+    padding:4px 8px;border-radius:5px;max-width:260px;text-align:right}
+  #hoverTag{position:fixed;z-index:9;pointer-events:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;
+    padding:3px 7px;border-radius:4px;display:none;white-space:nowrap}
+  #hoverTag b{color:#ffd83d}
+  /* ---------- walk hint / toast ---------- */
+  #walkHint{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:11;display:none;
+    background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
+  #walkHint button{margin-left:10px;background:#ff5c5c;color:#fff;border:2px solid #7a0000;border-radius:4px;
+    font-weight:800;padding:4px 10px}
+  #toast{position:fixed;left:50%;top:110px;transform:translateX(-50%);z-index:12;background:#222;color:#fff;
+    padding:8px 16px;border-radius:6px;font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none}
+  #toast.on{opacity:1}
+  #help{position:fixed;right:10px;top:110px;z-index:9;background:rgba(0,0,0,.5);color:#fff;font-size:12px;line-height:1.6;
+    padding:8px 10px;border-radius:6px;max-width:230px}
+  #help b{color:#ffd83d}
+  @media (max-width:760px){
+    #help{display:none}
+    #palette button{width:52px;font-size:9px}
+    #palette button canvas{width:28px;height:28px}
+    #readout{max-width:200px;font-size:12px}
+    #note{display:none}
+  }
+</style>
+<script type="importmap">
+{"imports":{
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="gl"></div>
+
+<div id="topbar">
+  <div class="brand">⛏️ Minecraft Home Designer <small>· <span id="projName">My Build</span></small></div>
+  <div id="floorbar"></div>
+  <div class="actions">
+    <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
+    <button id="btnRedo" title="Ctrl+Y">↪ Redo</button>
+    <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
+    <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
+    <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
+    <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
+    <button id="btnImport" title="Open a project JSON">⬆ Import</button>
+    <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
+  </div>
+  <div class="camrow">
+    <span class="lbl">Camera:</span>
+    <button data-cam="iso" class="on">Angle</button>
+    <button data-cam="top">Top</button>
+    <button data-cam="front">Front</button>
+    <button data-cam="eye">Eye 5'6"</button>
+    <span class="lbl">Tool:</span>
+    <span id="toolSeg">
+      <button data-tool="build" class="on" title="Click a face to place a block (B)">🧱 Build</button>
+      <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
+      <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
+    </span>
+    <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
+  </div>
+</div>
+
+<div id="palette"></div>
+
+<div id="readout">
+  <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b></div>
+  <div>📐 Built so far: <b id="roFoot">nothing yet</b> · Floor area: <b id="roArea">0 sq ft</b></div>
+  <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
+</div>
+
+<div id="help">
+  <b>Left-click</b> a face = place block<br>
+  <b>Right-click</b> a block = remove it<br>
+  <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
+  <b>WASD</b> fly · <b>Q / E</b> down / up<br>
+  <b>1–8</b> pick block · <b>B / E / P</b> tools<br>
+  <b>Ctrl+Z / Ctrl+Y</b> undo / redo
+</div>
+
+<div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnExitWalk">✕ Exit walk</button></div>
+<div id="hoverTag"></div>
+<div id="toast"></div>
+<div id="note">Visualisation only — not certified architectural or structural documentation.</div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none">
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* ================= constants: 1 block = 6 in = 0.5 ft ================= */
+const FT = 0.5;                       // feet per block (1 block = 6 in)
+const FLOORS = [
+  { name:'Basement', base:-20 },
+  { name:'Ground',   base:0 },
+  { name:'First',    base:20 },
+  { name:'Second',   base:40 },
+  { name:'Rooftop',  base:60 },
+];
+const FLOOR_H = 20;                   // blocks per floor (10 ft)
+const LSKEY = 'home-designer-minecraft-v2';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const key3 = (x,y,z)=>x+','+y+','+z;
+const parseKey = k=>{ const p=k.split(','); return [+p[0],+p[1],+p[2]]; };
+function ftin(ft){ const neg=ft<0; ft=Math.abs(ft); const f=Math.floor(ft+1e-9); const i=Math.round((ft-f)*12*2)/2;
+  return (neg?'-':'')+f+"' "+(i%1? i.toFixed(1):i)+'"'; }
+function floorOfY(y){ let fi=0; for(let i=0;i<FLOORS.length;i++) if(y>=FLOORS[i].base) fi=i; return fi; }
+
+/* ================= seeded random for textures ================= */
+function rng(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
+
+/* ================= procedural pixel textures ================= */
+function texCanvas(fn, seed){
+  const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d');
+  const R=rng(seed); fn(g,64,R);
+  const t=new THREE.CanvasTexture(c);
+  t.magFilter=THREE.NearestFilter; t.minFilter=THREE.NearestFilter; t.generateMipmaps=false;
+  t.colorSpace=THREE.SRGBColorSpace; return t;
+}
+function speckle(g,S,R,cols,n,sz=2){ for(let i=0;i<n;i++){ g.fillStyle=cols[(R()*cols.length)|0];
+  g.fillRect((R()*S)|0,(R()*S)|0,sz,sz); } }
+const T = {};
+T.grassTop = texCanvas((g,S,R)=>{ g.fillStyle='#79b34a'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#6aa843','#8ac35c','#5f9c3a','#93cc68'],420); }, 11);
+T.dirt = texCanvas((g,S,R)=>{ g.fillStyle='#8a5f3c'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#7a5233','#9c6f47','#6b4a2e','#a87a52'],480); }, 12);
+T.grassSide = texCanvas((g,S,R)=>{ g.fillStyle='#8a5f3c'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#7a5233','#9c6f47','#6b4a2e'],380);
+  g.fillStyle='#79b34a'; g.fillRect(0,0,S,12);
+  for(let x=0;x<S;x+=4){ const d=10+((R()*8)|0); g.fillRect(x,10,4,d); }
+  speckle(g,S,R,['#6aa843','#8ac35c'],90,2); }, 13);
+T.wood = texCanvas((g,S,R)=>{ g.fillStyle='#a0824f'; g.fillRect(0,0,S,S);
+  for(let y=0;y<S;y+=16){ g.fillStyle='#7d6438'; g.fillRect(0,y,S,2); g.fillStyle='#b3925e'; g.fillRect(0,y+2,S,2); }
+  speckle(g,S,R,['#8a6c40','#b89a68','#96794a'],260); }, 14);
+T.stone = texCanvas((g,S,R)=>{ g.fillStyle='#8d8d8d'; g.fillRect(0,0,S,S);
+  g.fillStyle='#6f6f6f';
+  for(let y=0;y<S;y+=16){ g.fillRect(0,y,S,2); const off=(y/16)%2?16:0;
+    for(let x=-16;x<S;x+=32) g.fillRect((x+off+S)%S,y,2,16); }
+  speckle(g,S,R,['#7d7d7d','#9d9d9d','#757575'],300); }, 15);
+T.brick = texCanvas((g,S,R)=>{ g.fillStyle='#b8a89a'; g.fillRect(0,0,S,S);
+  g.fillStyle='#9a4a38';
+  for(let y=0;y<S;y+=16){ const off=(y/16)%2?16:0;
+    for(let x=-16;x<S;x+=32) g.fillRect((x+off+S)%S+2,y+2,28,12); }
+  speckle(g,S,R,['#8a4030','#a85844','#7d382c'],260); }, 16);
+T.glass = texCanvas((g,S,R)=>{ g.clearRect(0,0,S,S);
+  g.strokeStyle='rgba(255,255,255,0.9)'; g.lineWidth=4; g.strokeRect(2,2,S-4,S-4);
+  g.strokeStyle='rgba(255,255,255,0.45)'; g.lineWidth=3;
+  g.beginPath(); g.moveTo(10,54); g.lineTo(30,10); g.moveTo(22,54); g.lineTo(42,10); g.stroke(); }, 17);
+T.slab = texCanvas((g,S,R)=>{ g.fillStyle='#b5b5b5'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#a8a8a8','#c2c2c2','#9a9a9a'],420); }, 18);
+T.leaf = texCanvas((g,S,R)=>{ g.fillStyle='#3f7a26'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#2f5e1c','#4c8f30','#5da33c'],520); }, 19);
+
+/* ================= block types ================= */
+const TYPES = [
+  { id:'grass', name:'Grass',   mats:[T.grassSide,T.grassSide,T.grassTop,T.dirt,T.grassSide,T.grassSide] },
+  { id:'dirt',  name:'Dirt',    mats:[T.dirt,T.dirt,T.dirt,T.dirt,T.dirt,T.dirt] },
+  { id:'wood',  name:'Wood Planks', mats:[T.wood,T.wood,T.wood,T.wood,T.wood,T.wood] },
+  { id:'stone', name:'Stone Bricks', mats:[T.stone,T.stone,T.stone,T.stone,T.stone,T.stone] },
+  { id:'brick', name:'Brick',   mats:[T.brick,T.brick,T.brick,T.brick,T.brick,T.brick] },
+  { id:'glass', name:'Glass',   mats:[T.glass,T.glass,T.glass,T.glass,T.glass,T.glass], glass:true },
+  { id:'stair', name:'Stair',   mats:[T.wood,T.wood,T.wood,T.wood,T.wood,T.wood], stair:true },
+  { id:'slab',  name:'Roof Slab', mats:[T.slab,T.slab,T.slab,T.slab,T.slab,T.slab] },
+];
+function matFor(ti){
+  const ty=TYPES[ti];
+  return ty.mats.map(tex=>{
+    if(ty.glass) return new THREE.MeshLambertMaterial({ map:tex, transparent:true, opacity:0.45, depthWrite:false, color:0xdff4ff });
+    return new THREE.MeshLambertMaterial({ map:tex });
+  });
+}
+/* stair step geometry: full block at bottom half, back half at top half — ascends toward -z */
+function stairGeometry(){
+  const lo=new THREE.BoxGeometry(1,0.5,1); lo.translate(0,-0.25,0);
+  const hi=new THREE.BoxGeometry(1,0.5,0.5); hi.translate(0,0.25,-0.25);
+  return mergeGeometries([lo,hi]);
+}
+const STAIR_DIRS=[[0,-1],[1,0],[0,1],[-1,0]];   // rot 0..3 -> ascend direction (dx,dz)
+
+/* ================= state ================= */
+let blocks = new Map();            // key -> {t, r}
+let activeFloor = 1;               // Ground
+let selType = 2;                   // wood
+let tool = 'build';
+let projectName = 'My Build';
+let undoStack = [], redoStack = [];
+let groundVisible = true;
+
+/* ================= three.js scene ================= */
+let renderer, scene, camera, controls;
+const instMeshes = [];             // per type: {mesh, keys[]}
+const groundMeshes = [];
+let ghost, floorBand;
+const raycaster = new THREE.Raycaster();
+const pointerNDC = new THREE.Vector2();
+
+function initScene(){
+  renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  $('#gl').appendChild(renderer.domElement);
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x87ceeb);
+  scene.fog = new THREE.Fog(0x87ceeb, 180, 420);
+  scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x8a6a45, 0.95));
+  const sun = new THREE.DirectionalLight(0xfff2d0, 1.6);
+  sun.position.set(60, 110, 40); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left=-90; sun.shadow.camera.right=90;
+  sun.shadow.camera.top=90; sun.shadow.camera.bottom=-90;
+  sun.shadow.camera.near=10; sun.shadow.camera.far=320;
+  sun.shadow.bias=-0.0004;
+  scene.add(sun);
+  camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
+  camera.position.set(62, 78, -27);   // front-right-above the empty grass base
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 10, 0);
+  controls.enableDamping = true; controls.dampingFactor = 0.12;
+  controls.maxDistance = 320; controls.minDistance = 4;
+  controls.maxPolarAngle = Math.PI*0.96;
+  controls.update();
+
+  const boxGeo = new THREE.BoxGeometry(1,1,1);
+  const stairGeo = stairGeometry();
+  TYPES.forEach((ty,ti)=>{
+    const mesh = new THREE.InstancedMesh(ti===6?stairGeo:boxGeo, matFor(ti), 64);
+    mesh.count = 0; mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.userData.type = ti;
+    mesh.frustumCulled = false;
+    scene.add(mesh);
+    instMeshes.push({ mesh, keys:[] });
+  });
+
+  // ghost preview cube
+  ghost = new THREE.Mesh(new THREE.BoxGeometry(1.002,1.002,1.002),
+    new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.45, depthWrite:false }));
+  ghost.visible = false; scene.add(ghost);
+
+  // active-floor band: a thin translucent sheet just above the floor surface,
+  // sized to the footprint of what is built on the active floor
+  floorBand = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1),
+    new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.22, depthWrite:false }));
+  floorBand.position.set(0, 1.03, 0);
+  floorBand.scale.set(12, 1, 12);
+  scene.add(floorBand);
+
+  buildGroundScenery();
+  resize();
+  window.addEventListener('resize', resize);
+  (function animate(){
+    requestAnimationFrame(animate);
+    tick(clockDelta());
+    if(!WALK.active) controls.update();
+    renderer.render(scene, camera);
+  })();
+}
+let _lastT = performance.now();
+function clockDelta(){ const now=performance.now(); const dt=Math.min((now-_lastT)/1000, 0.25); _lastT=now; return dt; }
+function resize(){
+  const w=innerWidth, h=innerHeight;
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+function buildGroundScenery(){
+  // one plain grass base to build on — no plot, no hole, no road.
+  // 1 block thick (y 0..1) so the basement can be seen from a low angle
+  // or by hiding the ground.
+  const grassTop = new THREE.MeshLambertMaterial({ map:T.grassTop });
+  const grassSide = new THREE.MeshLambertMaterial({ map:T.grassSide });
+  const dirtM = new THREE.MeshLambertMaterial({ map:T.dirt });
+  const grassMats = [grassSide,grassSide,grassTop,dirtM,grassSide,grassSide];
+  const m=new THREE.Mesh(new THREE.BoxGeometry(102,1,150), grassMats);
+  m.position.set(11, 0.5, 35); m.receiveShadow=true; m.userData.ground=true;
+  scene.add(m); groundMeshes.push(m);
+}
+
+/* ================= block data + instanced rebuild ================= */
+const dummy = new THREE.Object3D();
+function setBlock(x,y,z,t,r=0, record=true){
+  const k=key3(x,y,z);
+  const prev = blocks.get(k) || null;
+  if(t==null){ if(!prev) return false; blocks.delete(k); }
+  else blocks.set(k, { t, r });
+  if(record) pushUndo({ x,y,z, prev, next: t==null?null:{t,r} });
+  rebuild(); scheduleSave(); updateStats();
+  return true;
+}
+function getBlock(x,y,z){ return blocks.get(key3(x,y,z)) || null; }
+function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
+
+function rebuild(){
+  const byType = TYPES.map(()=>[]);
+  for(const [k,v] of blocks){ byType[v.t].push([k, v]); }
+  byType.forEach((list, ti)=>{
+    const slot = instMeshes[ti];
+    if(list.length > slot.mesh.instanceMatrix.array.length/16){
+      const cap = Math.max(64, Math.ceil(list.length*1.4));
+      const old = slot.mesh;
+      const nm = new THREE.InstancedMesh(old.geometry, old.material, cap);
+      nm.count=0; nm.castShadow=true; nm.receiveShadow=true;
+      nm.userData.type=ti; nm.frustumCulled=false;
+      scene.remove(old); old.dispose();
+      scene.add(nm); slot.mesh = nm;
+    }
+    const mesh = slot.mesh;
+    mesh.count = list.length;
+    slot.keys = new Array(list.length);
+    for(let i=0;i<list.length;i++){
+      const [k,v] = list[i];
+      const [x,y,z] = parseKey(k);
+      dummy.position.set(x+0.5, y+0.5, z+0.5);
+      dummy.rotation.set(0,0,0);
+      if(TYPES[ti].stair){
+        const d=STAIR_DIRS[v.r||0];
+        dummy.rotation.y = Math.atan2(-d[0], -d[1]);
+      }
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      slot.keys[i]=k;
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  });
+}
+
+/* ================= undo / redo ================= */
+function pushUndo(op){ undoStack.push(op); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); }
+function applyOp(op, useNext){
+  const v = useNext ? op.next : op.prev;
+  if(v) blocks.set(key3(op.x,op.y,op.z), { t:v.t, r:v.r||0 });
+  else blocks.delete(key3(op.x,op.y,op.z));
+}
+function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
+function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
+function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
+
+/* ================= clear ================= */
+function clearBlocks(){ blocks.clear(); undoStack.length=0; redoStack.length=0; rebuild(); updateStats(); }
+function buildEmpty(){ clearBlocks(); rebuild(); updateStats(); scheduleSave(); }
+
+/* ================= floors ================= */
+function setFloor(i, focus=false){
+  activeFloor = clamp(i,0,FLOORS.length-1);
+  const f=FLOORS[activeFloor];
+  $$('#floorbar button').forEach((b,bi)=>b.classList.toggle('on', bi===activeFloor));
+  $('#activeFloorLbl').textContent = 'Building on: '+f.name+'  ·  floor top '+ftin((f.base+1)*FT)+' — 1 block = 6 in';
+  if(focus){
+    controls.target.y = f.base + 10;
+    camera.position.y = f.base + 55;
+    controls.update();
+  }
+  updateStats();
+}
+
+/* ================= stats / readouts ================= */
+// bounding box of everything built inside one floor's 20-block band
+function floorBBox(fi){
+  const y0=FLOORS[fi].base, y1=y0+FLOOR_H;
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,n=0;
+  for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1){ n++;
+    if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; } }
+  return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
+}
+function floorAreaSqFt(fi){
+  const b=floorBBox(fi);
+  return b? b.w*b.d*FT*FT : 0;
+}
+function updateFloorBand(){
+  const b=floorBBox(activeFloor);
+  const w=b?b.w:12, d=b?b.d:12;
+  const cx=b?(b.x0+b.x1+1)/2:0, cz=b?(b.z0+b.z1+1)/2:0;
+  floorBand.scale.set(w,1,d);
+  floorBand.position.set(cx, FLOORS[activeFloor].base+1.03, cz);
+}
+function updateStats(){
+  $('#roBlocks').textContent = blocks.size.toLocaleString('en-IN');
+  $('#roFloor').textContent = FLOORS[activeFloor].name;
+  const b=floorBBox(activeFloor);
+  $('#roFoot').textContent = b? ftin(b.w*FT)+' × '+ftin(b.d*FT) : 'nothing yet';
+  const a=floorAreaSqFt(activeFloor);
+  $('#roArea').textContent = (Math.round(a*10)/10)+' sq ft';
+  updateFloorBand();
+}
+
+/* ================= save / load / export / import ================= */
+let saveTimer=null;
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveLocal, 600); }
+function saveLocal(){
+  try{
+    const arr=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; });
+    localStorage.setItem(LSKEY, JSON.stringify({ version:1, name:projectName, blocks:arr }));
+  }catch(e){}
+}
+function loadLocal(){
+  try{
+    const raw=localStorage.getItem(LSKEY); if(!raw) return false;
+    const p=JSON.parse(raw);
+    if(!p||!Array.isArray(p.blocks)) return false;
+    blocks.clear();
+    for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
+    projectName = p.name||'My Build';
+    $('#projName').textContent = projectName;
+    rebuild(); updateStats();
+    return true;
+  }catch(e){ return false; }
+}
+function exportJSON(){
+  const arr=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; });
+  const blob=new Blob([JSON.stringify({ version:1, name:projectName, blocks:arr },null,1)], { type:'application/json' });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=(projectName||'design').replace(/\s+/g,'-').toLowerCase()+'-minecraft.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  toast('Project exported — '+arr.length.toLocaleString('en-IN')+' blocks');
+}
+function importJSON(file){
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const p=JSON.parse(rd.result);
+      if(!p||!Array.isArray(p.blocks)) throw new Error('bad file');
+      blocks.clear();
+      for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
+      projectName = p.name||'Imported design';
+      $('#projName').textContent = projectName;
+      undoStack.length=0; redoStack.length=0;
+      rebuild(); updateStats(); saveLocal();
+      toast('Imported — '+blocks.size.toLocaleString('en-IN')+' blocks');
+    }catch(e){ toast('That file could not be opened'); }
+  };
+  rd.readAsText(file);
+}
+function snapshot(){
+  renderer.render(scene,camera);
+  const a=document.createElement('a');
+  a.href=renderer.domElement.toDataURL('image/png');
+  a.download='minecraft-design.png'; a.click();
+  toast('Photo saved');
+}
+
+/* ================= toast ================= */
+let toastTimer=null;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'), 2600); }
+
+/* ================= picking / ghost preview ================= */
+let hover = null;   // {cell:[x,y,z], block:[x,y,z]|null, type, valid}
+function setNDC(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  pointerNDC.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+}
+function raycastVoxel(e){
+  setNDC(e);
+  raycaster.setFromCamera(pointerNDC, camera);
+  raycaster.far = Infinity;
+  const targets=[...instMeshes.map(s=>s.mesh), ...groundMeshes];
+  const hits=raycaster.intersectObjects(targets, false);
+  if(!hits.length) return null;
+  const h=hits[0];
+  if(h.object.userData.ground){
+    // hit the ground scenery: cell just inside the box + face normal
+    const n=h.face.normal.clone();
+    const p=h.point.clone().addScaledVector(n, -0.01);
+    const cx=Math.floor(p.x), cy=Math.floor(p.y), cz=Math.floor(p.z);
+    return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)], type:null };
+  }
+  const ti=h.object.userData.type;
+  const slot=instMeshes[ti];
+  const k=slot.keys[h.instanceId];
+  if(!k) return null;
+  const bp=parseKey(k);
+  // face normal in world space (stair instances are rotated)
+  const m=new THREE.Matrix4(); h.object.getMatrixAt(h.instanceId, m);
+  const q=new THREE.Quaternion().setFromRotationMatrix(m);
+  const n=h.face.normal.clone().applyQuaternion(q).round();
+  return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti };
+}
+function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
+function updateHover(e){
+  if(WALK.active){ ghost.visible=false; hover=null; return; }
+  const hit=raycastVoxel(e);
+  if(!hit){ ghost.visible=false; hover=null; $('#hoverTag').style.display='none'; $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; return; }
+  const [cx,cy,cz]=hit.cell;
+  const occupied=getBlock(cx,cy,cz)!==null;
+  const valid=!occupied&&inBounds(cx,cy,cz);
+  hover={ cell:hit.cell, block:hit.block, type:hit.type, valid };
+  ghost.visible=true;
+  ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
+  ghost.material.color.set(valid?0x7CFC00:0xff4444);
+  const tag=$('#hoverTag');
+  tag.style.display='block';
+  tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+  const typeName = hit.type!=null ? TYPES[hit.type].name : 'Ground';
+  tag.innerHTML='<b>'+typeName+'</b> · '+ftin(cx*FT)+' × '+ftin(cy*FT)+' · '+ftin(cz*FT);
+  $('#roHover').innerHTML='At <b>'+ftin(cx*FT)+'</b> × <b>'+ftin(cy*FT)+'</b> · <b>'+ftin(cz*FT)+'</b> — '+(valid?'place <b>'+TYPES[selType].name+'</b> here':'blocked');
+}
+
+/* ================= pointer: click = place/erase/pick, drag = orbit ================= */
+let downPos=null, downTime=0, downBtn=0, walkDrag=null;
+function bindPointer(){
+  const el=renderer.domElement;
+  el.addEventListener('contextmenu', e=>e.preventDefault());
+  el.addEventListener('pointermove', e=>{
+    if(WALK.active){
+      if(walkDrag){
+        WALK.camYaw -= (e.clientX-walkDrag.x)*0.005;
+        WALK.camPitch = clamp(WALK.camPitch + (e.clientY-walkDrag.y)*0.005, -0.05, 1.1);
+        walkDrag={ x:e.clientX, y:e.clientY };
+      }
+      return;
+    }
+    if(!downPos) updateHover(e);
+  });
+  el.addEventListener('pointerdown', e=>{
+    downPos=[e.clientX,e.clientY]; downTime=Date.now(); downBtn=e.button;
+    if(WALK.active) walkDrag={ x:e.clientX, y:e.clientY };
+  });
+  el.addEventListener('pointerup', e=>{
+    if(WALK.active){ walkDrag=null; return; }
+    if(!downPos) return;
+    const moved=Math.hypot(e.clientX-downPos[0], e.clientY-downPos[1]);
+    const dt=Date.now()-downTime;
+    downPos=null;
+    if(moved>6||dt>600) return;   // it was a drag (orbit/pan), not a click
+    const hit=raycastVoxel(e);
+    if(e.button===2){ // right-click erases
+      if(hit&&hit.block){ const [x,y,z]=hit.block; const b=getBlock(x,y,z);
+        setBlock(x,y,z,null); }
+      return;
+    }
+    if(e.button!==0) return;
+    if(tool==='pick'){
+      if(hit&&hit.block){ const b=getBlock(hit.block[0],hit.block[1],hit.block[2]);
+        if(b){ selectType(b.t); toast('Picked '+TYPES[b.t].name); } }
+      return;
+    }
+    if(tool==='erase'){
+      if(hit&&hit.block){ const [x,y,z]=hit.block; setBlock(x,y,z,null); }
+      return;
+    }
+    // build
+    if(!hit) return;
+    const [cx,cy,cz]=hit.cell;
+    if(getBlock(cx,cy,cz)) return;
+    if(!inBounds(cx,cy,cz)){ toast('Outside the build area'); return; }
+    const fi=floorOfY(cy);
+    if(fi!==activeFloor) setFloor(fi);   // click on another floor -> build there now
+    // stair blocks face away from the player (like Minecraft)
+    let r=0;
+    if(TYPES[selType].stair){
+      const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+      const ax=Math.abs(dir.x)>Math.abs(dir.z)?'x':'z';
+      if(ax==='x') r = dir.x>0 ? 3 : 1; else r = dir.z>0 ? 0 : 2;
+    }
+    setBlock(cx,cy,cz,selType,r);
+  });
+}
+
+/* ================= palette + floor bar + tools UI ================= */
+function buildPalette(){
+  const pal=$('#palette');
+  TYPES.forEach((ty,ti)=>{
+    const b=document.createElement('button');
+    b.dataset.type=ti;
+    const cv=document.createElement('canvas'); cv.width=cv.height=64;
+    const g=cv.getContext('2d');
+    const tex=ty.mats[2];   // top texture as the swatch
+    g.drawImage(tex.image,0,0);
+    if(ty.glass){ g.fillStyle='rgba(180,220,255,0.5)'; g.fillRect(0,0,64,64); g.drawImage(tex.image,0,0); }
+    b.appendChild(cv);
+    const nm=document.createElement('span'); nm.textContent=ty.name; b.appendChild(nm);
+    const k=document.createElement('span'); k.className='k'; k.textContent='key '+(ti+1); b.appendChild(k);
+    b.onclick=()=>selectType(ti);
+    pal.appendChild(b);
+  });
+  selectType(selType);
+}
+function selectType(ti){
+  selType=ti;
+  $$('#palette button').forEach(b=>b.classList.toggle('on', +b.dataset.type===ti));
+}
+function buildFloorBar(){
+  const bar=$('#floorbar');
+  FLOORS.forEach((f,i)=>{
+    const b=document.createElement('button');
+    b.textContent=f.name;
+    b.onclick=()=>setFloor(i,true);
+    bar.appendChild(b);
+  });
+}
+function setTool(t){
+  tool=t;
+  $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+}
+function setCam(name){
+  if(WALK.active) return;
+  const c={x:0, z:0};
+  if(name==='iso'){ camera.position.set(c.x+62, 78, c.z-62); controls.target.set(c.x, 10, c.z); }
+  else if(name==='top'){ camera.position.set(c.x, 135, c.z+0.5); controls.target.set(c.x, 0, c.z); }
+  else if(name==='front'){ camera.position.set(c.x, 16, c.z-78); controls.target.set(c.x, 10, c.z); }
+  else if(name==='eye'){ camera.position.set(c.x, 12, -12); controls.target.set(c.x, 10, c.z); }
+  controls.update();
+}
+
+/* ================= walk mode ================= */
+const WALK = {
+  active:false, pos:new THREE.Vector3(0,1,0), vy:0, onGround:true,
+  camYaw:Math.PI, camPitch:0.5, dist:32, hw:1.5, h:12,
+};
+let walker=null, savedCam=null;
+function buildWalker(){
+  walker=new THREE.Group();
+  const mat=(c)=>new THREE.MeshLambertMaterial({ color:c });
+  const add=(w,h,d,c,x,y,z)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat(c));
+    m.position.set(x,y,z); m.castShadow=true; walker.add(m); return m; };
+  add(1.3,4,1.5, 0x3b4a6b, -0.8, 2, 0);      // left leg
+  add(1.3,4,1.5, 0x3b4a6b,  0.8, 2, 0);      // right leg
+  add(3,5,1.8, 0x2e7d32, 0, 6.5, 0);         // torso (green shirt)
+  add(1,5,1.5, 0x2e7d32, -2, 6.5, 0);        // left arm
+  add(1,5,1.5, 0x2e7d32,  2, 6.5, 0);        // right arm
+  add(3,3,3, 0xe8b98a, 0, 10.5, 0);          // head
+  add(3.2,1,3.2, 0x1b5e20, 0, 12.3, 0);      // cap
+  add(0.5,0.7,0.2, 0x222222, -0.7, 11, 1.55); // eyes
+  add(0.5,0.7,0.2, 0x222222,  0.7, 11, 1.55);
+  walker.visible=false;
+  scene.add(walker);
+}
+function walkStart(){
+  if(WALK.active) return;
+  WALK.active=true;
+  savedCam={ pos:camera.position.clone(), tgt:controls.target.clone() };
+  controls.enabled=false;
+  // spawn on the grass at the origin, facing +z
+  WALK.pos.set(0, 1, 0); WALK.vy=0; WALK.onGround=true;
+  WALK.camYaw=Math.PI; WALK.camPitch=0.62;
+  walker.visible=true;
+  $('#hoverTag').style.display='none';
+  $('#walkHint').style.display='block';
+  $('#btnWalk').textContent='🚶 Walking…';
+  ghost.visible=false;
+  setFloor(floorOfY(Math.floor(WALK.pos.y)));
+}
+function walkStop(){
+  if(!WALK.active) return;
+  WALK.active=false;
+  walker.visible=false;
+  controls.enabled=true;
+  if(savedCam){ camera.position.copy(savedCam.pos); controls.target.copy(savedCam.tgt); controls.update(); }
+  $('#walkHint').style.display='none';
+  $('#btnWalk').textContent='🚶 Walk';
+}
+function walkCollides(x,y,z){
+  const x0=Math.floor(x-WALK.hw), x1=Math.floor(x+WALK.hw);
+  const y0=Math.floor(y), y1=Math.floor(y+WALK.h-0.01);
+  const z0=Math.floor(z-WALK.hw), z1=Math.floor(z+WALK.hw);
+  for(let bx=x0;bx<=x1;bx++) for(let by=y0;by<=y1;by++) for(let bz=z0;bz<=z1;bz++)
+    if(isSolid(bx,by,bz)) return true;
+  return false;
+}
+function walkGround(x,z,feetY){
+  // highest solid top at/below feetY+0.6 in this column (scan the 3x3 footprint)
+  let best=-1e9;
+  for(let bx=Math.floor(x-WALK.hw);bx<=Math.floor(x+WALK.hw);bx++)
+    for(let bz=Math.floor(z-WALK.hw);bz<=Math.floor(z+WALK.hw);bz++){
+      // the grass base is solid ground: its top is y=1 inside its footprint
+      if(bx>=-40&&bx<62&&bz>=-40&&bz<110){ if(1<=feetY+0.6&&1>best) best=1; }
+      for(let by=Math.floor(feetY)+1;by>=-21;by--){
+        if(isSolid(bx,by,bz)){ const top=by+1; if(top<=feetY+0.6&&top>best) best=top; }
+      }
+    }
+  return best;
+}
+function walkStep(dt){
+  const keys=window.__keys;
+  const run=keys.has('ShiftLeft')||keys.has('ShiftRight');
+  const speed=run?14:8;
+  const fwd=new THREE.Vector3(-Math.sin(WALK.camYaw),0,-Math.cos(WALK.camYaw));
+  // facing +z (camYaw=PI), right hand is -x: right=(cos(camYaw), 0, -sin(camYaw))
+  const right=new THREE.Vector3(Math.cos(WALK.camYaw),0,-Math.sin(WALK.camYaw));
+  let fi=0, ri=0;
+  if(keys.has('KeyW')||keys.has('ArrowUp')) fi+=1;
+  if(keys.has('KeyS')||keys.has('ArrowDown')) fi-=1;
+  if(keys.has('KeyD')||keys.has('ArrowRight')) ri+=1;
+  if(keys.has('KeyA')||keys.has('ArrowLeft')) ri-=1;
+  const mv=new THREE.Vector3().addScaledVector(fwd,fi).addScaledVector(right,ri);
+  if(mv.lengthSq()>0) mv.normalize();
+  const sub=Math.max(1, Math.ceil(dt/(1/60)));
+  const sdt=dt/sub;
+  for(let s=0;s<sub;s++){
+    const dx=mv.x*speed*sdt, dz=mv.z*speed*sdt;
+    if(dx!==0){
+      const nx=WALK.pos.x+dx;
+      if(!walkCollides(nx,WALK.pos.y,WALK.pos.z)) WALK.pos.x=nx;
+      else if(!walkCollides(nx,WALK.pos.y+1,WALK.pos.z)){ WALK.pos.y+=1; WALK.pos.x=nx; }
+    }
+    if(dz!==0){
+      const nz=WALK.pos.z+dz;
+      if(!walkCollides(WALK.pos.x,WALK.pos.y,nz)) WALK.pos.z=nz;
+      else if(!walkCollides(WALK.pos.x,WALK.pos.y+1,nz)){ WALK.pos.y+=1; WALK.pos.z=nz; }
+    }
+    // gravity / snap to ground
+    const g=walkGround(WALK.pos.x,WALK.pos.z,WALK.pos.y);
+    if(g>-1e8){
+      if(WALK.pos.y<=g+0.02){ WALK.pos.y=g; WALK.vy=0; WALK.onGround=true; }
+      else { WALK.vy-=40*sdt; WALK.pos.y+=WALK.vy*sdt;
+        if(WALK.pos.y<=g){ WALK.pos.y=g; WALK.vy=0; WALK.onGround=true; } else WALK.onGround=false; }
+    } else { // no ground below at all: fall, then respawn if out of the world
+      WALK.vy-=40*sdt; WALK.pos.y+=WALK.vy*sdt;
+      if(WALK.pos.y<-30){ WALK.pos.set(0,1,0); WALK.vy=0; }
+    }
+  }
+  // face the movement direction
+  if(mv.lengthSq()>0){
+    const targetYaw=Math.atan2(mv.x,mv.z);
+    let d=targetYaw-walker.rotation.y;
+    while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
+    walker.rotation.y+=d*Math.min(1, dt*10);
+  }
+  // gentle bob while moving
+  const bob=mv.lengthSq()>0 ? Math.sin(performance.now()/90)*0.15 : 0;
+  walker.position.set(WALK.pos.x, WALK.pos.y+bob, WALK.pos.z);
+  // follow camera (raycast-clamped so walls don't hide the character)
+  // 3/4 over-shoulder view: offset to the walker's right so the steps
+  // ahead are visible beside him instead of hidden dead behind him,
+  // and aim a little ahead so he sits low in frame with the stairs in view.
+  const head=new THREE.Vector3(WALK.pos.x, WALK.pos.y+9, WALK.pos.z);
+  const cp=Math.cos(WALK.camPitch), sp=Math.sin(WALK.camPitch);
+  const side=WALK.dist*0.6;
+  const desired=new THREE.Vector3(
+    head.x + Math.sin(WALK.camYaw)*cp*WALK.dist + Math.cos(WALK.camYaw)*side,
+    head.y + sp*WALK.dist,
+    head.z + Math.cos(WALK.camYaw)*cp*WALK.dist - Math.sin(WALK.camYaw)*side);
+  const lookAt=head.clone().add(new THREE.Vector3(-Math.sin(WALK.camYaw)*10, 0, -Math.cos(WALK.camYaw)*10));
+  const dir=desired.clone().sub(head); const len=dir.length();
+  raycaster.set(head, dir.clone().normalize()); raycaster.far=len;
+  const hits=raycaster.intersectObjects([...instMeshes.map(s=>s.mesh), ...groundMeshes], false);
+  raycaster.far=Infinity;
+  let d=len;
+  if(hits.length) d=Math.max(4, hits[0].distance-1.5);
+  const camPos=head.clone().addScaledVector(dir.normalize(), d);
+  camera.position.lerp(camPos, 1-Math.exp(-12*dt));
+  camera.lookAt(lookAt);
+  // floor bar follows the walker
+  const wfi=floorOfY(Math.floor(WALK.pos.y));
+  if(wfi!==activeFloor) setFloor(wfi);
+  $('#walkFloor').textContent=FLOORS[wfi].name;
+}
+
+/* ================= keyboard + fly camera ================= */
+window.__keys=new Set();
+function bindKeys(){
+  window.addEventListener('keydown', e=>{
+    if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName||'')) return;
+    const k=e.code;
+    if(k==='Escape'){ if(WALK.active){ walkStop(); } return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyZ'){ e.preventDefault(); e.shiftKey?doRedo():doUndo(); return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyY'){ e.preventDefault(); doRedo(); return; }
+    if(k==='KeyV'){ WALK.active?walkStop():walkStart(); return; }
+    if(!WALK.active){
+      if(k==='KeyB') setTool('build');
+      if(k==='KeyE') setTool('erase');
+      if(k==='KeyP') setTool('pick');
+      if(k>='Digit1'&&k<='Digit8') selectType(+k.slice(5)-1);
+    }
+    window.__keys.add(k);
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(k)) e.preventDefault();
+  });
+  window.addEventListener('keyup', e=>window.__keys.delete(e.code));
+  window.addEventListener('blur', ()=>window.__keys.clear());
+}
+function flyTick(dt){
+  if(WALK.active) return;
+  const keys=window.__keys;
+  if(!keys.size) return;
+  const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+  const fwd=new THREE.Vector3(dir.x,0,dir.z).normalize();
+  const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0));
+  const mv=new THREE.Vector3();
+  if(keys.has('KeyW')||keys.has('ArrowUp')) mv.add(fwd);
+  if(keys.has('KeyS')||keys.has('ArrowDown')) mv.sub(fwd);
+  if(keys.has('KeyD')||keys.has('ArrowRight')) mv.add(right);
+  if(keys.has('KeyA')||keys.has('ArrowLeft')) mv.sub(right);
+  if(keys.has('KeyE')) mv.y+=1;
+  if(keys.has('KeyQ')) mv.y-=1;
+  if(mv.lengthSq()===0) return;
+  mv.normalize().multiplyScalar((keys.has('ShiftLeft')||keys.has('ShiftRight')?55:26)*dt);
+  camera.position.add(mv); controls.target.add(mv);
+}
+
+/* ================= main tick ================= */
+function tick(dt){
+  flyTick(dt);
+  if(WALK.active) walkStep(dt);
+  if(WALK.active) return;
+  // keep the floor band under the active floor
+  floorBand.position.y = FLOORS[activeFloor].base + 1.03;
+}
+
+/* ================= init ================= */
+function init(){
+  initScene();
+  buildWalker();
+  buildPalette();
+  buildFloorBar();
+  bindPointer();
+  bindKeys();
+  $$('#floorbar button').forEach((b,i)=>b.classList.toggle('on', i===activeFloor));
+  setFloor(1);
+  $$('#toolSeg button').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+  $$('.camrow [data-cam]').forEach(b=>b.onclick=()=>{
+    $$('.camrow [data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
+  $('#btnUndo').onclick=doUndo;
+  $('#btnRedo').onclick=doRedo;
+  $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
+  $('#btnExitWalk').onclick=walkStop;
+  $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
+    groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
+  $('#btnSnap').onclick=snapshot;
+  $('#btnExport').onclick=exportJSON;
+  $('#btnImport').onclick=()=>$('#importFile').click();
+  $('#importFile').addEventListener('change', e=>{ if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
+  $('#btnNew').onclick=()=>{ if(confirm('Clear everything and start a new empty plot?')){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } };
+  // wheel zoom in walk mode changes follow distance
+  renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
+  if(!loadLocal()){
+    // fresh start: empty grass base, nothing built yet
+    projectName='My Build'; $('#projName').textContent=projectName;
+    updateStats();
+  }
+  updateUndoBtns();
+  window.__ready=true;
+}
+
+/* ================= test hooks (read-only, used by the Playwright suites) ================= */
+window.__mc = {
+  get blocks(){ return blocks; },
+  count(){ return blocks.size; },
+  footprint(){ let xs=[],zs=[]; for(const [k] of blocks){ const p=parseKey(k); xs.push(p[0]); zs.push(p[2]); }
+    return xs.length? { x0:Math.min(...xs), x1:Math.max(...xs), z0:Math.min(...zs), z1:Math.max(...zs), w:Math.max(...xs)-Math.min(...xs)+1, d:Math.max(...zs)-Math.min(...zs)+1 } : null; },
+  areaSqFt(fi){ return floorAreaSqFt(fi); },
+  place(x,y,z,t,r=0){ return setBlock(x,y,z,t,r); },
+  erase(x,y,z){ return setBlock(x,y,z,null); },
+  getBlock(x,y,z){ return getBlock(x,y,z); },
+  setFloor(i){ setFloor(i,true); },
+  floor(){ return activeFloor; },
+  loadEmpty(){ buildEmpty(); },
+  undo(){ doUndo(); }, redo(){ doRedo(); },
+  walk:{
+    active(){ return WALK.active; },
+    start(){ walkStart(); }, stop(){ walkStop(); },
+    pos(){ return { x:WALK.pos.x, y:WALK.pos.y, z:WALK.pos.z }; },
+    floor(){ return floorOfY(Math.floor(WALK.pos.y)); },
+    setHeading(a){ WALK.camYaw=a; },   // heading: character moves toward (-sin a, 0, -cos a)
+    setPos(x,y,z){ WALK.pos.set(x,y,z); WALK.vy=0; },
+  },
+  projectToScreen(x,y,z){
+    const v=new THREE.Vector3(x,y,z).project(camera);
+    return { x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight, behind:v.z>1 };
+  },
+};
+
+init();
+</script>
+</body>
+</html>
