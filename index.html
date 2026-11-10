@@ -61,27 +61,30 @@
   body.touch #palette button canvas{width:44px;height:44px}
   body.touch #walkHint button{padding:8px 14px;font-size:16px}
   body.touch #moreMenu button,body.touch #sunMenu button{font-size:16px;padding:10px 12px}
-  /* ---------- palette ---------- */
-  #palette{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:10;display:flex;gap:6px;
+  /* ---------- palette: the full material strip — Level 2, behind "All blocks" (round 10) ----------
+     Hidden by default; the hotbar is what a first-time user sees. */
+  #palette{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:10;display:none;gap:6px;
     background:rgba(0,0,0,.45);padding:7px;border-radius:8px;border:3px solid rgba(0,0,0,.55)}
+  #palette.on{display:flex}
   #palette button{display:flex;flex-direction:column;align-items:center;gap:2px;width:64px;padding:4px 2px 3px;
     background:#d8d8d8;border:3px solid #555;border-radius:4px;font-size:10px;font-weight:800;color:#222}
   #palette button canvas{width:34px;height:34px;image-rendering:pixelated;border:2px solid #333;background:#999}
   #palette button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
   #palette button .k{font-size:9px;color:#666}
   /* ---------- readouts ---------- */
-  #readout{position:fixed;left:10px;bottom:10px;z-index:10;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;
-    padding:7px 10px;font-size:13px;line-height:1.5;max-width:300px}
+  #readout{position:fixed;left:10px;bottom:120px;z-index:10;background:rgba(0,0,0,.55);color:#fff;border-radius:6px;
+    padding:7px 10px;font-size:13px;line-height:1.5;max-width:240px}
   #readout b{color:#ffd83d}
   #readout .dim{color:#9be36d}
   #roTool{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #note{position:fixed;right:10px;bottom:10px;z-index:9;font-size:11px;color:#fff;background:rgba(0,0,0,.45);
+  #roFoot,#roArea{white-space:nowrap}   /* a size never splits mid-value; the line may wrap between them */
+  #note{position:fixed;right:10px;bottom:120px;z-index:9;font-size:11px;color:#fff;background:rgba(0,0,0,.45);
     padding:4px 8px;border-radius:5px;max-width:260px;text-align:right}
   #hoverTag{position:fixed;z-index:9;pointer-events:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;
     padding:3px 7px;border-radius:4px;display:none;white-space:nowrap}
   #hoverTag b{color:#ffd83d}
   /* ---------- walk hint / toast ---------- */
-  #walkHint{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:11;display:none;
+  #walkHint{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
   #walkHint button{margin-left:10px;background:#ff5c5c;color:#fff;border:2px solid #7a0000;border-radius:4px;
     font-weight:800;padding:4px 10px}
@@ -92,7 +95,7 @@
     padding:8px 10px;border-radius:6px;max-width:230px}
   #help b{color:#ffd83d}
   /* ---------- stairs / shutter presets panel ---------- */
-  #presetPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  #presetPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
   #presetPanel.on{display:flex}
   #presetPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
@@ -103,7 +106,7 @@
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
   /* ---------- templates / blueprints / mirror / replace / shortcuts panels (same bottom-centre spot) ---------- */
-  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
   #templatePanel.on,#blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on{display:flex}
   #templatePanel .pp-title,#blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
@@ -116,7 +119,7 @@
   #mirrorPanel input{width:56px}
   #cheatPanel{max-height:62vh;overflow:auto}
   /* ---------- clearance warnings panel + inline room rename (round 8) ---------- */
-  #warnPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  #warnPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
   #warnPanel.on{display:flex}
   #warnPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
@@ -129,7 +132,7 @@
   .warn-fl{font-weight:800;white-space:nowrap;color:#9be36d}
   .warn-note{flex-basis:100%;color:#ffd83d;font-size:11px;font-weight:700;line-height:1.5}
   #roWarn{cursor:pointer;color:#ffb84d}
-  #renameBox{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:30;display:none;
+  #renameBox{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:30;display:none;
     background:rgba(0,0,0,.75);border:3px solid #ffd83d;border-radius:8px;padding:10px;gap:8px;flex-wrap:wrap;max-width:420px}
   #renameBox.on{display:flex}
   #renameBox .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
@@ -145,7 +148,7 @@
   .tpl-item .tpl-size{font-weight:800;white-space:nowrap;color:#9be36d}
   .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
-  #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
   #fillPanel.on,#wallPanel.on{display:flex}
   #fillPanel .pp-title,#wallPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
@@ -158,7 +161,7 @@
   #wallPanel .pp-row .pp-note{flex-basis:auto;color:#ffd83d;font-weight:800}
   #wallPanel .pp-row b{color:#ffd83d}
   /* ---------- camera tour bar ---------- */
-  #tourBar{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:11;display:none;
+  #tourBar{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
   #tourBar button{margin-left:10px;background:#ff5c5c;color:#fff;border:2px solid #7a0000;border-radius:4px;
     font-weight:800;padding:4px 10px}
@@ -191,6 +194,66 @@
   #gizmo .gcen circle{fill:rgba(0,0,0,.45);stroke:#fff;stroke-width:1.5}
   /* ---------- box-select rectangle ---------- */
   #selBox{position:fixed;z-index:9;display:none;border:2px dashed #ffd83d;background:rgba(255,216,61,.12);pointer-events:none}
+  /* ---------- start screen: pick a house, never an empty grid (round 10) ---------- */
+  #startScreen{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;gap:16px;
+    background:linear-gradient(180deg,#7ec850 0%,#3a7d2c 60%,#2f6b24 100%);padding:20px;overflow:auto}
+  #startScreen.on{display:flex}
+  /* the wrapper carries margin:auto (not justify-content:center): when the
+     cards stack taller than a phone screen, the top stays reachable by
+     scrolling instead of being clipped off-centre */
+  .ss-wrap{margin:auto;width:100%;display:flex;flex-direction:column;align-items:center;gap:16px}
+  .ss-card{background:#fffbe6;border:4px solid #1e4d16;border-radius:14px;padding:22px 24px;max-width:860px;width:100%;
+    box-shadow:0 12px 40px rgba(0,0,0,.4);text-align:center;color:#222}
+  .ss-card h1{font-size:26px;margin-bottom:6px}
+  .ss-card .ss-sub{font-size:14px;color:#444;margin-bottom:16px;font-weight:700}
+  .ss-homes{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .ss-home{flex:1;min-width:200px;max-width:250px;background:#fff;border:3px solid #1e4d16;border-radius:10px;padding:14px;cursor:pointer;text-align:left}
+  .ss-home:hover{border-color:#b8860b;box-shadow:0 0 0 3px #ffd83d}
+  .ss-home .ss-ico{font-size:44px;text-align:center}
+  .ss-home h2{font-size:17px;margin:6px 0 4px}
+  .ss-home p{font-size:13px;color:#444;line-height:1.45}
+  .ss-home .ss-size{font-weight:800;color:#1e6b12;font-size:13px;margin-top:6px}
+  .ss-home button{margin-top:10px;width:100%;background:#ffd83d;border:3px solid #7a5b00;border-radius:6px;font-weight:800;font-size:14px;padding:9px;color:#4a3200;pointer-events:none}
+  .ss-empty{background:none;border:0;color:#fff;font-weight:800;font-size:15px;text-decoration:underline}
+  /* ---------- guided first build card (round 10) ---------- */
+  #guideCard{position:fixed;left:10px;top:110px;z-index:11;display:none;background:#fffbe6;border:3px solid #1e4d16;border-radius:10px;
+    padding:10px 12px;width:290px;box-shadow:0 6px 18px rgba(0,0,0,.35);color:#222}
+  #guideCard.on{display:block}
+  #guideCard h3{font-size:15px;margin-bottom:2px;padding-right:22px}
+  #guideCard .g-sub{font-size:12px;color:#555;font-weight:700;margin-bottom:8px}
+  #guideCard .g-step{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:700;padding:5px 0;color:#444}
+  #guideCard .g-step .g-box{flex:none;width:20px;height:20px;border:3px solid #1e4d16;border-radius:4px;background:#fff;text-align:center;line-height:15px;font-size:14px;color:#1e6b12}
+  #guideCard .g-step.done{color:#1e6b12}
+  #guideCard .g-step.done .g-box{background:#ffd83d}
+  #guideCard .g-celebrate{display:none;font-size:14px;font-weight:800;color:#1e6b12;margin-top:6px}
+  #guideCard.done .g-celebrate{display:block}
+  #guideCard .g-btns{display:none;gap:6px;margin-top:8px}
+  #guideCard.done .g-btns{display:flex}
+  #guideCard .g-btns button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;padding:6px 9px;color:#222}
+  #guideCard .g-x{position:absolute;top:6px;right:8px;border:0;background:none;font-size:16px;font-weight:800;cursor:pointer;color:#555}
+  /* ---------- hotbar: 8 big named blocks + Add / Remove modes (round 10) ---------- */
+  #hotbar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:10;display:flex;gap:6px;align-items:stretch;
+    background:rgba(0,0,0,.45);padding:7px;border-radius:8px;border:3px solid rgba(0,0,0,.55);max-width:calc(100vw - 20px);overflow-x:auto}
+  #hotbar .hb-mode{display:flex;flex-direction:column;gap:4px;justify-content:center}
+  #hotbar .hb-mode button{padding:8px 10px;font-size:13px;font-weight:800;border:3px solid #1e4d16;border-radius:4px;background:#e8e8e8;color:#12300c;white-space:nowrap}
+  #hotbar .hb-mode button.on{background:#ffd83d;color:#4a3200;box-shadow:0 0 0 2px #fff}
+  #hbSlots{display:flex;gap:6px}
+  #hotbar .hb-slot{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;padding:4px 2px 3px;
+    background:#d8d8d8;border:3px solid #555;border-radius:4px;font-size:11px;font-weight:800;color:#222}
+  #hotbar .hb-slot canvas{width:40px;height:40px;image-rendering:pixelated;border:2px solid #333;background:#999}
+  #hotbar .hb-slot .hb-ico{font-size:34px;line-height:40px}
+  #hotbar .hb-slot.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #hotbar .hb-slot .k{font-size:9px;color:#666}
+  #btnAllBlocks{align-self:center;background:#e8e8e8;border:3px solid #1e4d16;border-radius:4px;font-weight:800;font-size:12px;padding:8px 10px;color:#12300c;white-space:nowrap}
+  #btnAllBlocks.on{background:#ffd83d;color:#4a3200;box-shadow:0 0 0 2px #fff}
+  /* ---------- contextual selection panel: only when something is selected (round 10) ---------- */
+  #selPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
+    background:rgba(0,0,0,.6);border:3px solid #ffd83d;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px;align-items:center}
+  #selPanel.on{display:flex}
+  #selPanel .sp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #selPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;padding:7px 10px;color:#222}
+  /* ---------- save pill + big undo/redo (round 10) ---------- */
+  #savePill{position:fixed;right:140px;top:100px;z-index:9;font-size:12px;font-weight:800;color:#dff5c9;background:rgba(0,0,0,.45);border-radius:4px;padding:5px 8px;white-space:nowrap}
   @media (max-width:760px){
     #help{display:none}
     #gizmo{display:none}
@@ -198,6 +261,14 @@
     #palette button canvas{width:28px;height:28px}
     #readout{max-width:200px;font-size:12px}
     #note{display:none}
+    /* round 10: hotbar scrolls sideways, selection panel docks as a bottom sheet */
+    #hotbar{max-width:calc(100vw - 16px)}
+    #hotbar .hb-slot{min-width:56px}
+    #selPanel{left:0;right:0;transform:none;bottom:0;border-radius:10px 10px 0 0;max-width:none}
+    #guideCard{width:230px}
+    .ss-card{padding:16px}
+    .ss-card h1{font-size:21px}
+    .ss-homes{flex-direction:column}
   }
 </style>
 <script type="importmap">
@@ -227,7 +298,7 @@
     <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
   <div class="camrow">
-    <button data-cam="iso" class="on">Angle</button>
+    <button data-cam="iso" class="on">🏠 Home</button>
     <button data-cam="top">Top</button>
     <button data-cam="front">Front</button>
     <button data-cam="eye">Eye 5'6"</button>
@@ -252,6 +323,11 @@
     <span class="lbl" style="margin-left:auto">· <span id="projName">My Build</span></span>
   </div>
 </div>
+
+<!-- the save pill floats at the top-right of the canvas, left of the camera
+     gizmo: the top bar is exactly full at 1280px, so the pill cannot live
+     in it without pushing the toolbar to a third row (round 10) -->
+<span id="savePill">✓ Saved on this device</span>
 
 <div id="moreMenu">
   <div class="mm-title">More tools &amp; views</div>
@@ -293,9 +369,28 @@
 
 <div id="palette"></div>
 
+<div id="hotbar">
+  <div class="hb-mode">
+    <button id="btnModeAdd" class="on" title="Click to add blocks">➕ Add blocks</button>
+    <button id="btnModeRemove" title="Click to remove blocks">🧽 Remove blocks</button>
+  </div>
+  <div id="hbSlots"></div>
+  <button id="btnAllBlocks" title="Every block material — tap to show or hide">🧱 All blocks ▾</button>
+</div>
+
+<div id="selPanel">
+  <div class="sp-title" id="selPanelTitle">Selected: 0 blocks</div>
+  <button id="selCopy">📋 Copy</button>
+  <button id="selMove">🚚 Move</button>
+  <button id="selRotate">🔄 Rotate</button>
+  <button id="selColour">🎨 Change colour</button>
+  <button id="selBlueprint">💾 Save as blueprint</button>
+  <button id="selDelete">🗑 Delete</button>
+</div>
+
 <div id="readout">
   <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
-  <div style="white-space:nowrap">📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
+  <div>📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
   <div id="roSym" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
@@ -308,19 +403,11 @@
 </div>
 
 <div id="help">
-  <b>Left-click</b> a face = place block<br>
-  <b>Right-click</b> = tool menu<br>
-  <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
-  <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–9</b> pick block · <b>B E P I S X M F L T U W</b> tools<br>
-  <b>I</b> dropper · <b>U</b> flood · <b>W</b> wall · <b>Alt+click</b> pick a type<br>
-  <b>Ctrl+C / V</b> copy / paste · <b>R</b> rotate<br>
-  <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo<br>
-  <b>?</b> all shortcuts · <b>H</b> labels on / off<br>
-  <b>🎥</b> tour · <b>▦</b> grid · <b>🧲</b> snap in the top bar · <b>F</b> first-person in Walk<br>
-  <b>Shift+click</b> select a whole row · <b>Double-click</b> select all connected<br>
-  <b>Shift+drag</b> in Build draws a straight line of blocks · <b>Gizmo</b> top-right — click an axis to snap, drag to orbit<br>
-  <b>Space</b> hold for the hand — drag to move the view · <b>Scroll</b> zooms to the cursor
+  <b>Click Add blocks</b>, pick a block below, then click where it goes.<br>
+  <b>Drag</b> to look around · <b>Scroll</b> to zoom<br>
+  <b>Hold Space</b> and drag to move the view<br>
+  <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row<br>
+  Stuck? Click <b>🏠 Home</b> up top to reset the view.
 </div>
 
 <div id="presetPanel">
@@ -429,7 +516,9 @@
 <div id="cheatPanel">
   <div class="pp-title">Keyboard shortcuts — press ? any time to see this</div>
   <div class="cheat-grid">
-    <b>1 – 9</b><span>Pick a block type</span>
+    <b>1 – 8</b><span>Pick a block: Floor · Wall · Window · Door · Roof · Stairs · Tree · Eraser</span>
+    <b>Add / Remove</b><span>Buttons under the canvas — Add places blocks, Remove takes them away</span>
+    <b>🧱 All blocks</b><span>Every block material — tap All blocks under the canvas</span>
     <b>B · E · P · I</b><span>Build · Erase · Pick · Dropper (pick a type)</span>
     <b>S · X · M</b><span>Select · Expand · Move</span>
     <b>F · L · T · U</b><span>Fill a box · Line · Tape measure · Flood fill</span>
@@ -513,6 +602,28 @@
 <div id="hoverTag"></div>
 <div id="toast"></div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
+<div id="startScreen">
+  <div class="ss-wrap">
+  <div class="ss-card">
+    <h1>⛏️ Pick a house to make your own</h1>
+    <div class="ss-sub">Tap a house to open it and start changing it. No sign-up — your house is saved on this device.</div>
+    <div class="ss-homes" id="ssHomes"></div>
+  </div>
+  <button class="ss-empty" id="ssEmpty">Start with an empty plot →</button>
+  </div>
+</div>
+
+<div id="guideCard">
+  <button class="g-x" id="guideClose" title="Hide this">✕</button>
+  <h3>🏠 Build your first house</h3>
+  <div class="g-sub">3 quick steps — do them in the real editor.</div>
+  <div class="g-step" data-step="0"><span class="g-box"></span><span><b>1. Add a floor</b> — pick <b>Floor</b> below, then click the grass</span></div>
+  <div class="g-step" data-step="1"><span class="g-box"></span><span><b>2. Add walls</b> — pick <b>Wall</b>, click along the edge</span></div>
+  <div class="g-step" data-step="2"><span class="g-box"></span><span><b>3. Add a door</b> — pick <b>Door</b>, click a wall</span></div>
+  <div class="g-celebrate">🎉 You built a house!</div>
+  <div class="g-btns"><button id="guideKeep">Keep building</button><button id="guideStarter">Try a starter house</button></div>
+</div>
+
 <input type="file" id="importFile" accept=".json,application/json" style="display:none">
 
 <script type="module">
@@ -626,6 +737,7 @@ const TYPES = [
   { id:'stair', name:'Stair',   mats:[T.wood,T.wood,T.wood,T.wood,T.wood,T.wood], stair:true },
   { id:'slab',  name:'Roof Slab', mats:[T.slab,T.slab,T.slab,T.slab,T.slab,T.slab] },
   { id:'shutter', name:'Shutter', mats:[T.shutter,T.shutter,T.shutter,T.shutter,T.shutter,T.shutter] },
+  { id:'leaf',  name:'Leaves', mats:[T.leaf,T.leaf,T.leaf,T.leaf,T.leaf,T.leaf] },
 ];
 function matFor(ti){
   const ty=TYPES[ti];
@@ -845,6 +957,8 @@ function resize(){
   const tb=document.querySelector('#topbar');
   if(tb){ const top=(tb.offsetHeight+10)+'px';
     const gz=$('#gizmo'); if(gz) gz.style.top=top;
+    const gc=$('#guideCard'); if(gc) gc.style.top=top;   // the first-build card hangs under the bar too (round 10)
+    const pill=$('#savePill'); if(pill) pill.style.top=top;   // the save pill floats left of the gizmo (round 10)
     $('#help').style.top=(tb.offsetHeight+138)+'px'; $('#sizeBar').style.top=top; }
 }
 function buildGroundScenery(){
@@ -1188,6 +1302,7 @@ function updateStats(){
   }
   updateFloorBand();
   updateSymmetryReadout();
+  guideCheck();   // the 3-step first build ticks itself off as you build (round 10)
 }
 
 /* ================= always-on wall dimension labels ================= */
@@ -2095,12 +2210,14 @@ function loadProjectData(p){
 }
 function scheduleSave(){
   const el=$('#roSaved'); if(el) el.textContent='💾 Saving…';
+  const pill=$('#savePill'); if(pill) pill.textContent='💾 Saving…';
   clearTimeout(saveTimer); saveTimer=setTimeout(saveLocal, 600);
 }
 function saveLocal(){
   try{
     localStorage.setItem(LSKEY, JSON.stringify(projectData()));
     const el=$('#roSaved'); if(el) el.textContent='💾 Saved ✓ '+saveTimeStr();
+    const pill=$('#savePill'); if(pill) pill.textContent='✓ Saved on this device';
   }catch(e){}
 }
 function loadLocal(){
@@ -2607,6 +2724,7 @@ function updateSelectionHighlight(){
     sz.style.display='block';
     sz.textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' wide × '+ftin(d)+' deep × '+ftin(h)+' high';
   } else sz.style.display='none';
+  updateSelPanel();   // the contextual panel lives and dies with the selection (round 10)
 }
 function clearSelection(){ selection.clear(); updateSelectionHighlight(); }
 function selectBlockKey(k, additive){
@@ -2852,6 +2970,37 @@ function flatCells(){
   c.push(...tplRect(-1,24,18,18,-1,12,7));                    // slab roof
   return c;
 }
+function houseCells(){
+  // Two-storey family house, 20 x 20 blocks (10' x 10'): ground floor,
+  // stairs inside, first floor with a stair opening, slab roof.
+  let c=[];
+  c.push(...tplRect(0,19,1,1,0,19,2));                        // wood ground floor
+  let walls=tplWalls(0,19,0,19,2,17,4);                       // brick ground walls, 16 high (8 ft)
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=8 && cell.x<=13 && cell.y<=15);   // front door 3' x 7'
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=2 && cell.x<=5 && cell.y>=8 && cell.y<=11); // front windows
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=15 && cell.x<=18 && cell.y>=8 && cell.y<=11);
+  walls=tplCut(walls, cell=> cell.z===19 && cell.x>=3 && cell.x<=6 && cell.y>=8 && cell.y<=11); // back windows
+  walls=tplCut(walls, cell=> cell.z===19 && cell.x>=13 && cell.x<=16 && cell.y>=8 && cell.y<=11);
+  walls=tplCut(walls, cell=> cell.x===0 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11);  // left window
+  walls=tplCut(walls, cell=> cell.x===19 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11); // right window
+  c.push(...walls);
+  // stairs inside: 20 steps, 3 ft wide, along +z at x 13..18, ground up to the first floor
+  c.push(...stairCells('straight',20,6).map(s=>({ x:13+s.dx, y:1+s.dy, z:s.dz, t:s.t, r:s.r })));
+  // first floor: wood floor at y=21, with a stair opening over the top
+  // steps (z 16..19) so there is headroom while climbing
+  let ff=tplRect(0,19,21,21,0,19,2);
+  ff=tplCut(ff, cell=> cell.x>=13 && cell.x<=18 && cell.z>=16 && cell.z<=19);
+  c.push(...ff);
+  // first-floor walls, brick, 16 high, windows all round
+  let fw=tplWalls(0,19,0,19,22,37,4);
+  for(const z of [0,19]) for(const x0 of [2,8,14])
+    fw=tplCut(fw, cell=> cell.z===z && cell.x>=x0 && cell.x<=x0+3 && cell.y>=28 && cell.y<=31);
+  for(const x of [0,19])
+    fw=tplCut(fw, cell=> cell.x===x && cell.z>=8 && cell.z<=11 && cell.y>=28 && cell.y<=31);
+  c.push(...fw);
+  c.push(...tplRect(-1,20,38,38,-1,20,7));                    // slab roof, 1-block overhang
+  return c;
+}
 function gardenCells(){
   let c=[];
   c.push(...tplRect(0,19,1,4,0,0,3));                         // front wall, 20 long, 4 high (2 ft)
@@ -2874,14 +3023,22 @@ function stairDemoCells(){
 const TEMPLATES=[
   { id:'cottage', name:'Small cottage', desc:"One-room cottage — door, four windows, slab roof", cells:cottageCells },
   { id:'flat', name:'Two-room flat', desc:"Two rooms with a door between them — windows all round", cells:flatCells },
+  { id:'house', name:'Two-storey house', desc:"Two floors, stairs inside, windows all round — the family house", cells:houseCells },
   { id:'garden', name:'Garden wall + gate', desc:"Low stone garden wall, brick gate posts, dirt path", cells:gardenCells },
   { id:'stairs', name:'Staircase demo', desc:"20-step stair, 3 ft wide, landing and side rails", cells:stairDemoCells },
 ];
 function templateInfo(t){
   const cells=t.cells();
-  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
-  for(const c of cells){ x0=Math.min(x0,c.x); x1=Math.max(x1,c.x); z0=Math.min(z0,c.z); z1=Math.max(z1,c.z); }
-  return { cells, n:cells.length, wFt:(x1-x0+1)*FT, dFt:(z1-z0+1)*FT };
+  // count unique positions: a template may list a cell twice (e.g. the
+  // house stairs sit on top of floor cells), but the build holds one block
+  const seen=new Set();
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,n=0;
+  for(const c of cells){
+    const k=c.x+','+c.y+','+c.z;
+    if(!seen.has(k)){ seen.add(k); n++; }
+    x0=Math.min(x0,c.x); x1=Math.max(x1,c.x); z0=Math.min(z0,c.z); z1=Math.max(z1,c.z);
+  }
+  return { cells, n, wFt:(x1-x0+1)*FT, dFt:(z1-z0+1)*FT };
 }
 function loadTemplate(id){
   const t=TEMPLATES.find(t=>t.id===id); if(!t) return 0;
@@ -4165,7 +4322,6 @@ function buildPalette(){
     if(ty.glass){ g.fillStyle='rgba(180,220,255,0.5)'; g.fillRect(0,0,64,64); g.drawImage(tex.image,0,0); }
     b.appendChild(cv);
     const nm=document.createElement('span'); nm.textContent=ty.name; b.appendChild(nm);
-    const k=document.createElement('span'); k.className='k'; k.textContent='key '+(ti+1); b.appendChild(k);
     b.onclick=()=>selectType(ti);
     pal.appendChild(b);
   });
@@ -4174,6 +4330,7 @@ function buildPalette(){
 function selectType(ti){
   selType=ti;
   $$('#palette button').forEach(b=>b.classList.toggle('on', +b.dataset.type===ti));
+  updateHotbar();   // a picked material lights up its hotbar slot too (round 10)
 }
 function buildFloorBar(){
   const bar=$('#floorbar');
@@ -4184,6 +4341,173 @@ function buildFloorBar(){
     bar.appendChild(b);
   });
 }
+
+/* ================= Canva-style UI (round 10) ================= */
+/* Level 1 is what a first-time user sees: a hotbar of 8 big NAMED blocks
+   by function, two plain Add / Remove mode buttons, big Undo / Redo and a
+   "Saved on this device" pill. Everything else (the full 10-material
+   palette, the 12 tools, templates, mirror…) stays one click away in
+   Level 2 — nothing is removed, only moved behind a clear label. */
+const HOTBAR_SLOTS=[
+  { id:'floor',  name:'Floor',  type:2 },   // wood planks, like every template floor
+  { id:'wall',   name:'Wall',   type:4 },
+  { id:'window', name:'Window', type:5 },
+  { id:'door',   name:'Door',   type:8 },
+  { id:'roof',   name:'Roof',   type:7 },
+  { id:'stairs', name:'Stairs', type:6 },
+  { id:'tree',   name:'Tree',   type:9 },
+  { id:'eraser', name:'Eraser', tool:'erase' },
+];
+let buildMode='add';   // 'add' | 'remove' — the plain-language face of the Build / Erase tools
+function buildHotbar(){
+  const wrap=$('#hbSlots');
+  HOTBAR_SLOTS.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='hb-slot'; b.dataset.slot=s.id;
+    if(s.tool==='erase'){
+      const ic=document.createElement('span'); ic.className='hb-ico'; ic.textContent='🧽'; b.appendChild(ic);
+    } else {
+      const cv=document.createElement('canvas'); cv.width=cv.height=64;
+      cv.getContext('2d').drawImage(TYPES[s.type].mats[2].image,0,0);
+      b.appendChild(cv);
+    }
+    const nm=document.createElement('span'); nm.textContent=s.name; b.appendChild(nm);
+    const k=document.createElement('span'); k.className='k'; k.textContent='key '+(i+1); b.appendChild(k);
+    b.onclick=()=>selectHotbarSlot(i);
+    wrap.appendChild(b);
+  });
+  updateHotbar();
+}
+function selectHotbarSlot(i){
+  const s=HOTBAR_SLOTS[i]; if(!s) return false;
+  if(s.tool==='erase'){ setBuildMode('remove'); return true; }
+  selectType(s.type);
+  setBuildMode('add');
+  return true;
+}
+function updateHotbar(){
+  const wrap=$('#hbSlots'); if(!wrap) return;
+  $$('#hotbar .hb-slot').forEach((b,i)=>{
+    const s=HOTBAR_SLOTS[i];
+    b.classList.toggle('on', !!s && (s.tool==='erase' ? tool==='erase' : (tool==='build' && selType===s.type)));
+  });
+  updateModeUI();
+}
+function updateModeUI(){
+  const a=$('#btnModeAdd'), r=$('#btnModeRemove');
+  if(!a||!r) return;
+  a.classList.toggle('on', buildMode==='add');
+  r.classList.toggle('on', buildMode==='remove');
+}
+function setBuildMode(m){
+  buildMode=(m==='remove')?'remove':'add';
+  setTool(buildMode==='remove'?'erase':'build');
+  updateModeUI();
+}
+/* the full material strip is Level 2: hidden until "All blocks" is tapped */
+function togglePalette(show){
+  const p=$('#palette');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  const b=$('#btnAllBlocks'); if(b) b.classList.toggle('on',on);
+  return on;
+}
+/* ================= contextual selection panel (round 10) ================= */
+/* Only when something is selected — the panel shows the actions that fit
+   a selection, in plain words. Clicking empty space clears the selection
+   and the panel goes away with it. It steps aside while a settings panel
+   is open, and the material strip rides above it when both show. */
+const PANEL_IDS=['presetPanel','templatePanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel'];
+function anyPanelOpen(){ return PANEL_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('on'); }); }
+function updateSelPanel(){
+  const p=$('#selPanel'); if(!p) return;
+  const on=selection.size>0 && !WALK.active && !anyPanelOpen();
+  p.classList.toggle('on', on);
+  if(on){
+    const bb=selectionBBox();
+    const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT;
+    $('#selPanelTitle').textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d);
+  }
+  const pal=$('#palette');
+  if(pal) pal.style.bottom = on ? (120 + p.offsetHeight + 10)+'px' : '';
+}
+/* ================= start screen: pick a house, never an empty grid (round 10) ================= */
+const START_IDS=['cottage','flat','house'];
+const START_ICONS={ cottage:'🏠', flat:'🏡', house:'🏘️' };
+function renderStartScreen(){
+  const wrap=$('#ssHomes'); wrap.innerHTML='';
+  for(const id of START_IDS){
+    const t=TEMPLATES.find(t=>t.id===id); if(!t) continue;
+    const info=templateInfo(t);
+    const card=document.createElement('div'); card.className='ss-home';
+    const ic=document.createElement('div'); ic.className='ss-ico'; ic.textContent=START_ICONS[id]||'🏠';
+    const nm=document.createElement('h2'); nm.textContent=t.name;
+    const ds=document.createElement('p'); ds.textContent=t.desc;
+    const sz=document.createElement('div'); sz.className='ss-size';
+    sz.textContent=ftin(info.wFt)+' × '+ftin(info.dFt)+' · '+info.n+' blocks';
+    const b=document.createElement('button'); b.textContent='Make it mine';
+    card.append(ic,nm,ds,sz,b);
+    card.onclick=()=>startPick(id);
+    wrap.appendChild(card);
+  }
+}
+function showStartScreen(){ renderStartScreen(); $('#startScreen').classList.add('on'); }
+function hideStartScreen(){ $('#startScreen').classList.remove('on'); }
+function startPick(id){
+  hideStartScreen();
+  loadTemplate(id);   // the build is empty at first load, so no confirm dialog
+}
+function startEmpty(){
+  hideStartScreen();
+  if(!guideDone()) showGuide();
+}
+/* ================= guided first build (round 10) ================= */
+/* Three tiny steps inside the real editor, modelled on Tinkercad's
+   in-app starters — no manual, no tour. Stored in localStorage so it
+   never repeats once finished or dismissed. */
+const GUIDE_KEY='home-designer-minecraft-guide-v1';
+const guideState={ done:[false,false,false], visible:false, finished:false };
+function guideDone(){ try{ return localStorage.getItem(GUIDE_KEY)==='done'; }catch(e){ return false; } }
+function guideMarkDone(){ try{ localStorage.setItem(GUIDE_KEY,'done'); }catch(e){} }
+function showGuide(){
+  if(guideDone()) return false;
+  guideState.visible=true;
+  $('#guideCard').classList.add('on');
+  updateGuideUI();
+  return true;
+}
+function dismissGuide(){
+  guideState.visible=false;
+  $('#guideCard').classList.remove('on');
+  guideMarkDone();
+}
+function updateGuideUI(){
+  $$('#guideCard .g-step').forEach((el,i)=>{
+    el.classList.toggle('done', !!guideState.done[i]);
+    const box=el.querySelector('.g-box'); if(box) box.textContent=guideState.done[i]?'✓':'';
+  });
+}
+function guideCheck(){
+  if(!guideState.visible || guideState.finished) return;
+  const base=FLOORS[activeFloor].base;
+  let floorN=0, hasWall=false, hasDoor=false;
+  for(const [k,v] of blocks){
+    const p=parseKey(k);
+    if(p[1]===base+1) floorN++;
+    if(v.t===4 || p[1]>=base+2) hasWall=true;
+    if(v.t===8) hasDoor=true;
+  }
+  guideState.done[0]=floorN>=4;
+  guideState.done[1]=hasWall;
+  guideState.done[2]=hasDoor;
+  updateGuideUI();
+  if(guideState.done.every(Boolean)){
+    guideState.finished=true;
+    $('#guideCard').classList.add('done');
+    guideMarkDone();
+    toast('🎉 You built a house!');
+  }
+}
 function setTool(t){
   if(moveCarry) cancelMove();
   if(fillDrag) cancelFillDrag();
@@ -4192,6 +4516,11 @@ function setTool(t){
   if(buildDrag) cancelBuildDrag();
   if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   tool=t;
+  // the Add / Remove mode buttons are the plain-language face of
+  // Build / Erase — keep them in sync with the tool (round 10)
+  if(t==='build') buildMode='add';
+  else if(t==='erase') buildMode='remove';
+  updateHotbar();
   $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   // the fill panel and the stair panel share the same bottom-centre spot —
@@ -4250,6 +4579,7 @@ function walkStart(){
   cancelMove();
   if(viewMode!=='normal') setView('normal');   // walking needs the whole build visible
   WALK.active=true;
+  updateSelPanel();   // the selection panel stays out of the way while walking (round 10)
   if(wallLabelGroup) wallLabelGroup.visible=false;
   if(roomLabelGroup) roomLabelGroup.visible=false;
   savedCam={ pos:camera.position.clone(), tgt:controls.target.clone() };
@@ -4269,6 +4599,7 @@ function walkStop(){
   WALK.active=false;
   WALK.fp=false;
   walker.visible=false;
+  updateSelPanel();   // the selection panel may come back now (round 10)
   const fpb=$('#btnWalkFP');
   if(fpb){ fpb.classList.remove('on'); fpb.textContent='👁 First-person'; }
   if(document.pointerLockElement===renderer.domElement){ try{ document.exitPointerLock(); }catch(e){} }
@@ -4475,7 +4806,7 @@ function bindKeys(){
         if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
         else rotateSelection();
       }
-      if(k>='Digit1'&&k<='Digit9') selectType(+k.slice(5)-1);
+      if(k>='Digit1'&&k<='Digit8') selectHotbarSlot(+k.slice(5)-1);   // hotbar slots: Floor · Wall · Window · Door · Roof · Stairs · Tree · Eraser (round 10)
     }
     if(k==='Space' && !WALK.active && !TOUR.active) setHand(true);
     window.__keys.add(k);
@@ -4520,6 +4851,7 @@ function init(){
   initScene();
   buildWalker();
   buildPalette();
+  buildHotbar();   // the 8 big named blocks + Add / Remove modes (round 10)
   buildFloorBar();
   bindPointer();
   bindKeys();
@@ -4530,6 +4862,31 @@ function init(){
     $$('.camrow [data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
   $('#btnUndo').onclick=doUndo;
   $('#btnRedo').onclick=doRedo;
+  // Add / Remove modes + the full material strip (round 10)
+  $('#btnModeAdd').onclick=()=>setBuildMode('add');
+  $('#btnModeRemove').onclick=()=>setBuildMode('remove');
+  $('#btnAllBlocks').onclick=()=>togglePalette();
+  // the contextual selection panel (round 10)
+  $('#selCopy').onclick=()=>copySelection();
+  $('#selMove').onclick=()=>{ setTool('move'); toast('Click one of the selected blocks to pick the whole lot up'); };
+  $('#selRotate').onclick=()=>rotateSelection();
+  $('#selColour').onclick=()=>{ replaceScope='selection';
+    $$('#replacePanel button[data-scope]').forEach(x=>x.classList.toggle('on', x.dataset.scope==='selection'));
+    updateReplaceCount(); toggleReplacePanel(true); };
+  $('#selBlueprint').onclick=()=>{
+    const name=prompt('Name this blueprint:', '');
+    if(name===null) return;
+    if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
+  };
+  $('#selDelete').onclick=()=>deleteSelection();
+  // start screen + guided first build (round 10)
+  $('#ssEmpty').onclick=()=>startEmpty();
+  $('#guideClose').onclick=()=>dismissGuide();
+  $('#guideKeep').onclick=()=>dismissGuide();
+  $('#guideStarter').onclick=()=>{ dismissGuide(); showStartScreen(); };
+  // the selection panel re-checks itself whenever any panel opens or
+  // closes, so it never sits on top of a settings panel (round 10)
+  new MutationObserver(()=>updateSelPanel()).observe(document.body,{attributes:true,attributeFilter:['class'],subtree:true});
   $('#btnCopy').onclick=()=>copySelection();
   $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
   $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
@@ -4650,12 +5007,18 @@ function init(){
   $('#btnNew').onclick=()=>{ if(confirm('Clear everything and start a new empty plot?')){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
-  if(!loadLocal()){
+  const hadSave=loadLocal();
+  if(!hadSave){
     // fresh start: empty grass base, nothing built yet
     projectName='My Build'; $('#projName').textContent=projectName;
     updateStats();
   }
-  loadSharedFromHash();   // a #s= link replaces whatever was loaded above
+  const shared=loadSharedFromHash();   // a #s= link replaces whatever was loaded above
+  // first load with no save and no shared link: pick a house first —
+  // never an empty grid by default (round 10)
+  if(!hadSave && !shared && blocks.size===0) showStartScreen();
+  const pill=$('#savePill');
+  if(pill) pill.textContent = hadSave ? '✓ Saved on this device' : 'Saves on this device as you build';
   loadLabelsPref();   // wall labels: on by default, remembered choice wins
   loadSunPref();      // sunlight: Day by default, remembered choice wins
   loadTouchPref();    // touch mode: off by default, remembered choice wins
@@ -4940,6 +5303,46 @@ window.__mc = {
   exportData(){ return projectData(); },
   importData(p){ return loadProjectData(p); },
   saveStatus(){ return $('#roSaved').textContent; },
+  savePill(){ return $('#savePill').textContent; },
+  start:{
+    visible(){ return $('#startScreen').classList.contains('on'); },
+    show(){ showStartScreen(); return true; },
+    pick(id){ startPick(id); return true; },
+    empty(){ startEmpty(); return true; },
+    templates(){ return [...START_IDS]; },
+    cardCount(){ return document.querySelectorAll('#ssHomes .ss-home').length; },
+    cardNames(){ return [...document.querySelectorAll('#ssHomes .ss-home h2')].map(e=>e.textContent); },
+  },
+  guide:{
+    visible(){ return $('#guideCard').classList.contains('on'); },
+    show(){ return showGuide(); },
+    dismiss(){ dismissGuide(); return true; },
+    steps(){ return [...guideState.done]; },
+    finished(){ return guideState.finished; },
+    doneFlag(){ return guideDone(); },
+    stepTexts(){ return [...document.querySelectorAll('#guideCard .g-step')].map(e=>e.textContent); },
+    celebrateVisible(){ return $('#guideCard').classList.contains('done'); },
+  },
+  hotbar:{
+    slots(){ return HOTBAR_SLOTS.map((s,i)=>({ i, id:s.id, name:s.name, type:(s.type??null), tool:s.tool||null })); },
+    select(i){ return selectHotbarSlot(i); },
+    active(){ const el=document.querySelector('#hotbar .hb-slot.on'); return el? el.dataset.slot : null; },
+    mode(){ return buildMode; },
+    setMode(m){ setBuildMode(m); return buildMode; },
+    count(){ return document.querySelectorAll('#hotbar .hb-slot').length; },
+    visible(){ const el=document.querySelector('#hotbar'); const r=el.getBoundingClientRect(); return r.width>0 && r.height>0; },
+  },
+  palette:{
+    open(){ return togglePalette(true); },
+    close(){ return togglePalette(false); },
+    isOpen(){ return $('#palette').classList.contains('on'); },
+    count(){ return document.querySelectorAll('#palette button').length; },
+    select(ti){ selectType(ti); return true; },
+  },
+  selPanel:{
+    visible(){ return $('#selPanel').classList.contains('on'); },
+    title(){ return $('#selPanelTitle').textContent; },
+  },
   sizeBarVisible(){ return $('#sizeBar').classList.contains('on'); },
   clearAll(){ clearBlocks(); scheduleSave(); },
   menuOpen(){ return ctxMenuOpen(); },
