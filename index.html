@@ -208,6 +208,8 @@
   #gizmo .gcen circle{fill:rgba(0,0,0,.45);stroke:#fff;stroke-width:1.5}
   /* ---------- box-select rectangle ---------- */
   #selBox{position:fixed;z-index:9;display:none;border:2px dashed #ffd83d;background:rgba(255,216,61,.12);pointer-events:none}
+  #selBoxLabel{position:absolute;left:0;top:-26px;background:#222;color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:4px;white-space:nowrap;pointer-events:none}
+  #selBoxLabel.below{top:calc(100% + 4px)}
   /* ---------- start screen: pick a house, never an empty grid (round 10) ---------- */
   #startScreen{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;gap:16px;
     background:linear-gradient(180deg,#7ec850 0%,#3a7d2c 60%,#2f6b24 100%);padding:20px;overflow:auto}
@@ -373,13 +375,13 @@ body.panel-collapsed #sidePanel{ display:none; }
 .tpl-card h3{ font-size:15px; color:#1a1a1a; margin:4px 0 2px; }
 .tpl-card p{ font-size:12px; color:#555; line-height:1.45; }
 .tpl-card .tpl-size{ font-weight:800; color:#1b5e20; font-size:12px; margin-top:6px; }
-.proj-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
-  border-radius:10px; padding:10px; margin-bottom:8px; cursor:pointer; color:#1a1a1a; }
+.proj-row{ display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #d8d8d8;
+  border-radius:10px; padding:8px; margin-bottom:8px; cursor:pointer; color:#1a1a1a; }
 .proj-row:hover{ border-color:#2e7d32; }
 .proj-row.current{ border-color:#2e7d32; background:#e8f5e9; }
 .proj-row .pr-info{ flex:1; min-width:0; }
 .proj-row .pr-name{ font-weight:800; font-size:13px; color:#1a1a1a; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
-.proj-row .pr-meta{ font-size:11px; color:#666; margin-top:2px; }
+.proj-row .pr-meta{ font-size:10px; color:#666; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .proj-row .pr-btns{ display:flex; gap:0; flex:none; }
 .proj-row .pr-btns button{ background:none; border:0; font-size:14px; padding:5px 4px; border-radius:6px; color:#444; }
 .proj-row .pr-btns button:hover{ background:#e0e0e0; }
@@ -399,7 +401,7 @@ body.panel-collapsed #sidePanel{ display:none; }
 #sheetHandle .grip{ display:block; width:44px; height:5px; border-radius:3px; background:#bbb; margin:0 auto; }
 #sheetHandle .sh-label{ display:block; font-size:11px; font-weight:800; color:#666; text-align:center; margin-top:3px; }
 /* round 14: project thumbnails on the build rows */
-.pr-thumb{ width:52px; height:40px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
+.pr-thumb{ width:44px; height:34px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
   display:flex; align-items:center; justify-content:center; font-size:22px; }
 .pr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 .layer-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
@@ -489,6 +491,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
      the way so the canvas — and the drop ghost — is actually visible */
   body.card-dragging #sidePanel{ max-height:0; border:0; box-shadow:none; }
   #readout{ left:10px; bottom:68px; max-width:calc(100vw - 20px); }
+  #toast{ left:50%; }   /* round 16: no left shell on phones, so no offset */
   #note{ display:none; }
   #zoomBar{ bottom:68px; }
   #selPanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-width:none; max-height:45vh; border-radius:14px 14px 0 0; }
@@ -633,10 +636,10 @@ body.touch #zoomBar button{ padding:6px 12px; }
     <div class="sp-sec">How to build</div>
     <div class="help-lines">
       <b>Click Add blocks</b>, pick a block in Elements, then click where it goes.<br>
-      <b>Drag</b> to look around · <b>Scroll</b> to zoom<br>
+      <b>Drag</b> to look around · <b>Scroll</b> to zoom · <b>0</b> fits the build in view<br>
       <b>Hold Space</b> and drag to move the view<br>
       <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row<br>
-      Stuck? Click <b>🏠 Home</b> in Tools to reset the view.
+      With <b>Select</b>, drag empty grass to box-select an area · <b>Shift</b> adds to it · <b>🏠 Home</b> resets the view.
     </div>
     <div style="height:12px"></div>
     <button id="btnHelpShortcuts" class="sp-primary">❓ Keyboard shortcuts</button>
@@ -845,6 +848,8 @@ body.touch #zoomBar button{ padding:6px 12px; }
     <b>Shift + click</b><span>Select the whole row (Select tool) · erase a whole wall (Erase tool)</span>
     <b>Double-click</b><span>Select all connected blocks of the same material</span>
     <b>Shift + drag</b><span>Draw a straight line of blocks (Build tool)</span>
+    <b>Drag (Select)</b><span>Box-select a whole area on the floor you are on — Shift adds to the selection, Esc cancels</span>
+    <b>0</b><span>Fit the whole build in view (or the empty plot when nothing is built)</span>
     <b>↔ Flip</b><span>Flip the selection left-right or front-back — buttons when blocks are selected</span>
     <b>🧱 Materials</b><span>What the build is made of — counts per material (More menu)</span>
     <b>🏠 Build a room</b><span>Type a size in feet and inches, build a room or a wall (More menu)</span>
@@ -962,7 +967,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <button id="ctxStack" title="Copy the selection upward">⬆ Stack up</button>
   <button id="ctxSelectFloor" title="Select every block on this floor">⬚ Select this floor</button>
 </div>
-<div id="selBox"></div>
+<div id="selBox"><span id="selBoxLabel"></span></div>
 
 <div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnWalkFP" title="First-person view, eye 5'6&quot; (F)">👁 First-person</button> <button id="btnExitWalk">✕ Exit walk</button></div>
 <div id="tourBar">🎥 Tour — slow orbit around the build · Esc stops <button id="btnTourRec" title="Record this tour as a .webm video">● Record</button> <button id="btnTourStop">✕ Stop</button></div>
@@ -970,6 +975,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
 <div id="toast"></div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
 <div id="zoomBar" title="Zoom the view">
+  <button id="btnFit" title="Fit the build in view (0)">⤢</button>
   <button id="zoomOut" title="Zoom out">−</button>
   <input id="zoomSlider" type="range" min="0" max="100" value="50" step="1" title="Zoom">
   <button id="zoomIn" title="Zoom in">＋</button>
@@ -1325,13 +1331,16 @@ function clockDelta(){ const now=performance.now(); const dt=Math.min((now-_last
    projection does, so raycasts, the gizmo and zoom-to-cursor stay in step */
 function updateViewOffset(){
   if(!camera) return;
-  const sl=parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0;
+  // round 16: on phones the rail is at the BOTTOM, so there is no left
+  // shell to offset for — the old 64px value pushed the whole picture
+  // 32px right of the screen centre on phones
+  const sl=innerWidth<=820?0:(parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0);
   if(sl>0) camera.setViewOffset(innerWidth, innerHeight, -sl/2, 0, innerWidth, innerHeight);
   else camera.clearViewOffset();
 }
 function resize(){
   const w=innerWidth, h=innerHeight;
-  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); updateViewOffset();
+  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); updateViewOffset(); positionToast();
   // the size bar sits just under the slim top bar; the gizmo hangs under it too
   const tb=document.querySelector('#topbar');
   if(tb){ const top=(tb.offsetHeight+10)+'px';
@@ -3248,10 +3257,32 @@ function loadSharedFromHash(){
 
 /* ================= toast ================= */
 let toastTimer=null;
+/* round 16: the toast sits ABOVE whatever is under it — the status pill
+   on desktop, the bottom sheet on phones — so it never covers either one.
+   Its height is measured live because the pill grows with its lines. */
+function positionToast(){
+  const t=$('#toast'); if(!t) return;
+  let bottom;
+  if(innerWidth<=820){
+    const sp=document.querySelector('#sidePanel');
+    const panelOpen = sp && getComputedStyle(sp).display!=='none'
+      && !document.body.classList.contains('panel-closed');
+    if(panelOpen){
+      const r=sp.getBoundingClientRect();
+      bottom = innerHeight - r.top + 10;   // just above the sheet (and its search box)
+    } else {
+      const ro=$('#readout'); const r=ro.getBoundingClientRect();
+      bottom = innerHeight - r.top + 10;   // just above the status pill
+    }
+  } else {
+    const ro=$('#readout'); const r=ro.getBoundingClientRect();
+    bottom = innerHeight - r.top + 10;     // just above the status pill
+  }
+  t.style.bottom = Math.round(bottom)+'px';
+}
 function toast(msg){ const t=$('#toast'); t.textContent=msg;
-  // round 15: CSS pins the toast bottom-centre above the zoom controls —
-  // it never covers the middle of the build any more
   t.classList.add('on');
+  positionToast();
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'), 2600); }
 
 /* ================= picking / ghost preview ================= */
@@ -5007,28 +5038,56 @@ function projectToScreenPoint(x,y,z){
   if(v.z>1) return null;
   return { x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight };
 }
+/* round 16: the live count under the rectangle counts the blocks on the
+   ACTIVE floor only — a marquee never grabs a hidden floor */
+let boxCountAt=0, boxCountCache=0;
+function boxCountInRect(x0,y0,x1,y1){
+  let n=0;
+  for(const [k] of blocks){
+    const [x,y,z]=parseKey(k);
+    if(floorOfY(y)!==activeFloor) continue;
+    const s=projectToScreenPoint(x+0.5,y+0.5,z+0.5);
+    if(s && s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1) n++;
+  }
+  return n;
+}
 function updateBoxDrag(e){
+  if(e.isPrimary===false) return;   // a second finger is the pinch, never the box
   boxDrag.x1=e.clientX; boxDrag.y1=e.clientY;
   const el=$('#selBox');
-  el.style.left=Math.min(boxDrag.x0,boxDrag.x1)+'px';
-  el.style.top=Math.min(boxDrag.y0,boxDrag.y1)+'px';
-  el.style.width=Math.abs(boxDrag.x1-boxDrag.x0)+'px';
-  el.style.height=Math.abs(boxDrag.y1-boxDrag.y0)+'px';
+  const x0=Math.min(boxDrag.x0,boxDrag.x1), y0=Math.min(boxDrag.y0,boxDrag.y1);
+  const w=Math.abs(boxDrag.x1-boxDrag.x0), h=Math.abs(boxDrag.y1-boxDrag.y0);
+  el.style.left=x0+'px'; el.style.top=y0+'px';
+  el.style.width=w+'px'; el.style.height=h+'px';
   el.style.display='block';
+  // live count, throttled so a 20k-block build doesn't jank the drag
+  const now=performance.now();
+  if(now-boxCountAt>60){ boxCountAt=now; boxCountCache=boxCountInRect(x0,y0,x0+w,y0+h); }
+  const lab=$('#selBoxLabel');
+  lab.textContent=(w>6||h>6)? boxCountCache+' block'+(boxCountCache===1?'':'s') : '';
+  lab.classList.toggle('below', y0<30);   // near the top of the screen the label hangs below the box
+}
+function cancelBoxDrag(){
+  if(!boxDrag) return;
+  boxDrag=null; controls.enabled=true;
+  $('#selBox').style.display='none';
 }
 function finishBoxDrag(){
   const b=boxDrag; boxDrag=null; controls.enabled=true;
   $('#selBox').style.display='none';
   const x0=Math.min(b.x0,b.x1), y0=Math.min(b.y0,b.y1), x1=Math.max(b.x0,b.x1), y1=Math.max(b.y0,b.y1);
-  if(x1-x0<6 && y1-y0<6){ clearSelection(); return; }
-  let added=0;
+  if(x1-x0<6 && y1-y0<6){ if(!b.add) clearSelection(); return; }   // a tap, not a drag — same as clicking empty grass
+  if(!b.add) selection.clear();   // plain marquee replaces; Shift+marquee adds
+  let n=0;
   for(const [k] of blocks){
     const [x,y,z]=parseKey(k);
+    if(floorOfY(y)!==activeFloor) continue;   // active floor only — hidden floors are never selected
     const s=projectToScreenPoint(x+0.5,y+0.5,z+0.5);
-    if(s && s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1){ selection.add(k); added++; }
+    if(s && s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1){ selection.add(k); n++; }
   }
   updateSelectionHighlight();
-  if(added) toast('Selected '+added+' blocks');
+  if(n) toast('Selected '+n+' block'+(n===1?'':'s'));
+  else if(!b.add) toast('Nothing in that box — try a bigger drag');
 }
 
 /* ================= pointer: click = place/erase/pick, drag = orbit ================= */
@@ -5094,10 +5153,14 @@ function bindPointer(){
       const hit=raycastVoxel(e);
       if(hit) buildDragStart(e, hit.cell);
     }
-    if(e.button===0 && tool==='select' && !(touchMode && e.pointerType==='touch')){
+    // round 16: marquee (Figma/Blender-style box select) — drag on EMPTY
+    // grass with Select draws the rectangle; a drag starting on a block
+    // still orbits / moves as before. Touch works too: one finger draws
+    // the box (a second finger is the pinch, so it never starts a box)
+    if(e.button===0 && tool==='select' && e.isPrimary!==false){
       const hit=raycastVoxel(e);
       if(!hit || !hit.block){
-        boxDrag={ x0:e.clientX, y0:e.clientY, x1:e.clientX, y1:e.clientY };
+        boxDrag={ x0:e.clientX, y0:e.clientY, x1:e.clientX, y1:e.clientY, add:!!e.shiftKey };
         controls.enabled=false;
       }
     }
@@ -5108,10 +5171,10 @@ function bindPointer(){
   });
   el.addEventListener('pointerup', e=>{
     clearTimeout(lpTimer); lpTimer=null;
-    if(lpFired){ lpFired=false; downPos=null; return; }   // long-press already erased; swallow the tap
+    if(lpFired){ lpFired=false; downPos=null; cancelBoxDrag(); return; }   // long-press already erased; swallow the tap
     if(WALK.active){ walkDrag=null; return; }
     if(expandDrag){ expandFinish(); downPos=null; return; }
-    if(boxDrag){ finishBoxDrag(); downPos=null; return; }
+    if(boxDrag && e.isPrimary!==false){ finishBoxDrag(); downPos=null; return; }
     if(fillDrag){ fillFinish(); downPos=null; return; }
     if(wallDrag && wallPlacing){ wallFinish(); return; }
     if(buildDrag){ buildDragFinish(); downPos=null; return; }
@@ -5216,8 +5279,8 @@ function bindPointer(){
   });
   // a fill drag released outside the canvas still has to finish, or the
   // controls stay disabled and the ghost stays on screen
-  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); if(wallDrag && wallPlacing) wallFinish(); if(buildDrag) buildDragFinish(); if(panDrag) endPanDrag(); });
-  window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); if(wallDrag) cancelWallDrag(); if(buildDrag) cancelBuildDrag(); if(panDrag) endPanDrag(); });
+  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); if(wallDrag && wallPlacing) wallFinish(); if(buildDrag) buildDragFinish(); if(panDrag) endPanDrag(); if(boxDrag) finishBoxDrag(); });
+  window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); if(wallDrag) cancelWallDrag(); if(buildDrag) cancelBuildDrag(); if(panDrag) endPanDrag(); if(boxDrag) cancelBoxDrag(); });
   // scroll zooms toward the cursor (Figma-style), not the screen centre.
   // Caught on window in the capture phase so OrbitControls' own wheel zoom
   // (dolly toward the target) never also runs — pinch zoom on touch is
@@ -5679,6 +5742,7 @@ function bindKeys(){
       if(TOUR.active){ tourStop(); return; }
       if(WALK.active){ if(WALK.fp) setWalkFP(false); else walkStop(); }
       else if(moveCarry){ cancelMove(); }
+      else if(boxDrag){ cancelBoxDrag(); }
       else if(fillDrag){ cancelFillDrag(); }
       else if(buildDrag){ cancelBuildDrag(); }
       else if(wallDrag){ cancelWallDrag(); }
@@ -5728,6 +5792,7 @@ function bindKeys(){
         else rotateSelection();
       }
       if(k>='Digit1'&&k<='Digit8') selectHotbarSlot(+k.slice(5)-1);   // hotbar slots: Floor · Wall · Window · Door · Roof · Stairs · Tree · Eraser (round 10)
+      if(k==='Digit0') zoomFit();   // round 16: fit the build in view
     }
     if(k==='Space' && !WALK.active && !TOUR.active) setHand(true);
     window.__keys.add(k);
@@ -5901,6 +5966,7 @@ function init(){
   $('#projNameInput').addEventListener('blur', ()=>{ if($('#projNameInput').style.display!=='none') commitProjRename(); });
   $('#zoomOut').onclick=()=>zoomStep(-1);
   $('#zoomIn').onclick=()=>zoomStep(1);
+  $('#btnFit').onclick=()=>zoomFit();
   $('#zoomSlider').addEventListener('input', e=>{ const v=+e.target.value;
     const d=320*Math.pow(8/320, v/100); const cd=camDist();
     if(cd>0.01){ camera.position.sub(controls.target).multiplyScalar(d/cd).add(controls.target); controls.update(); }
@@ -6086,11 +6152,12 @@ function projectAreaSqFt(data){
 function projectMeta(p){
   const n=p.data&&Array.isArray(p.data.blocks)? p.data.blocks.length : 0;
   const d=new Date(p.updatedAt||p.createdAt||Date.now());
-  const when=d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '
+  // round 16: short date first, no "Edited", no area — one tidy line again.
+  // Very big builds shorten the count ("20k blocks") so the line never clips.
+  const when=String(d.getDate()).padStart(2,'0')+' '+d.toLocaleDateString(undefined,{month:'short'})+' '
     +String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-  const area=projectAreaSqFt(p.data);
-  return 'Edited '+when+' · '+n.toLocaleString('en-IN')+' block'+(n===1?'':'s')
-    +(area?' · '+area+' sq ft':'');
+  const nStr=n>=10000? Math.round(n/1000)+'k' : n.toLocaleString('en-IN');
+  return when+' · '+nStr+' block'+(n===1?'':'s');
 }
 function openProject(id){
   saveLocal();   // flush the project being left first
@@ -6618,6 +6685,97 @@ function updateZoomUI(){
   if(pc) pc.textContent=zoomPct()+'%';
 }
 
+/* ---- round 16: Fit — frame the build (or the empty plot) in the view ---- */
+/* The camera keeps its angle (Figma-style fit); only the target and the
+   distance change. The fit is measured against the VISIBLE canvas — the
+   shell on the left on desktop, the rail + sheet at the bottom on phones —
+   so the build lands in the middle of what you can actually see. */
+function visibleCanvasRect(){
+  const tb=document.querySelector('#topbar');
+  const top=tb? tb.offsetHeight : 0;
+  if(innerWidth<=820){
+    const sp=document.querySelector('#sidePanel');
+    const panelOpen = sp && getComputedStyle(sp).display!=='none'
+      && !document.body.classList.contains('panel-closed');
+    let bottom=innerHeight-58;   // the bottom rail
+    if(panelOpen){ const r=sp.getBoundingClientRect(); bottom=Math.min(bottom, r.top); }
+    return { left:0, top, right:innerWidth, bottom };
+  }
+  const sl=parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0;
+  return { left:sl, top, right:innerWidth, bottom:innerHeight };
+}
+function zoomFit(){
+  let x0,x1,y0,y1,z0,z1;
+  if(blocks.size){
+    x0=1e9;x1=-1e9;y0=1e9;y1=-1e9;z0=1e9;z1=-1e9;
+    for(const [k] of blocks){ const p=parseKey(k);
+      if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0];
+      if(p[1]<y0)y0=p[1]; if(p[1]>y1)y1=p[1];
+      if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
+    x0-=0.5; x1+=1.5; y0-=0.5; y1+=1.5; z0-=0.5; z1+=1.5;
+  } else {
+    x0=-40; x1=62; y0=0; y1=1; z0=-40; z1=110;   // the whole grass plot
+  }
+  const cx=(x0+x1)/2, cy=(y0+y1)/2, cz=(z0+z1)/2;
+  const corners=[];
+  for(const xx of [x0,x1]) for(const yy of [y0,y1]) for(const zz of [z0,z1]) corners.push([xx,yy,zz]);
+  const baseOff=camera.position.clone().sub(controls.target).normalize();
+  const rect=visibleCanvasRect();
+  const m=24;   // margin, px
+  const ctr=new THREE.Vector3(cx,cy,cz);
+  const fitsAt=(off,d)=>{
+    camera.position.copy(ctr).addScaledVector(off, d);
+    controls.target.copy(ctr);
+    camera.lookAt(ctr);
+    camera.updateMatrixWorld(true);
+    for(const c of corners){
+      const s=projectToScreenPoint(c[0],c[1],c[2]);
+      if(!s) return false;
+      if(s.x<rect.left+m||s.x>rect.right-m||s.y<rect.top+m||s.y>rect.bottom-m) return false;
+    }
+    return true;
+  };
+  const tryAzimuth=(off)=>{
+    // grow until everything fits — the tightest fit that shows it all.
+    // d=320 itself is tested too: a fit that needs 310–320 must not be
+    // skipped by the ×1.12 step jumping straight past the cap
+    let d=8;
+    for(;;){
+      if(fitsAt(off,d)) return d;
+      if(d>=320) return null;
+      d=Math.min(320, d*1.12);
+    }
+  };
+  let off=baseOff, d=tryAzimuth(off), turned=false;
+  if(d===null){
+    // too wide / tall for this angle on a narrow screen (a phone in
+    // portrait): turn the view around the build — new compass direction,
+    // and if that still doesn't fit, flatten the view too (a low angle
+    // squeezes a deep plot into less screen height). The angle only ever
+    // changes when it has to; the current elevation is tried first.
+    const elev0=Math.asin(clamp(baseOff.y,-1,1));
+    const offFrom=(elev,azim)=>new THREE.Vector3(
+      Math.cos(elev)*Math.sin(azim), Math.sin(elev), Math.cos(elev)*Math.cos(azim));
+    const elevs=[elev0, THREE.MathUtils.degToRad(35), THREE.MathUtils.degToRad(25), THREE.MathUtils.degToRad(15)];
+    // absolute azimuth grid (0°/90°/180°/270° are the natural fits for a
+    // rectangular plot — a grid relative to the current angle can miss
+    // them by a few degrees and fail by a few pixels)
+    outer: for(const el of elevs){
+      for(let k=0;k<24;k++){
+        const rot=offFrom(el, k*Math.PI/12);
+        const dd=tryAzimuth(rot);
+        if(dd!==null){ off=rot; d=dd; turned=true; break outer; }
+      }
+    }
+  }
+  if(d===null){ off=baseOff; d=320; }   // nothing fits — show as much as possible from the original angle
+  camera.position.copy(ctr).addScaledVector(off, d);
+  controls.target.copy(ctr);
+  controls.update(); updateZoomUI();
+  if(turned) toast('Fit — turned the view so the whole build fits');
+  return { dist:Math.round(d), center:[cx,cy,cz], empty:!blocks.size, turned };
+}
+
 
 
 /* ================= test hooks (read-only, used by the Playwright suites) ================= */
@@ -7081,6 +7239,63 @@ Object.assign(window.__mc, {
     out(){ return zoomStep(-1); },
     dist(){ return camDist(); },
   },
+  fit(){ return zoomFit(); },
+  visibleRect(){ return visibleCanvasRect(); },
+  // round 16 debug: does this view (elevation/azimuth/distance) frame the
+  // build (or the empty plot)? Returns the corner projections + verdict.
+  // The camera is put back exactly where it was.
+  fitCheck(elevDeg, azimDeg, dist){
+    let x0,x1,y0,y1,z0,z1;
+    if(blocks.size){
+      x0=1e9;x1=-1e9;y0=1e9;y1=-1e9;z0=1e9;z1=-1e9;
+      for(const [k] of blocks){ const p=parseKey(k);
+        if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0];
+        if(p[1]<y0)y0=p[1]; if(p[1]>y1)y1=p[1];
+        if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
+      x0-=0.5; x1+=1.5; y0-=0.5; y1+=1.5; z0-=0.5; z1+=1.5;
+    } else { x0=-40; x1=62; y0=0; y1=1; z0=-40; z1=110; }
+    const cx=(x0+x1)/2, cy=(y0+y1)/2, cz=(z0+z1)/2;
+    const ctr=new THREE.Vector3(cx,cy,cz);
+    const el=THREE.MathUtils.degToRad(elevDeg), az=THREE.MathUtils.degToRad(azimDeg);
+    const off=new THREE.Vector3(Math.cos(el)*Math.sin(az), Math.sin(el), Math.cos(el)*Math.cos(az));
+    const oldPos=camera.position.clone(), oldTgt=controls.target.clone();
+    camera.position.copy(ctr).addScaledVector(off, dist);
+    controls.target.copy(ctr);
+    camera.lookAt(ctr);
+    camera.updateMatrixWorld(true);
+    const rect=visibleCanvasRect();
+    const pts=[];
+    for(const xx of [x0,x1]) for(const yy of [y0,y1]) for(const zz of [z0,z1])
+      pts.push(projectToScreenPoint(xx,yy,zz));
+    const ok=pts.every(s=>s && s.x>=rect.left+24 && s.x<=rect.right-24
+      && s.y>=rect.top+24 && s.y<=rect.bottom-24);
+    camera.position.copy(oldPos); controls.target.copy(oldTgt);
+    camera.lookAt(oldTgt); controls.update();
+    return { ok, rect, pts:pts.map(s=>s?{x:Math.round(s.x),y:Math.round(s.y)}:null) };
+  },
+  toast:{
+    show(m){ toast(m); return true; },
+    rect(){ const t=document.querySelector('#toast'); const r=t.getBoundingClientRect();
+      return { on:t.classList.contains('on'), left:Math.round(r.left), top:Math.round(r.top),
+        right:Math.round(r.right), bottom:Math.round(r.bottom) }; },
+    bottom(){ return document.querySelector('#toast').style.bottom; },
+  },
+  marquee:{
+    active(){ return !!boxDrag; },
+    box(){ return boxDrag? { ...boxDrag } : null; },
+    start(x,y,add){ boxDrag={ x0:x, y0:y, x1:x, y1:y, add:!!add }; controls.enabled=false;
+      updateBoxDrag({ clientX:x, clientY:y, isPrimary:true }); return true; },
+    dragTo(x,y){ if(!boxDrag) return null; updateBoxDrag({ clientX:x, clientY:y, isPrimary:true });
+      return { count:boxCountCache, label:document.querySelector('#selBoxLabel').textContent }; },
+    commit(){ if(!boxDrag) return null; finishBoxDrag(); return [...selection]; },
+    cancel(){ cancelBoxDrag(); return true; },
+    label(){ return document.querySelector('#selBoxLabel').textContent; },
+    count(){ return boxCountCache; },
+    rect(){ const el=document.querySelector('#selBox'); const r=el.getBoundingClientRect();
+      return { visible:el.style.display!=='none', left:Math.round(r.left), top:Math.round(r.top),
+        width:Math.round(r.width), height:Math.round(r.height) }; },
+  },
+  metaText(id){ const p=loadProjects().find(x=>x.id===id); return p? projectMeta(p) : null; },
   home:{
     visible(){ return $('#startScreen').classList.contains('on'); },
     projects(){ return loadProjects().map(p=>p.name); },
