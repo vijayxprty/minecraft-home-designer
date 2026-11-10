@@ -61,6 +61,25 @@
   #help{position:fixed;right:10px;top:110px;z-index:9;background:rgba(0,0,0,.5);color:#fff;font-size:12px;line-height:1.6;
     padding:8px 10px;border-radius:6px;max-width:230px}
   #help b{color:#ffd83d}
+  /* ---------- stairs / shutter presets panel ---------- */
+  #presetPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+    background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
+  #presetPanel.on{display:flex}
+  #presetPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #presetPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 10px;color:#222}
+  #presetPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  /* ---------- right-click tool menu ---------- */
+  #ctxMenu{position:fixed;z-index:30;display:none;flex-direction:column;background:#222;color:#fff;
+    border:3px solid #ffd83d;border-radius:8px;padding:5px;min-width:170px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+  #ctxMenu.on{display:flex}
+  #ctxMenu .cm-title{font-size:11px;font-weight:800;color:#ffd83d;padding:3px 8px 5px}
+  #ctxMenu button{background:transparent;border:0;color:#fff;text-align:left;font-weight:700;font-size:14px;
+    padding:7px 10px;border-radius:5px}
+  #ctxMenu button:hover{background:#444}
+  #ctxMenu button.on{background:#3a7d2c}
+  /* ---------- box-select rectangle ---------- */
+  #selBox{position:fixed;z-index:9;display:none;border:2px dashed #ffd83d;background:rgba(255,216,61,.12);pointer-events:none}
   @media (max-width:760px){
     #help{display:none}
     #palette button{width:52px;font-size:9px}
@@ -85,11 +104,16 @@
   <div class="actions">
     <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
     <button id="btnRedo" title="Ctrl+Y">↪ Redo</button>
+    <button id="btnCopy" title="Copy the selection (Ctrl+C)">⧉ Copy</button>
+    <button id="btnPaste" title="Paste what you copied (Ctrl+V)">📋 Paste</button>
+    <button id="btnRotate" title="Rotate the selection or the preset ghost 90° (R)">🔄 Rotate</button>
+    <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
     <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
     <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
     <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
     <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
     <button id="btnImport" title="Open a project JSON">⬆ Import</button>
+    <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
     <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
   </div>
   <div class="camrow">
@@ -103,6 +127,8 @@
       <button data-tool="build" class="on" title="Click a face to place a block (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
+      <button data-tool="select" title="Click a block to select it, Shift-click to add more, drag a box to select many (L)">⬚ Select</button>
+      <button data-tool="expand" title="Click a wall and drag to make it longer or taller (X)">↔ Expand</button>
     </span>
     <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
   </div>
@@ -111,19 +137,40 @@
 <div id="palette"></div>
 
 <div id="readout">
-  <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b></div>
+  <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
   <div>📐 Built so far: <b id="roFoot">nothing yet</b> · Floor area: <b id="roArea">0 sq ft</b></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
 </div>
 
 <div id="help">
   <b>Left-click</b> a face = place block<br>
-  <b>Right-click</b> a block = remove it<br>
+  <b>Right-click</b> = tool menu<br>
   <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
   <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–8</b> pick block · <b>B / E / P</b> tools<br>
-  <b>Ctrl+Z / Ctrl+Y</b> undo / redo
+  <b>1–9</b> pick block · <b>B / E / P / L / X</b> tools<br>
+  <b>Ctrl+C / Ctrl+V</b> copy / paste · <b>R</b> rotate<br>
+  <b>Del</b> delete selection · <b>Ctrl+Z / Ctrl+Y</b> undo / redo
 </div>
+
+<div id="presetPanel">
+  <div class="pp-title">Stairs &amp; shutter — pick one, then click the ground to place it · R rotates it · Esc stops</div>
+  <button data-preset="stairs5">🪜 Straight 5 steps</button>
+  <button data-preset="stairs10">🪜 Straight 10 steps</button>
+  <button data-preset="stairsL">🪜 L-shaped</button>
+  <button data-preset="stairsU">🪜 U-shaped</button>
+  <button data-preset="shutter">🚪 Shutter door 6' × 7'</button>
+  <button id="presetClose">✕ Close</button>
+</div>
+
+<div id="ctxMenu">
+  <div class="cm-title">Switch tool</div>
+  <button data-tool="build">🧱 Build</button>
+  <button data-tool="erase">⛏ Erase</button>
+  <button data-tool="pick">🎯 Pick</button>
+  <button data-tool="select">⬚ Select</button>
+  <button data-tool="expand">↔ Expand</button>
+</div>
+<div id="selBox"></div>
 
 <div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnExitWalk">✕ Exit walk</button></div>
 <div id="hoverTag"></div>
@@ -200,6 +247,16 @@ T.slab = texCanvas((g,S,R)=>{ g.fillStyle='#b5b5b5'; g.fillRect(0,0,S,S);
   speckle(g,S,R,['#a8a8a8','#c2c2c2','#9a9a9a'],420); }, 18);
 T.leaf = texCanvas((g,S,R)=>{ g.fillStyle='#3f7a26'; g.fillRect(0,0,S,S);
   speckle(g,S,R,['#2f5e1c','#4c8f30','#5da33c'],520); }, 19);
+T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic slats
+  for(let y=0;y<S;y+=8){
+    const grad=g.createLinearGradient(0,y,0,y+8);
+    grad.addColorStop(0,'#a9bfd2'); grad.addColorStop(0.45,'#7d97ad');
+    grad.addColorStop(0.55,'#5f7a92'); grad.addColorStop(1,'#8ba2b6');
+    g.fillStyle=grad; g.fillRect(0,y,S,8);
+    g.fillStyle='rgba(18,32,46,0.9)'; g.fillRect(0,y+7,S,1);
+    g.fillStyle='rgba(255,255,255,0.25)'; g.fillRect(0,y,S,1);
+  }
+  speckle(g,S,R,['rgba(255,255,255,0.12)','rgba(0,0,0,0.12)'],120); }, 20);
 
 /* ================= block types ================= */
 const TYPES = [
@@ -211,6 +268,7 @@ const TYPES = [
   { id:'glass', name:'Glass',   mats:[T.glass,T.glass,T.glass,T.glass,T.glass,T.glass], glass:true },
   { id:'stair', name:'Stair',   mats:[T.wood,T.wood,T.wood,T.wood,T.wood,T.wood], stair:true },
   { id:'slab',  name:'Roof Slab', mats:[T.slab,T.slab,T.slab,T.slab,T.slab,T.slab] },
+  { id:'shutter', name:'Shutter', mats:[T.shutter,T.shutter,T.shutter,T.shutter,T.shutter,T.shutter] },
 ];
 function matFor(ti){
   const ty=TYPES[ti];
@@ -236,11 +294,23 @@ let projectName = 'My Build';
 let undoStack = [], redoStack = [];
 let groundVisible = true;
 
+/* ---- selection / copy-paste / presets / expand ---- */
+let selection = new Set();         // block keys
+let clipboard = [];                // [{dx,dy,dz,t,r}] relative to the copied min corner
+let pasteMode = false;             // ghost of the clipboard follows the mouse, click stamps it
+let presetMode = null;             // preset name being placed, or null
+let presetRot = 0;                 // 0..3, R rotates the preset ghost
+let expandDrag = null;             // {anchor:[x,y,z], run, mode, len, cells:[]}
+let boxDrag = null;                // {x0,y0,x1,y1} screen coords for box-select
+
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
 const instMeshes = [];             // per type: {mesh, keys[]}
 const groundMeshes = [];
-let ghost, floorBand;
+let ghost, floorBand, multiGhost, selGroup;
+const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.45, depthWrite:false });
+const selBoxGeo = new THREE.BoxGeometry(1.04, 1.04, 1.04);
+const selBoxMat = new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.4, depthWrite:false });
 const raycaster = new THREE.Raycaster();
 const pointerNDC = new THREE.Vector2();
 
@@ -274,7 +344,10 @@ function initScene(){
   const boxGeo = new THREE.BoxGeometry(1,1,1);
   const stairGeo = stairGeometry();
   TYPES.forEach((ty,ti)=>{
-    const mesh = new THREE.InstancedMesh(ti===6?stairGeo:boxGeo, matFor(ti), 64);
+    // the merged stair geometry has no face groups, so an array material
+    // would render (and raycast) nothing — stairs get a single material
+    const mats = matFor(ti);
+    const mesh = new THREE.InstancedMesh(ti===6?stairGeo:boxGeo, ti===6? mats[0] : mats, 64);
     mesh.count = 0; mesh.castShadow = true; mesh.receiveShadow = true;
     mesh.userData.type = ti;
     mesh.frustumCulled = false;
@@ -294,6 +367,11 @@ function initScene(){
   floorBand.position.set(0, 1.03, 0);
   floorBand.scale.set(12, 1, 12);
   scene.add(floorBand);
+
+  // multi-block ghost: reused by Expand, Paste and preset placement
+  multiGhost = new THREE.Group(); multiGhost.visible=false; scene.add(multiGhost);
+  // selection highlight boxes
+  selGroup = new THREE.Group(); selGroup.visible=false; scene.add(selGroup);
 
   buildGroundScenery();
   resize();
@@ -326,14 +404,26 @@ function buildGroundScenery(){
 
 /* ================= block data + instanced rebuild ================= */
 const dummy = new THREE.Object3D();
-function setBlock(x,y,z,t,r=0, record=true){
+function setBlockRaw(x,y,z,t,r=0){
   const k=key3(x,y,z);
   const prev = blocks.get(k) || null;
-  if(t==null){ if(!prev) return false; blocks.delete(k); }
+  if(t==null){ if(!prev) return null; blocks.delete(k); }
   else blocks.set(k, { t, r });
-  if(record) pushUndo({ x,y,z, prev, next: t==null?null:{t,r} });
+  return { x,y,z, prev, next: t==null?null:{t,r} };
+}
+function setBlock(x,y,z,t,r=0, record=true){
+  const op = setBlockRaw(x,y,z,t,r);
+  if(!op) return false;
+  if(record) pushUndo(op);
   rebuild(); scheduleSave(); updateStats();
   return true;
+}
+/* apply a list of desired final states {x,y,z,t,r} as ONE undo step; skips no-ops */
+function applyBatch(list){
+  const ops=[];
+  for(const o of list){ const op=setBlockRaw(o.x,o.y,o.z, o.t, o.r||0); if(op) ops.push(op); }
+  if(ops.length){ pushUndo(ops); rebuild(); scheduleSave(); updateStats(); }
+  return ops.length;
 }
 function getBlock(x,y,z){ return blocks.get(key3(x,y,z)) || null; }
 function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
@@ -373,19 +463,23 @@ function rebuild(){
   });
 }
 
-/* ================= undo / redo ================= */
-function pushUndo(op){ undoStack.push(op); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); }
-function applyOp(op, useNext){
+/* ================= undo / redo (single op or {batch:[ops]}) ================= */
+function pushUndo(op){ undoStack.push(Array.isArray(op)?{batch:op}:op); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); }
+function applySingle(op, useNext){
   const v = useNext ? op.next : op.prev;
   if(v) blocks.set(key3(op.x,op.y,op.z), { t:v.t, r:v.r||0 });
   else blocks.delete(key3(op.x,op.y,op.z));
+}
+function applyOp(op, useNext){
+  if(op.batch){ op.batch.forEach(o=>applySingle(o,useNext)); return; }
+  applySingle(op,useNext);
 }
 function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
 function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); }
 function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
 
 /* ================= clear ================= */
-function clearBlocks(){ blocks.clear(); undoStack.length=0; redoStack.length=0; rebuild(); updateStats(); }
+function clearBlocks(){ blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
 function buildEmpty(){ clearBlocks(); rebuild(); updateStats(); scheduleSave(); }
 
 /* ================= floors ================= */
@@ -450,6 +544,7 @@ function loadLocal(){
     for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
     projectName = p.name||'My Build';
     $('#projName').textContent = projectName;
+    clearSelection();
     rebuild(); updateStats();
     return true;
   }catch(e){ return false; }
@@ -473,6 +568,7 @@ function importJSON(file){
       projectName = p.name||'Imported design';
       $('#projName').textContent = projectName;
       undoStack.length=0; redoStack.length=0;
+      clearSelection();
       rebuild(); updateStats(); saveLocal();
       toast('Imported — '+blocks.size.toLocaleString('en-IN')+' blocks');
     }catch(e){ toast('That file could not be opened'); }
@@ -528,11 +624,28 @@ function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
 function updateHover(e){
   if(WALK.active){ ghost.visible=false; hover=null; return; }
   const hit=raycastVoxel(e);
-  if(!hit){ ghost.visible=false; hover=null; $('#hoverTag').style.display='none'; $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; return; }
+  if(!hit){ ghost.visible=false; hover=null; hideMultiGhost();
+    $('#hoverTag').style.display='none'; $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; return; }
   const [cx,cy,cz]=hit.cell;
+  hover={ cell:hit.cell, block:hit.block, type:hit.type, valid:true };
+  // paste / preset mode: the ghost is the whole clipboard / preset, not one block
+  if(pasteMode || presetMode){
+    const cells = pasteMode ? pasteCells(hit.cell)
+      : presetCells(presetMode, presetRot).map(c=>({ x:hit.cell[0]+c.dx, y:hit.cell[1]+c.dy, z:hit.cell[2]+c.dz }))
+        .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+    showMultiGhost(cells);
+    ghost.visible=false;
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):PRESETS[presetMode].label)+'</b> · click to place';
+    $('#roHover').innerHTML = pasteMode ? 'Click to paste <b>'+cells.length+'</b> blocks here — Esc to stop'
+      : 'Click to place <b>'+PRESETS[presetMode].label+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
+    return;
+  }
   const occupied=getBlock(cx,cy,cz)!==null;
   const valid=!occupied&&inBounds(cx,cy,cz);
-  hover={ cell:hit.cell, block:hit.block, type:hit.type, valid };
+  hover.valid=valid;
   ghost.visible=true;
   ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
   ghost.material.color.set(valid?0x7CFC00:0xff4444);
@@ -544,8 +657,303 @@ function updateHover(e){
   $('#roHover').innerHTML='At <b>'+ftin(cx*FT)+'</b> × <b>'+ftin(cy*FT)+'</b> · <b>'+ftin(cz*FT)+'</b> — '+(valid?'place <b>'+TYPES[selType].name+'</b> here':'blocked');
 }
 
+/* ================= selection ================= */
+function updateSelectionHighlight(){
+  while(selGroup.children.length) selGroup.remove(selGroup.children[0]);
+  selGroup.visible = selection.size>0;
+  for(const k of selection){
+    const [x,y,z]=parseKey(k);
+    const m=new THREE.Mesh(selBoxGeo, selBoxMat);
+    m.position.set(x+0.5, y+0.5, z+0.5);
+    selGroup.add(m);
+  }
+  $('#roSel').textContent = selection.size? ' · Selected: '+selection.size+' block'+(selection.size>1?'s':'') : '';
+}
+function clearSelection(){ selection.clear(); updateSelectionHighlight(); }
+function selectBlockKey(k, additive){
+  if(!blocks.has(k)) return;   // never select a block that isn't there
+  if(!additive) selection.clear();
+  if(selection.has(k)){ if(additive) selection.delete(k); }
+  else selection.add(k);
+  updateSelectionHighlight();
+}
+function bboxOfKeys(keys){
+  let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;
+  for(const k of keys){ const [x,y,z]=parseKey(k);
+    x0=Math.min(x0,x); y0=Math.min(y0,y); z0=Math.min(z0,z);
+    x1=Math.max(x1,x); y1=Math.max(y1,y); z1=Math.max(z1,z); }
+  return { x0,y0,z0,x1,y1,z1 };
+}
+function selectionBBox(){ return selection.size? bboxOfKeys([...selection]) : null; }
+
+/* ================= multi-block ghost (Expand / Paste / presets) ================= */
+function showMultiGhost(cells){
+  while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]);
+  if(!cells.length){ multiGhost.visible=false; return; }
+  for(const c of cells){
+    const m=new THREE.Mesh(selBoxGeo, multiGhostMat);
+    m.position.set(c.x+0.5, c.y+0.5, c.z+0.5);
+    multiGhost.add(m);
+  }
+  multiGhost.visible=true;
+}
+function hideMultiGhost(){ multiGhost.visible=false; while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]); }
+
+/* ================= copy / paste ================= */
+function copySelection(){
+  let keys=[...selection].filter(k=>blocks.has(k));
+  if(!keys.length && hover && hover.block) keys=[key3(hover.block[0],hover.block[1],hover.block[2])];
+  if(!keys.length){ toast('Nothing to copy — select a block first'); return 0; }
+  const bb=bboxOfKeys(keys);
+  clipboard = keys.map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
+    return { dx:x-bb.x0, dy:y-bb.y0, dz:z-bb.z0, t:b.t, r:b.r||0 }; });
+  toast('Copied '+clipboard.length+' block'+(clipboard.length>1?'s':'')+' — Ctrl+V to paste');
+  return clipboard.length;
+}
+function pasteCells(origin){
+  const cells=[];
+  for(const c of clipboard){
+    const x=origin[0]+c.dx, y=origin[1]+c.dy, z=origin[2]+c.dz;
+    if(getBlock(x,y,z)) continue;            // never overwrite
+    if(!inBounds(x,y,z)) continue;
+    cells.push({ x,y,z, t:c.t, r:c.r });
+  }
+  return cells;
+}
+function pasteAt(origin){
+  const n=applyBatch(pasteCells(origin));
+  if(n) toast('Pasted '+n+' block'+(n>1?'s':''));
+  return n;
+}
+function setPasteMode(on){
+  if(on && !clipboard.length){ toast('Nothing copied yet — select blocks and press Ctrl+C'); return; }
+  pasteMode = !!on;
+  $('#btnPaste').classList.toggle('on', pasteMode);
+  if(pasteMode) toast('Paste mode — click to place, Esc to stop');
+  if(!pasteMode) hideMultiGhost();
+}
+
+/* ================= stair + shutter presets ================= */
+const PRESETS = {
+  stairs5:  { label:'Straight 5 steps', cells:(()=>{ const a=[]; for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2}); return a; })() },
+  stairs10: { label:'Straight 10 steps', cells:(()=>{ const a=[]; for(let i=0;i<10;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2}); return a; })() },
+  stairsL:  { label:'L-shaped stairs', cells:(()=>{ const a=[];
+    for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2});
+    a.push({dx:0,dy:5,dz:5,t:2,r:0});                       // landing (wood)
+    for(let i=0;i<5;i++) a.push({dx:1+i,dy:6+i,dz:5,t:6,r:1});
+    return a; })() },
+  stairsU:  { label:'U-shaped stairs', cells:(()=>{ const a=[];
+    for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2});
+    a.push({dx:0,dy:5,dz:5,t:2,r:0}); a.push({dx:1,dy:5,dz:5,t:2,r:0}); // landing
+    for(let i=0;i<5;i++) a.push({dx:1,dy:6+i,dz:4-i,t:6,r:0});
+    return a; })() },
+  shutter:  { label:'Shutter door 6\' × 7\'', cells:(()=>{ const a=[];
+    for(let x=0;x<12;x++) for(let y=0;y<14;y++) a.push({dx:x,dy:y,dz:0,t:8,r:0});
+    return a; })() },
+};
+function rotOffset(o, rot){
+  // rotate (dx,dz) by rot*90° about the origin; stair direction rotates with it
+  let dx=o.dx, dz=o.dz, r=o.r||0;
+  for(let i=0;i<rot;i++){ const nx=dz, nz=-dx; dx=nx; dz=nz; r=(r+3)%4; }
+  return { dx, dy:o.dy, dz, t:o.t, r };
+}
+function presetCells(name, rot){ return PRESETS[name].cells.map(c=>rotOffset(c, rot)); }
+function placePreset(name, ox,oy,oz, rot=0){
+  const cells=presetCells(name, rot).map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
+    .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells);
+  if(n) toast(PRESETS[name].label+' placed — '+n+' blocks');
+  return n;
+}
+function setPresetMode(name){
+  presetMode=name; presetRot=0;
+  $$('#presetPanel button[data-preset]').forEach(b=>b.classList.toggle('on', b.dataset.preset===name));
+  if(name) toast(PRESETS[name].label+' — click the ground to place, R rotates, Esc stops');
+  if(!name) hideMultiGhost();
+}
+function togglePresetPanel(show){
+  const p=$('#presetPanel');
+  const on = show!==undefined? show : !p.classList.contains('on');
+  p.classList.toggle('on', on);
+  $('#btnPresets').classList.toggle('on', on);
+  if(!on) setPresetMode(null);
+}
+
+/* ================= expand tool ================= */
+/* the straight run of same-type blocks through (x,y,z) — the longer of the x / z runs */
+function wallRun(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return null;
+  const run=(axis)=>{
+    let s=0,e=0;
+    const get=(v)=> axis==='x'? getBlock(x+v,y,z) : getBlock(x,y,z+v);
+    while(true){ const nb=get(s-1); if(nb&&nb.t===b.t) s--; else break; }
+    while(true){ const nb=get(e+1); if(nb&&nb.t===b.t) e++; else break; }
+    return { axis, s, e, len:e-s+1 };
+  };
+  const rx=run('x'), rz=run('z');
+  const r = rx.len>=rz.len ? rx : rz;
+  return { type:b.t, y, axis:r.axis, s:r.s, e:r.e, len:r.len,
+    fixed: r.axis==='x'? z : x, a0: r.axis==='x'? x+r.s : z+r.s, a1: r.axis==='x'? x+r.e : z+r.e };
+}
+function expandCells(run, mode, dir, len){
+  const cells=[];
+  if(len<=0) return cells;
+  if(mode==='up'){
+    for(let layer=1; layer<=len; layer++)
+      for(let a=run.a0; a<=run.a1; a++){
+        const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
+        if(!getBlock(x, run.y+layer, z)) cells.push({ x, y:run.y+layer, z, t:run.type, r:0 });
+      }
+  } else {
+    for(let i=1;i<=len;i++){
+      const a = dir>0 ? run.a1+i : run.a0-i;
+      const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
+      if(!getBlock(x, run.y, z)) cells.push({ x, y:run.y, z, t:run.type, r:0 });
+    }
+  }
+  return cells;
+}
+function expandCommit(run, mode, dir, len){
+  const cells=expandCells(run, mode, dir, len).filter(c=>inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells);
+  if(n) toast('Wall expanded +'+n+' blocks');
+  return n;
+}
+function expandDragUpdate(e){
+  const d=expandDrag; if(!d) return;
+  const dx=e.clientX-d.startX, dy=e.clientY-d.startY;
+  const run=d.run;
+  let mode='h', dir=1, len=0;
+  if(Math.abs(dy) > Math.abs(dx)*1.2 && dy < -12){
+    // mostly upward drag -> taller
+    mode='up'; len=clamp(Math.round(-dy/24), 0, 20);
+  } else {
+    // sideways drag -> longer; follow the 3D point under the cursor
+    setNDC(e); raycaster.setFromCamera(pointerNDC, camera);
+    const plane=new THREE.Plane(new THREE.Vector3(0,1,0), -(run.y+0.5));
+    const p=new THREE.Vector3();
+    if(raycaster.ray.intersectPlane(plane, p)){
+      if(run.len===1){ // a lone block: the drag picks the axis
+        const ax=Math.abs(p.x-(d.anchor[0]+0.5)), az=Math.abs(p.z-(d.anchor[2]+0.5));
+        run.axis = ax>=az? 'x':'z';
+        run.fixed = run.axis==='x'? d.anchor[2] : d.anchor[0];
+        run.a0=run.a1= run.axis==='x'? d.anchor[0] : d.anchor[2];
+      }
+      const pc = run.axis==='x'? p.x : p.z;
+      if(pc > run.a1+0.5){ dir=1; len=clamp(Math.floor(pc-run.a1), 0, 40); }
+      else if(pc < run.a0-0.5){ dir=-1; len=clamp(Math.floor(run.a0-pc), 0, 40); }
+    }
+  }
+  d.mode=mode; d.dir=dir; d.len=len;
+  d.cells=expandCells(run, mode, dir, len);
+  showMultiGhost(d.cells);
+  $('#roHover').textContent = len===0 ? 'Drag to expand the wall — sideways = longer, up = taller'
+    : mode==='up' ? 'Expand taller: +'+len+' layer'+(len>1?'s':'')+' · '+ftin(len*FT)+' higher'
+    : 'Expand longer: +'+len+' block'+(len>1?'s':'')+' · '+ftin(len*FT);
+}
+function expandStart(e, hit){
+  const [x,y,z]=hit.block;
+  const run=wallRun(x,y,z);
+  if(!run) return false;
+  expandDrag={ anchor:[x,y,z], run, mode:'h', dir:1, len:0, cells:[], startX:e.clientX, startY:e.clientY };
+  controls.enabled=false;
+  return true;
+}
+function expandFinish(){
+  const d=expandDrag; expandDrag=null;
+  controls.enabled=true;
+  hideMultiGhost();
+  if(d && d.len>0) expandCommit(d.run, d.mode, d.dir, d.len);
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= erase a whole wall / delete / rotate ================= */
+function eraseRun(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return 0;
+  const run=wallRun(x,y,z);
+  const cells=[];
+  for(let a=run.a0;a<=run.a1;a++){
+    const bx=run.axis==='x'? a : run.fixed, bz=run.axis==='x'? run.fixed : a;
+    cells.push({ x:bx, y:run.y, z:bz, t:null });
+  }
+  const n=applyBatch(cells);
+  if(n) toast('Wall removed — '+n+' blocks');
+  return n;
+}
+function deleteSelection(){
+  if(!selection.size) return 0;
+  const cells=[...selection].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
+  const n=applyBatch(cells);
+  selection.clear(); updateSelectionHighlight();
+  if(n) toast('Deleted '+n+' blocks');
+  return n;
+}
+function rotateSelection(){
+  if(selection.size<2){ toast('Select 2 or more blocks to rotate them'); return false; }
+  const bb=selectionBBox();
+  const items=[...selection].map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k); return b? { x,y,z, t:b.t, r:b.r||0 } : null; }).filter(Boolean);
+  if(items.length<2){ toast('Select 2 or more blocks to rotate them'); return false; }
+  const occupied=new Set([...blocks.keys()].filter(k=>!selection.has(k)));
+  const erases=[], sets=[], newKeys=new Set();
+  for(const it of items){
+    const dx=it.x-bb.x0, dz=it.z-bb.z0;
+    const nx=bb.x0+dz, nz=bb.z0-dx;
+    const nk=key3(nx,it.y,nz);
+    if(occupied.has(nk)) { newKeys.add(key3(it.x,it.y,it.z)); continue; } // blocked: stays put
+    let r=it.r; if(TYPES[it.t].stair) r=(it.r+3)%4;
+    erases.push({ x:it.x, y:it.y, z:it.z, t:null });
+    sets.push({ x:nx, y:it.y, z:nz, t:it.t, r });
+    newKeys.add(nk);
+  }
+  const n=applyBatch([...erases, ...sets]);
+  selection=newKeys; updateSelectionHighlight();
+  if(n) toast('Rotated 90°');
+  return n>0;
+}
+
+/* ================= right-click tool menu ================= */
+function showCtxMenu(x,y){
+  const m=$('#ctxMenu');
+  m.style.left=Math.min(x, innerWidth-190)+'px';
+  m.style.top=Math.min(y, innerHeight-260)+'px';
+  m.classList.add('on');
+  $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===tool));
+}
+function hideCtxMenu(){ $('#ctxMenu').classList.remove('on'); }
+function ctxMenuOpen(){ return $('#ctxMenu').classList.contains('on'); }
+
+/* ================= box-select ================= */
+function projectToScreenPoint(x,y,z){
+  const v=new THREE.Vector3(x,y,z).project(camera);
+  if(v.z>1) return null;
+  return { x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight };
+}
+function updateBoxDrag(e){
+  boxDrag.x1=e.clientX; boxDrag.y1=e.clientY;
+  const el=$('#selBox');
+  el.style.left=Math.min(boxDrag.x0,boxDrag.x1)+'px';
+  el.style.top=Math.min(boxDrag.y0,boxDrag.y1)+'px';
+  el.style.width=Math.abs(boxDrag.x1-boxDrag.x0)+'px';
+  el.style.height=Math.abs(boxDrag.y1-boxDrag.y0)+'px';
+  el.style.display='block';
+}
+function finishBoxDrag(){
+  const b=boxDrag; boxDrag=null; controls.enabled=true;
+  $('#selBox').style.display='none';
+  const x0=Math.min(b.x0,b.x1), y0=Math.min(b.y0,b.y1), x1=Math.max(b.x0,b.x1), y1=Math.max(b.y0,b.y1);
+  if(x1-x0<6 && y1-y0<6){ clearSelection(); return; }
+  let added=0;
+  for(const [k] of blocks){
+    const [x,y,z]=parseKey(k);
+    const s=projectToScreenPoint(x+0.5,y+0.5,z+0.5);
+    if(s && s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1){ selection.add(k); added++; }
+  }
+  updateSelectionHighlight();
+  if(added) toast('Selected '+added+' blocks');
+}
+
 /* ================= pointer: click = place/erase/pick, drag = orbit ================= */
-let downPos=null, downTime=0, downBtn=0, walkDrag=null;
+let downPos=null, downTime=0, downBtn=0, walkDrag=null, menuJustClosed=false;
 function bindPointer(){
   const el=renderer.domElement;
   el.addEventListener('contextmenu', e=>e.preventDefault());
@@ -558,33 +966,61 @@ function bindPointer(){
       }
       return;
     }
+    if(expandDrag){ expandDragUpdate(e); return; }
+    if(boxDrag){ updateBoxDrag(e); return; }
     if(!downPos) updateHover(e);
   });
   el.addEventListener('pointerdown', e=>{
     downPos=[e.clientX,e.clientY]; downTime=Date.now(); downBtn=e.button;
-    if(WALK.active) walkDrag={ x:e.clientX, y:e.clientY };
+    if(WALK.active){ walkDrag={ x:e.clientX, y:e.clientY }; return; }
+    if(ctxMenuOpen()){ hideCtxMenu(); menuJustClosed=true; return; }
+    if(pasteMode || presetMode) return;   // a paste/preset click must not start a drag
+    if(e.button===0 && tool==='select'){
+      const hit=raycastVoxel(e);
+      if(!hit || !hit.block){
+        boxDrag={ x0:e.clientX, y0:e.clientY, x1:e.clientX, y1:e.clientY };
+        controls.enabled=false;
+      }
+    }
+    if(e.button===0 && tool==='expand'){
+      const hit=raycastVoxel(e);
+      if(hit && hit.block) expandStart(e, hit);
+    }
   });
   el.addEventListener('pointerup', e=>{
     if(WALK.active){ walkDrag=null; return; }
+    if(expandDrag){ expandFinish(); downPos=null; return; }
+    if(boxDrag){ finishBoxDrag(); downPos=null; return; }
     if(!downPos) return;
     const moved=Math.hypot(e.clientX-downPos[0], e.clientY-downPos[1]);
     const dt=Date.now()-downTime;
     downPos=null;
+    if(menuJustClosed){ menuJustClosed=false; return; }
     if(moved>6||dt>600) return;   // it was a drag (orbit/pan), not a click
     const hit=raycastVoxel(e);
-    if(e.button===2){ // right-click erases
-      if(hit&&hit.block){ const [x,y,z]=hit.block; const b=getBlock(x,y,z);
-        setBlock(x,y,z,null); }
+    if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
+      showCtxMenu(e.clientX, e.clientY);
       return;
     }
     if(e.button!==0) return;
+    if(pasteMode){ if(hit) pasteAt(hit.cell); return; }
+    if(presetMode){ if(hit) placePreset(presetMode, hit.cell[0], hit.cell[1], hit.cell[2], presetRot); return; }
+    if(tool==='select'){
+      if(hit&&hit.block) selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), e.shiftKey);
+      else if(!e.shiftKey) clearSelection();
+      return;
+    }
+    if(tool==='expand'){ toast('Click a wall, then drag to expand it'); return; }
     if(tool==='pick'){
       if(hit&&hit.block){ const b=getBlock(hit.block[0],hit.block[1],hit.block[2]);
         if(b){ selectType(b.t); toast('Picked '+TYPES[b.t].name); } }
       return;
     }
     if(tool==='erase'){
-      if(hit&&hit.block){ const [x,y,z]=hit.block; setBlock(x,y,z,null); }
+      if(hit&&hit.block){
+        if(e.shiftKey) eraseRun(hit.block[0],hit.block[1],hit.block[2]);
+        else setBlock(hit.block[0],hit.block[1],hit.block[2],null);
+      }
       return;
     }
     // build
@@ -640,6 +1076,9 @@ function buildFloorBar(){
 function setTool(t){
   tool=t;
   $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+  $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+  if(pasteMode) setPasteMode(false);
+  if(presetMode) setPresetMode(null);
 }
 function setCam(name){
   if(WALK.active) return;
@@ -801,15 +1240,32 @@ function bindKeys(){
   window.addEventListener('keydown', e=>{
     if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName||'')) return;
     const k=e.code;
-    if(k==='Escape'){ if(WALK.active){ walkStop(); } return; }
+    if(k==='Escape'){
+      if(WALK.active){ walkStop(); }
+      else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
+      else if(pasteMode){ setPasteMode(false); }
+      else if(ctxMenuOpen()){ hideCtxMenu(); }
+      return;
+    }
     if((e.ctrlKey||e.metaKey)&&k==='KeyZ'){ e.preventDefault(); e.shiftKey?doRedo():doUndo(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyY'){ e.preventDefault(); doRedo(); return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyC'){ e.preventDefault(); if(!WALK.active) copySelection(); return; }
+    if((e.ctrlKey||e.metaKey)&&k==='KeyV'){ e.preventDefault();
+      if(!WALK.active){ if(clipboard.length) setPasteMode(!pasteMode); else toast('Nothing copied yet — select blocks and press Ctrl+C'); }
+      return; }
+    if((k==='Delete'||k==='Backspace') && !WALK.active && selection.size){ e.preventDefault(); deleteSelection(); return; }
     if(k==='KeyV'){ WALK.active?walkStop():walkStart(); return; }
     if(!WALK.active){
       if(k==='KeyB') setTool('build');
       if(k==='KeyE') setTool('erase');
       if(k==='KeyP') setTool('pick');
-      if(k>='Digit1'&&k<='Digit8') selectType(+k.slice(5)-1);
+      if(k==='KeyL') setTool('select');
+      if(k==='KeyX') setTool('expand');
+      if(k==='KeyR'){
+        if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
+        else rotateSelection();
+      }
+      if(k>='Digit1'&&k<='Digit9') selectType(+k.slice(5)-1);
     }
     window.__keys.add(k);
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(k)) e.preventDefault();
@@ -860,6 +1316,14 @@ function init(){
     $$('.camrow [data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
   $('#btnUndo').onclick=doUndo;
   $('#btnRedo').onclick=doRedo;
+  $('#btnCopy').onclick=()=>copySelection();
+  $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
+  $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
+  $('#btnPresets').onclick=()=>togglePresetPanel();
+  $('#presetClose').onclick=()=>togglePresetPanel(false);
+  $$('#presetPanel button[data-preset]').forEach(b=>b.onclick=()=>setPresetMode(b.dataset.preset));
+  $$('#ctxMenu button').forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); hideCtxMenu(); });
+  $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
   $('#btnExitWalk').onclick=walkStop;
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
@@ -894,6 +1358,30 @@ window.__mc = {
   floor(){ return activeFloor; },
   loadEmpty(){ buildEmpty(); },
   undo(){ doUndo(); }, redo(){ doRedo(); },
+  tool(){ return tool; },
+  setTool(t){ setTool(t); },
+  typeIndex(id){ return TYPES.findIndex(t=>t.id===id); },
+  selection(){ return [...selection]; },
+  select(x,y,z,add){ selectBlockKey(key3(x,y,z), !!add); },
+  clearSel(){ clearSelection(); },
+  copy(){ return copySelection(); },
+  clipboardSize(){ return clipboard.length; },
+  pasteAt(x,y,z){ return pasteAt([x,y,z]); },
+  setPasteMode(on){ setPasteMode(on); },
+  pasteModeOn(){ return pasteMode; },
+  presetNames(){ return Object.keys(PRESETS); },
+  placePreset(name,x,y,z,rot){ return placePreset(name,x,y,z,rot||0); },
+  presetModeOn(){ return presetMode; },
+  setPresetMode(name){ setPresetMode(name); },
+  rotatePreset(){ presetRot=(presetRot+1)%4; return presetRot; },
+  eraseWall(x,y,z){ return eraseRun(x,y,z); },
+  rotateSel(){ return rotateSelection(); },
+  deleteSel(){ return deleteSelection(); },
+  expandAt(x,y,z,mode,dir,len){ const run=wallRun(x,y,z); if(!run) return 0; return expandCommit(run,mode,dir,len); },
+  wallRun(x,y,z){ return wallRun(x,y,z); },
+  clearAll(){ clearBlocks(); scheduleSave(); },
+  menuOpen(){ return ctxMenuOpen(); },
+  showMenu(x,y){ showCtxMenu(x,y); },
   walk:{
     active(){ return WALK.active; },
     start(){ walkStart(); }, stop(){ walkStop(); },
@@ -902,10 +1390,7 @@ window.__mc = {
     setHeading(a){ WALK.camYaw=a; },   // heading: character moves toward (-sin a, 0, -cos a)
     setPos(x,y,z){ WALK.pos.set(x,y,z); WALK.vy=0; },
   },
-  projectToScreen(x,y,z){
-    const v=new THREE.Vector3(x,y,z).project(camera);
-    return { x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight, behind:v.z>1 };
-  },
+  projectToScreen(x,y,z){ return projectToScreenPoint(x,y,z); },
 };
 
 init();
