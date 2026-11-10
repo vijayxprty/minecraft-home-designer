@@ -106,15 +106,15 @@
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
   /* ---------- templates / blueprints / mirror / replace / shortcuts / materials / build-a-room panels (same bottom-centre spot) ---------- */
-  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,#buildRoomPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
+  #blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,#buildRoomPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
-  #templatePanel.on,#blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on,#materialsPanel.on,#buildRoomPanel.on{display:flex}
-  #templatePanel .pp-title,#blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title,#materialsPanel .pp-title,#buildRoomPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #templatePanel button,#blueprintPanel button,#mirrorPanel button,#replacePanel button,#cheatPanel button,#materialsPanel button,#buildRoomPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on,#materialsPanel.on,#buildRoomPanel.on{display:flex}
+  #blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title,#materialsPanel .pp-title,#buildRoomPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #blueprintPanel button,#mirrorPanel button,#replacePanel button,#cheatPanel button,#materialsPanel button,#buildRoomPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
   #mirrorPanel button.on,#replacePanel button.on,#buildRoomPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
-  #templatePanel .pp-row,#blueprintPanel .pp-row,#mirrorPanel .pp-row,#replacePanel .pp-row,#materialsPanel .pp-row,#buildRoomPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
-  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note,#mirrorPanel .pp-row .pp-note,#replacePanel .pp-row .pp-note,#materialsPanel .pp-row .pp-note,#buildRoomPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  #blueprintPanel .pp-row,#mirrorPanel .pp-row,#replacePanel .pp-row,#materialsPanel .pp-row,#buildRoomPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #blueprintPanel .pp-row .pp-note,#mirrorPanel .pp-row .pp-note,#replacePanel .pp-row .pp-note,#materialsPanel .pp-row .pp-note,#buildRoomPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
   #mirrorPanel input,#replacePanel select,#buildRoomPanel select{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;color:#222;background:#fff}
   #buildRoomPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px;color:#222;background:#fff}
   #buildRoomPanel .pp-row b{color:#ffd83d}
@@ -321,6 +321,14 @@ body.panel-closed{ --shell-left:64px; }
 #sidePanel{ position:fixed; left:64px; top:48px; bottom:0; width:300px; z-index:12; background:#fff;
   border-right:1px solid #e0e0e0; display:flex; flex-direction:column; color:#1a1a1a; }
 body.panel-closed #sidePanel{ display:none; }
+/* round 14: collapse the left panel — the chevron rides the panel's outer
+   edge (or the rail's edge when collapsed); the rail stays visible */
+body.panel-collapsed{ --shell-left:64px; }
+body.panel-collapsed #sidePanel{ display:none; }
+#panelCollapse{ position:fixed; left:var(--shell-left); top:50%; transform:translate(-50%,-50%);
+  width:22px; height:48px; z-index:13; background:#fff; color:#1b5e20; font-weight:800; font-size:16px;
+  border:1px solid #e0e0e0; border-left:0; border-radius:0 10px 10px 0; box-shadow:2px 0 8px rgba(0,0,0,.1); }
+#panelCollapse:hover{ background:#e8f5e9; }
 .sp-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px 6px;
   font-weight:800; font-size:16px; color:#1a1a1a; }
 .sp-head button{ background:none; border:0; font-size:16px; color:#555; padding:4px 8px; border-radius:6px; }
@@ -341,7 +349,7 @@ body.panel-closed #sidePanel{ display:none; }
 .card-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .el-card{ display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff;
   border:1px solid #d8d8d8; border-radius:10px; padding:10px 4px 8px; color:#1a1a1a;
-  cursor:grab; touch-action:none; user-select:none; }
+  cursor:grab; touch-action:pan-y; user-select:none; position:relative; }
 .el-card:hover{ border-color:#2e7d32; box-shadow:0 2px 8px rgba(0,0,0,.12); }
 .el-card.on{ border-color:#2e7d32; background:#e8f5e9; box-shadow:0 0 0 2px #2e7d32; }
 .el-card.dragging{ opacity:.6; cursor:grabbing; }
@@ -350,6 +358,11 @@ body.panel-closed #sidePanel{ display:none; }
 .el-card .el-name{ font-size:12px; font-weight:800; color:#1a1a1a; text-align:center; }
 .el-card .el-sub{ font-size:10px; color:#666; text-align:center; }
 .el-card .k{ font-size:9px; color:#999; }
+/* round 14: the grip is the only drag start on a card — the rest of the
+   card scrolls the panel normally on touch */
+.el-handle{ position:absolute; top:2px; right:4px; font-size:13px; color:#bbb; cursor:grab;
+  padding:5px 3px; touch-action:none; line-height:1; }
+.el-handle:hover{ color:#1b5e20; }
 #dragChip{ position:fixed; z-index:80; pointer-events:none; background:#fff; border:2px solid #2e7d32;
   border-radius:10px; padding:6px 10px; font-weight:800; font-size:13px; color:#1a1a1a;
   box-shadow:0 6px 18px rgba(0,0,0,.3); display:none; }
@@ -371,6 +384,10 @@ body.panel-closed #sidePanel{ display:none; }
 .proj-row .pr-btns button{ background:none; border:0; font-size:15px; padding:5px 6px; border-radius:6px; color:#444; }
 .proj-row .pr-btns button:hover{ background:#e0e0e0; }
 .proj-row input.pr-rename{ width:100%; border:2px solid #2e7d32; border-radius:6px; padding:5px 7px; font-weight:800; font-size:14px; color:#1a1a1a; }
+/* round 14: project thumbnails on the build rows */
+.pr-thumb{ width:64px; height:48px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
+  display:flex; align-items:center; justify-content:center; font-size:26px; }
+.pr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
 .layer-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
   border-radius:8px; padding:9px 10px; margin-bottom:6px; cursor:pointer; color:#1a1a1a; }
 .layer-row:hover{ border-color:#2e7d32; }
@@ -394,10 +411,14 @@ body.panel-closed #sidePanel{ display:none; }
 /* ---------- status pill (was the bottom-left readout) ---------- */
 #readout{ left:calc(var(--shell-left) + 10px); bottom:10px; background:#fff; color:#1a1a1a;
   border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.12);
-  font-size:12px; line-height:1.5; padding:8px 12px; max-width:300px; }
+  font-size:12px; line-height:1.5; padding:8px 12px; max-width:380px; }
 #readout b{ color:#1b5e20; }
 #readout .dim{ color:#2e7d32; }
 #roWarn{ color:#b45309 !important; }
+/* round 14: the status pill is two stacked lines by design — line 1 is
+   blocks + floor (+ selection count), line 2 is footprint + area — and
+   every line is nowrap with ellipsis, so nothing ever wraps mid-phrase */
+#readout #roLine1,#readout #roBuilt,#roSelSize{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* ---------- zoom bar (Canva, bottom-right) + note above it ---------- */
 #note{ right:10px; bottom:66px; background:rgba(255,255,255,.92); color:#555; font-size:10px; max-width:230px; }
 #zoomBar{ position:fixed; right:10px; bottom:10px; z-index:11; display:flex; align-items:center; gap:6px;
@@ -418,7 +439,7 @@ body.panel-closed #sidePanel{ display:none; }
 #selPanel button:hover{ background:#e8f5e9; }
 #selPanel input{ background:#fff; color:#1a1a1a; }
 /* ---------- floating tool panels centre on the visible canvas, not the window ---------- */
-#presetPanel,#templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
+#presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
 #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
   bottom:14px; left:calc(50% + var(--shell-left)/2); }
 #sizeBar{ left:calc(var(--shell-left) + 10px); }
@@ -438,19 +459,23 @@ body.touch #zoomBar button{ padding:6px 12px; }
   :root{ --shell-left:64px; }
   #topbar .brand{ display:none; }
   #savePill{ display:none; }
+  #panelCollapse{ display:none; }   /* phones use the bottom-sheet panel, not collapse */
   #topbar .proj-name{ max-width:120px; }
   #rail{ left:0; right:0; top:auto; bottom:0; width:100%; height:58px; flex-direction:row;
     border-right:0; border-top:1px solid #e0e0e0; padding:4px; justify-content:space-around; }
   .rail-btn{ flex:1; padding:4px 2px; }
   #sidePanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-height:62vh;
     border-right:0; border-top:1px solid #e0e0e0; border-radius:14px 14px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.2); }
+  /* round 14: while a card is being dragged, the bottom sheet gets out of
+     the way so the canvas — and the drop ghost — is actually visible */
+  body.card-dragging #sidePanel{ max-height:0; border:0; box-shadow:none; }
   #readout{ left:10px; bottom:68px; max-width:calc(100vw - 20px); }
   #note{ display:none; }
   #zoomBar{ bottom:68px; }
   #selPanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-width:none; max-height:45vh; border-radius:14px 14px 0 0; }
   #gizmo{ display:none; }
   #sizeBar{ left:10px; }
-  #presetPanel,#templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
+  #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
   #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
     left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0; }
   .ss-homes{ flex-direction:column; }
@@ -592,6 +617,8 @@ body.touch #zoomBar button{ padding:6px 12px; }
   </div>
 </div>
 
+<button id="panelCollapse" title="Hide this panel for a full-canvas view">‹</button>
+
 <div id="moreMenu">
   <div class="mm-title">More tools &amp; views</div>
   <button id="btnTemplates" title="Start from a ready-made build">🏠 Templates</button>
@@ -651,8 +678,8 @@ body.touch #zoomBar button{ padding:6px 12px; }
 </div>
 
 <div id="readout">
-  <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
-  <div id="roBuilt">📐 Built so far: <b id="roFoot">nothing yet</b><br>Area: <b id="roArea">0 sq ft</b></div>
+  <div id="roLine1">🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
+  <div id="roBuilt">📐 Built so far: <b id="roFoot">nothing yet</b> · Area: <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
   <div id="roSym" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
@@ -686,12 +713,6 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <button data-preset="stairs">🪜 Place stairs</button>
   <button data-preset="shutter">🚪 Shutter door 6' × 7'</button>
   <button id="presetClose">✕ Close</button>
-</div>
-
-<div id="templatePanel">
-  <div class="pp-title">Templates — load a starter build you can edit block by block · loading replaces the current build (it asks first)</div>
-  <div id="templateList" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div>
-  <button id="templateClose">✕ Close</button>
 </div>
 
 <div id="blueprintPanel">
@@ -1670,10 +1691,10 @@ function toggleMaterialsPanel(show){
   $('#btnMaterials').classList.toggle('on',on);
   if(on){ updateMaterialsPanel();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
-    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
     $('#cheatPanel').classList.remove('on'); $('#buildRoomPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on');
     $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     $('#btnBuildRoom').classList.remove('on');
@@ -2197,9 +2218,9 @@ function toggleWarnPanel(show){
   if(on){
     renderWarnPanel();
     // one panel at a time in the bottom-centre spot, like the others
-    for(const id of ['#presetPanel','#templatePanel','#fillPanel','#blueprintPanel','#mirrorPanel','#replacePanel','#cheatPanel'])
+    for(const id of ['#presetPanel','#fillPanel','#blueprintPanel','#mirrorPanel','#replacePanel','#cheatPanel'])
       $(id).classList.remove('on');
-    for(const id of ['#btnPresets','#btnTemplates','#btnBlueprints','#btnMirror','#btnReplace','#btnCheat'])
+    for(const id of ['#btnPresets','#btnBlueprints','#btnMirror','#btnReplace','#btnCheat'])
       $(id).classList.remove('on');
   }
   return on;
@@ -2458,9 +2479,9 @@ function toggleMirrorPanel(show){
   $('#btnMirror').classList.toggle('on',on);
   if(on){ updateMirrorPanel();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
-    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
     $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#btnBlueprints').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     if(presetMode) setPresetMode(null);
   }
@@ -2526,9 +2547,9 @@ function toggleReplacePanel(show){
   $('#btnReplace').classList.toggle('on',on);
   if(on){ updateReplaceCount();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
-    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on'); $('#btnCheat').classList.remove('on');
     if(presetMode) setPresetMode(null);
   }
@@ -2582,9 +2603,9 @@ function toggleCheatPanel(show){
   $('#btnCheat').classList.toggle('on',on);
   if(on){
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
-    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on');
     if(presetMode) setPresetMode(null);
   }
@@ -2628,6 +2649,32 @@ function loadProjectData(p){
   rebuild(); updateStats(); renderMeasures(); updateMeasuresBtn();
   return blocks.size;
 }
+/* round 14 — project thumbnails: a small top-down snapshot of the build,
+   stored with the project on autosave (JPEG, ~160 px wide, a few KB, so
+   localStorage stays healthy). The camera is moved, rendered once and put
+   straight back inside this one task, so the user never sees the jump. */
+function captureThumb(){
+  try{
+    if(!blocks.size || !renderer) return null;
+    const b=buildBBox(); if(!b) return null;
+    const cx=(b.x0+b.x1+1)/2, cz=(b.z0+b.z1+1)/2;
+    const span=Math.max(b.w, b.d, 8);
+    const oldPos=camera.position.clone(), oldTgt=controls.target.clone();
+    camera.position.set(cx, span*2.2+10, cz+0.01);
+    controls.target.set(cx, 0, cz);
+    camera.lookAt(cx, 0, cz);
+    renderer.render(scene, camera);
+    const src=renderer.domElement;
+    const w=160, h=Math.max(60, Math.round(160*src.height/src.width));
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(src, 0, 0, w, h);
+    const url=cv.toDataURL('image/jpeg', 0.6);
+    camera.position.copy(oldPos); controls.target.copy(oldTgt);
+    camera.lookAt(oldTgt); controls.update();
+    if(url.length>24000) return null;   // keep localStorage healthy
+    return url;
+  }catch(e){ return null; }
+}
 function scheduleSave(){
   const el=$('#roSaved'); if(el) el.textContent='💾 Saving…';
   const pill=$('#savePill'); if(pill) pill.textContent='💾 Saving…';
@@ -2646,6 +2693,8 @@ function saveLocal(){
       list.push(cur); currentProjectId=cur.id; setCurrentId(cur.id);
     }
     cur.data=data; cur.name=projectName; cur.updatedAt=Date.now();
+    if(blocks.size){ const th=captureThumb(); if(th) cur.thumb=th; }
+    else delete cur.thumb;
     saveProjects(list);
     saveQuotaFull=false;
     const el=$('#roSaved'); if(el) el.textContent='💾 Saved ✓ '+saveTimeStr();
@@ -3125,7 +3174,7 @@ function raycastVoxel(e){
 }
 function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
 function updateHover(e){
-  if(WALK.active){ ghost.visible=false; hover=null; return; }
+  if(WALK.active || cardDragActive){ ghost.visible=false; hover=null; return; }
   const hit=raycastVoxel(e);
   if(!hit){ ghost.visible=false; hover=null; hideMultiGhost();
     if(moveCarry){ moveCarry.valid=false; moveCarry.target=null;
@@ -3255,7 +3304,7 @@ function updateSelectionHighlight(){
     const bb=selectionBBox();
     const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT, h=(bb.y1-bb.y0+1)*FT;
     sz.style.display='block';
-    sz.textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' wide × '+ftin(d)+' deep × '+ftin(h)+' high';
+    sz.textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d)+' × '+ftin(h);
   } else sz.style.display='none';
   updateSelPanel();   // the contextual panel lives and dies with the selection (round 10)
 }
@@ -3448,8 +3497,8 @@ function togglePresetPanel(show){
   p.classList.toggle('on', on);
   $('#btnPresets').classList.toggle('on', on);
   $('#fillPanel').classList.toggle('on', !on && tool==='fill');
-  if(on){ $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
-    $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
+  if(on){$('#blueprintPanel').classList.remove('on');
+$('#btnBlueprints').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
     $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     updateMirrorLine(); }
@@ -3587,32 +3636,6 @@ function loadTemplate(id, force){
   toast(t.name+' loaded — '+n+' blocks, fully editable');
   return n;
 }
-function renderTemplatePanel(){
-  const list=$('#templateList'); list.innerHTML='';
-  for(const t of TEMPLATES){
-    const info=templateInfo(t);
-    const row=document.createElement('div'); row.className='tpl-item';
-    const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=t.name;
-    const ds=document.createElement('span'); ds.className='tpl-desc'; ds.textContent=t.desc;
-    const sz=document.createElement('span'); sz.className='tpl-size';
-    sz.textContent=ftin(info.wFt)+' × '+ftin(info.dFt)+' · '+info.n+' blocks';
-    const b=document.createElement('button'); b.textContent='Load';
-    b.onclick=()=>{ loadTemplate(t.id); toggleTemplatePanel(false); };
-    row.append(nm,ds,sz,b); list.appendChild(row);
-  }
-}
-function toggleTemplatePanel(show){
-  const p=$('#templatePanel');
-  const on=show!==undefined?show:!p.classList.contains('on');
-  p.classList.toggle('on',on);
-  $('#btnTemplates').classList.toggle('on',on);
-  if(on){ renderTemplatePanel();
-    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
-    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
-    $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
-    updateMirrorLine(); }
-}
 
 /* ================= blueprints: save a selection, place it again ================= */
 const BPKEY='home-designer-minecraft-blueprints-v1';
@@ -3676,8 +3699,8 @@ function toggleBlueprintPanel(show){
   p.classList.toggle('on',on);
   $('#btnBlueprints').classList.toggle('on',on);
   if(on){ renderBlueprintPanel();
-    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#templatePanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
     $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     updateMirrorLine(); }
@@ -4321,10 +4344,10 @@ function toggleBuildRoomPanel(show){
   $('#btnBuildRoom').classList.toggle('on',on);
   if(on){ updateBuildRoomPanel();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
-    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
     $('#cheatPanel').classList.remove('on'); $('#materialsPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnPresets').classList.remove('on');
     $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on');
     $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     $('#btnMaterials').classList.remove('on');
@@ -5093,6 +5116,8 @@ function buildPalette(){
     const b=document.createElement('button');
     b.className='el-card'; b.dataset.type=ti; b.dataset.el=String(ti); b.dataset.name=ty.name;
     b.draggable=true;
+    const hd=document.createElement('span'); hd.className='el-handle'; hd.textContent='⠿';
+    hd.title='Drag from here to place it'; b.appendChild(hd);
     const cv=document.createElement('canvas'); cv.width=cv.height=64;
     const g=cv.getContext('2d');
     const tex=ty.mats[2];   // top texture as the swatch
@@ -5159,7 +5184,7 @@ function setBuildMode(m){
    a selection, in plain words. Clicking empty space clears the selection
    and the panel goes away with it. It steps aside while a settings panel
    is open, and the material strip rides above it when both show. */
-const PANEL_IDS=['presetPanel','templatePanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel','materialsPanel','buildRoomPanel','confirmBox','bpNameBox'];
+const PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel','materialsPanel','buildRoomPanel','confirmBox','bpNameBox'];
 function anyPanelOpen(){ return PANEL_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('on'); }); }
 function updateSelPanel(){
   const p=$('#selPanel'); if(!p) return;
@@ -5210,10 +5235,11 @@ function startEmpty(){
    never repeats once finished or dismissed. */
 const GUIDE_KEY='home-designer-minecraft-guide-v1';
 const guideState={ done:[false,false,false], visible:false, finished:false };
+let guideHiddenByUser=false;   // dismissed while the plot is empty — stays hidden until something is built (round 14)
 function guideDone(){ try{ return localStorage.getItem(GUIDE_KEY)==='done'; }catch(e){ return false; } }
 function guideMarkDone(){ try{ localStorage.setItem(GUIDE_KEY,'done'); }catch(e){} }
-function showGuide(){
-  if(guideDone()) return false;
+function showGuide(force){
+  if(!force && guideDone()) return false;
   guideState.visible=true;
   $('#guideCard').classList.add('on');
   updateGuideUI();
@@ -5221,6 +5247,7 @@ function showGuide(){
 }
 function dismissGuide(){
   guideState.visible=false;
+  guideHiddenByUser=true;
   $('#guideCard').classList.remove('on');
   guideMarkDone();
 }
@@ -5231,6 +5258,27 @@ function updateGuideUI(){
   });
 }
 function guideCheck(){
+  if(!blocks.size){
+    // an empty open project always shows the checklist at the top of the
+    // Elements panel (round 14) — it is the first thing a new user needs.
+    // It only pops up once per empty spell: dismissing it keeps it hidden
+    // until something is built again.
+    if(!guideState.visible && !guideHiddenByUser){
+      guideState.done=[false,false,false]; guideState.finished=false;
+      $('#guideCard').classList.remove('done');
+      showGuide(true);
+    }
+    // the checklist can already be showing while the user is on another
+    // tab (e.g. they cleared the build from the Tools tab) — bring it
+    // into view. Only scrolled to the top when the tab itself switches,
+    // so browsing the Elements panel is never yanked back.
+    if(guideState.visible && railTab!=='elements'){
+      setRailTab('elements');
+      const t=$('#tab-elements'); if(t) t.scrollTop=0;
+    }
+    return;
+  }
+  guideHiddenByUser=false;
   if(!guideState.visible || guideState.finished) return;
   const base=FLOORS[activeFloor].base;
   let floorN=0, hasWall=false, hasDoor=false;
@@ -5272,8 +5320,8 @@ function setTool(t){
   $('#wallPanel').classList.toggle('on', t==='wall' && !$('#presetPanel').classList.contains('on'));
   if(t==='fill'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); }
   if(t==='wall'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); updateWallPanel(); }
-  $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
-  $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
+$('#blueprintPanel').classList.remove('on');
+$('#btnBlueprints').classList.remove('on');
   if(t!=='fill' && t!=='line') hideSizeBar();
   if(pasteMode) setPasteMode(false);
   if(presetMode) setPresetMode(null);
@@ -5511,7 +5559,6 @@ function bindKeys(){
       else if(wallDrag){ cancelWallDrag(); }
       else if(tool==='wall'){ setTool('build'); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
-      else if($('#templatePanel').classList.contains('on')){ toggleTemplatePanel(false); }
       else if($('#blueprintPanel').classList.contains('on')){ toggleBlueprintPanel(false); }
       else if($('#mirrorPanel').classList.contains('on')){ toggleMirrorPanel(false); }
       else if($('#replacePanel').classList.contains('on')){ toggleReplacePanel(false); }
@@ -5638,7 +5685,7 @@ function init(){
   $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
   $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
   $('#btnPresets').onclick=()=>togglePresetPanel();
-  $('#btnTemplates').onclick=()=>setRailTab('templates');
+  $('#btnTemplates').onclick=()=>setRailTab('templates', true);   // More-menu entry always opens Templates (round 14)
   $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
   $('#btnShare').onclick=()=>shareBuild();
   $('#btnMirror').onclick=()=>toggleMirrorPanel();
@@ -5662,7 +5709,6 @@ function init(){
   $$('#replacePanel button[data-scope]').forEach(b=>b.onclick=()=>{ replaceScope=b.dataset.scope;
     $$('#replacePanel button[data-scope]').forEach(x=>x.classList.toggle('on', x===b)); updateReplaceCount(); });
   $('#btnDoReplace').onclick=()=>{ replaceMaterial(+$('#repFrom').value, +$('#repTo').value, replaceScope); updateReplaceCount(); };
-  $('#templateClose').onclick=()=>toggleTemplatePanel(false);
   $('#blueprintClose').onclick=()=>toggleBlueprintPanel(false);
   $('#btnSaveBlueprint').onclick=()=>{ openBpNameBox(); };
   $('#presetClose').onclick=()=>togglePresetPanel(false);
@@ -5717,6 +5763,7 @@ function init(){
   // round 13: rail tabs, zoom bar, project rename, home-screen actions
   $$('.rail-btn').forEach(b=>b.onclick=()=>setRailTab(b.dataset.tab));
   $('#spClose').onclick=()=>setRailTab(null);
+  $('#panelCollapse').onclick=()=>{ if(railTab) setPanelCollapsed(true); else setPanelCollapsed(false); };
   $('#elSearch').addEventListener('input', filterElementCards);
   $('#btnNewBuild2').onclick=()=>createNewProject();
   $('#ssNewBuild').onclick=()=>createNewProject();
@@ -5803,6 +5850,15 @@ function init(){
   $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
+  // round 14: HTML5 drag from an element card — live ghost while hovering
+  // the canvas, drop places exactly where the ghost was
+  renderer.domElement.addEventListener('dragover', e=>{ if(!html5DragEl) return;
+    e.preventDefault(); e.dataTransfer.dropEffect='copy';
+    updateDragGhost(html5DragEl, e.clientX, e.clientY); });
+  renderer.domElement.addEventListener('dragleave', ()=>{ hideDragGhost(); });
+  renderer.domElement.addEventListener('drop', e=>{ if(!html5DragEl) return;
+    e.preventDefault(); const id=html5DragEl; html5DragEl=null;
+    dropElementAt(id, e.clientX, e.clientY); hideDragGhost(); });
   const hadSave=loadLocal();   // sessions: migrates the old single save into "My Build" and loads the open project
   const shared=loadSharedFromHash();   // a #s= link replaces whatever was loaded above
   // Figma-style home: every fresh open lands on "Your builds" — continue a
@@ -5818,6 +5874,8 @@ function init(){
   updateUndoBtns();
   resize();   // position the size bar under the finished top bar
   if(matchMedia('(max-width:820px)').matches) setRailTab(null);   // phones start with the panel closed (round 13)
+  try{ if(localStorage.getItem(PANEL_COLLAPSE_KEY)==='1') setPanelCollapsed(true); }catch(e){}
+  updateCollapseBtn();
   if(controls) controls.addEventListener('change', ()=>updateZoomUI());
   updateZoomUI();
   window.__ready=true;
@@ -5948,6 +6006,7 @@ function duplicateProject(id){
   const list=loadProjects();
   const p=list.find(x=>x.id===id); if(!p) return null;
   const copy=newProject(p.name+' copy', p.data? JSON.parse(JSON.stringify(p.data)) : null);
+  if(p.thumb) copy.thumb=p.thumb;
   list.push(copy); saveProjects(list);
   renderProjectsUI(); renderHomeProjects();
   toast('Copied "'+p.name+'"');
@@ -5998,7 +6057,10 @@ function renderProjectsUI(){
     mk('✎','Rename', ()=>startRowRename(row, p));
     mk('⧉','Duplicate', ()=>duplicateProject(p.id));
     mk('🗑','Delete', ()=>deleteProject(p.id));
-    row.append(info,btns);
+    const th=document.createElement('div'); th.className='pr-thumb';
+    if(p.thumb){ const im=document.createElement('img'); im.src=p.thumb; im.alt=''; th.appendChild(im); }
+    else th.textContent='🏠';
+    row.append(th,info,btns);
     row.onclick=()=>openProject(p.id);
     listEl.appendChild(row);
   }
@@ -6035,7 +6097,10 @@ function renderHomeProjects(){
     const b=document.createElement('button'); b.className='sp-primary'; b.style.width='auto';
     b.style.padding='8px 14px'; b.textContent='Continue';
     b.onclick=()=>openProject(p.id);
-    row.append(info,b);
+    const th=document.createElement('div'); th.className='pr-thumb';
+    if(p.thumb){ const im=document.createElement('img'); im.src=p.thumb; im.alt=''; th.appendChild(im); }
+    else th.textContent='🏠';
+    row.append(th,info,b);
     row.onclick=()=>openProject(p.id);
     wrap.appendChild(row);
   }
@@ -6058,12 +6123,30 @@ function cancelProjRename(){
   inp.style.display='none'; span.style.display=''; inp.blur();
 }
 
+/* ---- collapse the left panel (round 14) ---- */
+const PANEL_COLLAPSE_KEY='home-designer-minecraft-panel-collapsed-v1';
+let panelCollapsed=false, lastRailTab='elements';
+function updateCollapseBtn(){ const b=$('#panelCollapse'); if(b) b.textContent=railTab? '‹' : '›'; }
+function setPanelCollapsed(on){
+  panelCollapsed=!!on;
+  try{ localStorage.setItem(PANEL_COLLAPSE_KEY, panelCollapsed?'1':'0'); }catch(e){}
+  document.body.classList.toggle('panel-collapsed', panelCollapsed);
+  if(panelCollapsed) setRailTab(null);
+  else setRailTab(lastRailTab||'elements');
+  updateCollapseBtn();
+  return panelCollapsed;
+}
+
 /* ---- left rail + panel (Canva) ---- */
 const RAIL_TABS={ elements:'Elements', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', help:'Help' };
 let railTab='elements';
-function setRailTab(tab){
-  if(tab && tab===railTab) tab=null;   // tap the active tab again = close the panel
+function setRailTab(tab, force){
+  if(tab && tab===railTab && !force) tab=null;   // tap the active tab again = close the panel
   railTab=tab;
+  if(tab){ lastRailTab=tab;
+    if(panelCollapsed){ panelCollapsed=false;
+      try{ localStorage.setItem(PANEL_COLLAPSE_KEY,'0'); }catch(e){}
+      document.body.classList.remove('panel-collapsed'); } }
   $$('.rail-btn').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
   $$('#sidePanel .sp-tab').forEach(t=>t.classList.toggle('on', !!tab && t.id==='tab-'+tab));
   const st=$('#spTitle'); if(st) st.textContent=tab? RAIL_TABS[tab] : '';
@@ -6071,6 +6154,7 @@ function setRailTab(tab){
   if(tab==='templates') renderTplCards();
   if(tab==='builds') renderProjectsUI();
   if(tab==='layers') updateLayersPanel();
+  updateCollapseBtn();
   return railTab;
 }
 function renderTplCards(){
@@ -6154,6 +6238,8 @@ const ELEMENT_DEFS=[
   { id:'shutter', name:'Shutter door', sub:"6' × 7' rolling", preset:'shutter' },
 ];
 let cardDragged=false;   // a drag that just ended must not also fire the card's click
+let cardDragActive=false;   // a card drag is in progress — the hover ghost stays out of the way
+let html5DragEl=null;      // the element id of the current HTML5 drag (desktop mouse)
 function buildElementCards(){
   const grid=$('#elGrid'); if(!grid) return;
   ELEMENT_DEFS.forEach((def,i)=>{
@@ -6161,6 +6247,8 @@ function buildElementCards(){
     b.className='el-card'; b.dataset.el=def.id; b.dataset.name=def.name;
     if(i<7) b.dataset.slot=HOTBAR_SLOTS[i].id;
     b.draggable=true;
+    const hd=document.createElement('span'); hd.className='el-handle'; hd.textContent='⠿';
+    hd.title='Drag from here to place it'; b.appendChild(hd);
     if(def.preset==='shutter'){
       const ic=document.createElement('span'); ic.className='el-ico'; ic.textContent='🚪'; b.appendChild(ic);
     } else {
@@ -6197,19 +6285,28 @@ function bindCardDrag(card, elId){
   card.addEventListener('dragstart', e=>{
     e.dataTransfer.setData('text/plain', elId);
     e.dataTransfer.effectAllowed='copy';
+    html5DragEl=elId;
+    document.body.classList.add('card-dragging');
   });
-  card.addEventListener('dragend', ()=>{ card.classList.remove('dragging'); });
+  card.addEventListener('dragend', ()=>{ html5DragEl=null; hideDragGhost(); document.body.classList.remove('card-dragging'); card.classList.remove('dragging'); });
   card.addEventListener('pointerdown', e=>{
     if(e.button!==undefined && e.button!==0) return;
+    // round 14: only the grip handle starts a drag — the rest of the card
+    // scrolls the panel normally on touch
+    if(!e.target.closest('.el-handle')) return;
     const startX=e.clientX, startY=e.clientY;
     let dragging=false;
     const chip=$('#dragChip');
     const move=ev=>{
       if(!dragging && Math.hypot(ev.clientX-startX, ev.clientY-startY)>10){
         dragging=true; card.classList.add('dragging');
+        // the sheet gets out of the way on phones so the canvas is visible
+        document.body.classList.add('card-dragging');
         chip.textContent=card.dataset.name||elId; chip.style.display='block';
       }
       if(dragging){
+        cardDragActive=true;
+        updateDragGhost(elId, ev.clientX, ev.clientY);
         chip.style.left=(ev.clientX+14)+'px'; chip.style.top=(ev.clientY+14)+'px';
         if(ev.cancelable) ev.preventDefault();
       }
@@ -6219,6 +6316,7 @@ function bindCardDrag(card, elId){
       document.removeEventListener('pointerup', up);
       document.removeEventListener('pointercancel', up);
       chip.style.display='none'; card.classList.remove('dragging');
+      cardDragActive=false; hideDragGhost();
       if(dragging){
         cardDragged=true;
         setTimeout(()=>{ cardDragged=false; }, 0);
@@ -6227,6 +6325,9 @@ function bindCardDrag(card, elId){
           dropElementAt(elId, ev.clientX, ev.clientY);
         }
       }
+      // the sheet comes back only after the drop decision, so the drop
+      // point is still the open canvas when elementFromPoint runs
+      document.body.classList.remove('card-dragging');
     };
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
@@ -6242,6 +6343,45 @@ function dropPoint(sx, sy){
   const p=new THREE.Vector3();
   return ray.ray.intersectPlane(plane, p)? p : null;
 }
+/* round 14: the exact cells an element card would place at (x,y,z),
+   without placing them — the drag preview ghost and the drop use the
+   same list, so what you see is what lands. */
+function elementCells(elId, x, y, z){
+  const def=ELEMENT_DEFS.find(d=>d.id===elId);
+  let cells=[];
+  if(def && def.preset==='shutter') cells=SHUTTER_CELLS.map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }));
+  else switch(elId){
+    case 'wall': { const res=wallCells([x,y,z],[x+19,y,z],16,'none',null,4);   // 10 ft x 8 ft, brick
+      cells=res.cells? res.cells.slice() : []; break; }
+    case 'window': for(let dx=0;dx<8;dx++) for(let dy=7;dy<13;dy++) cells.push({ x:x+dx, y:y+dy, z, t:5, r:0 }); break;
+    case 'door': cells=SHUTTER_CELLS.map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r })); break;
+    case 'stairs': cells=stairCells('straight', 10, stairWidthBlocks).map(c=>rotOffset(c, 0))
+      .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r })); break;
+    case 'tree': for(let dy=0;dy<4;dy++) cells.push({ x, y:y+dy, z, t:2, r:0 });
+      for(let dy=4;dy<6;dy++) for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++)
+        cells.push({ x:x+dx, y:y+dy, z:z+dz, t:9, r:0 });
+      cells.push({ x, y:y+6, z, t:9, r:0 }); break;
+    case 'floor': cells=[{ x, y, z, t:2, r:0 }]; break;
+    case 'roof': cells=[{ x, y, z, t:7, r:0 }]; break;
+    default: { const ti=+elId;
+      if(Number.isInteger(ti)&&ti>=0&&ti<TYPES.length) cells=[{ x, y, z, t:ti, r:0 }]; }
+  }
+  return cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
+}
+/* round 14 — live drag preview: while a card is dragged over the canvas,
+   the multi-block ghost shows exactly the cells the drop would place. */
+function updateDragGhost(elId, sx, sy){
+  const p=dropPoint(sx, sy);
+  if(!p){ hideMultiGhost(); return 0; }
+  const x=Math.floor(p.x+1e-4), z=Math.floor(p.z+1e-4), y=FLOORS[activeFloor].base+1;
+  if(!inBounds(x,y,z)){ hideMultiGhost(); return 0; }
+  const cells=elementCells(elId, x, y, z);
+  if(!cells.length){ hideMultiGhost(); return 0; }
+  showMultiGhost(cells);
+  return cells.length;
+}
+function hideDragGhost(){ hideMultiGhost(); }
+
 function dropElementAt(elId, sx, sy){
   const p=dropPoint(sx, sy);
   if(!p){ toast('Drop it on the grass'); return 0; }
@@ -6265,41 +6405,25 @@ function dropElementAt(elId, sx, sy){
   }
 }
 function placeWallAt(x,y,z){
-  const len=20, h=16;   // 10 ft long x 8 ft high, brick
-  const res=wallCells([x,y,z],[x+len-1,y,z],h,'none',null,4);
-  if(!res.cells){ toast(res.error||'Could not place the wall here'); return 0; }
-  const fresh=res.cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
-  const n=applyBatch(fresh);
+  const n=applyBatch(elementCells('wall',x,y,z));   // 10 ft long x 8 ft high, brick
   if(n) toast('Wall placed — '+n+' blocks · 10\' 0" long × 8\' 0" high');
   else toast('That spot is taken');
   return n;
 }
 function placeWindowAt(x,y,z){
-  const cells=[];
-  for(let dx=0;dx<8;dx++) for(let dy=7;dy<13;dy++) cells.push({ x:x+dx, y:y+dy, z, t:5, r:0 });
-  const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
-  const n=applyBatch(fresh);
+  const n=applyBatch(elementCells('window',x,y,z));
   if(n) toast('Window placed — 4\' 0" × 3\' 0", sill 3\' 0"');
   else toast('That spot is taken');
   return n;
 }
 function placeTreeAt(x,y,z){
-  const cells=[];
-  for(let dy=0;dy<4;dy++) cells.push({ x, y:y+dy, z, t:2, r:0 });   // trunk
-  for(let dy=4;dy<6;dy++) for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++)
-    cells.push({ x:x+dx, y:y+dy, z:z+dz, t:9, r:0 });   // leafy canopy
-  cells.push({ x, y:y+6, z, t:9, r:0 });
-  const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
-  const n=applyBatch(fresh);
+  const n=applyBatch(elementCells('tree',x,y,z));
   if(n) toast('Tree placed');
   else toast('That spot is taken');
   return n;
 }
 function placeShutterAt(x,y,z){
-  const cells=SHUTTER_CELLS.map(c=>rotOffset(c,0))
-    .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }))
-    .filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells);
+  const n=applyBatch(elementCells('shutter',x,y,z));
   if(n) toast('Shutter door placed — 6\' 0" × 7\' 0"');
   else toast('That spot is taken');
   return n;
@@ -6683,6 +6807,7 @@ window.__mc = {
     dismiss(){ dismissGuide(); return true; },
     steps(){ return [...guideState.done]; },
     finished(){ return guideState.finished; },
+    hiddenByUser(){ return guideHiddenByUser; },
     doneFlag(){ return guideDone(); },
     stepTexts(){ return [...document.querySelectorAll('#guideCard .g-step')].map(e=>e.textContent); },
     celebrateVisible(){ return $('#guideCard').classList.contains('done'); },
@@ -6768,6 +6893,8 @@ Object.assign(window.__mc, {
     active(){ return railTab; },
     panelOpen(){ return !!railTab; },
     close(){ return setRailTab(null); },
+    collapsed(){ return panelCollapsed; },
+    setCollapsed(on){ return setPanelCollapsed(on); },
   },
   elements:{
     cards(){ return [...document.querySelectorAll('#elGrid .el-card')].map(c=>c.dataset.el); },
@@ -6813,6 +6940,23 @@ Object.assign(window.__mc, {
     visible(){ return $('#startScreen').classList.contains('on'); },
     projects(){ return loadProjects().map(p=>p.name); },
     open(id){ return openProject(id); },
+  },
+  dragGhost:{
+    cells(id,x,y,z){ return elementCells(id,x,y,z); },
+    show(id,sx,sy){ return updateDragGhost(id,sx,sy); },
+    visible(){ return multiGhost.visible; },
+    count(){ return multiGhost.children.length; },
+    active(){ return cardDragActive; },
+    hide(){ hideDragGhost(); return true; },
+  },
+  panel:{
+    collapsed(){ return panelCollapsed; },
+    setCollapsed(on){ return setPanelCollapsed(on); },
+    chevron(){ return document.querySelector('#panelCollapse').textContent; },
+  },
+  thumbs:{
+    capture(){ return captureThumb(); },
+    of(id){ const p=loadProjects().find(x=>x.id===id); return p&&p.thumb? p.thumb.length : 0; },
   },
 });
 
