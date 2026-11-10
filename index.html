@@ -69,6 +69,9 @@
   #presetPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
   #presetPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #presetPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
+  #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
   /* ---------- right-click tool menu ---------- */
   #ctxMenu{position:fixed;z-index:30;display:none;flex-direction:column;background:#222;color:#fff;
     border:3px solid #ffd83d;border-radius:8px;padding:5px;min-width:170px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -129,6 +132,7 @@
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
       <button data-tool="select" title="Click a block to select it, Shift-click to add more, drag a box to select many (L)">⬚ Select</button>
       <button data-tool="expand" title="Click a wall and drag to make it longer or taller (X)">↔ Expand</button>
+      <button data-tool="move" title="Click a block to pick it up, click again to drop it — or select many and move them together (M)">🚚 Move</button>
     </span>
     <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
   </div>
@@ -138,7 +142,9 @@
 
 <div id="readout">
   <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
-  <div>📐 Built so far: <b id="roFoot">nothing yet</b> · Floor area: <b id="roArea">0 sq ft</b></div>
+  <div style="white-space:nowrap">📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
+  <div id="roSelSize" class="dim" style="display:none"></div>
+  <div id="roWall" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
 </div>
 
@@ -147,17 +153,31 @@
   <b>Right-click</b> = tool menu<br>
   <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
   <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–9</b> pick block · <b>B / E / P / L / X</b> tools<br>
-  <b>Ctrl+C / Ctrl+V</b> copy / paste · <b>R</b> rotate<br>
+  <b>1–9</b> pick block · <b>B / E / P / L / X / M</b> tools<br>
+  <b>M</b> move a block or a selection · <b>Ctrl+C / Ctrl+V</b> copy / paste · <b>R</b> rotate<br>
   <b>Del</b> delete selection · <b>Ctrl+Z / Ctrl+Y</b> undo / redo
 </div>
 
 <div id="presetPanel">
-  <div class="pp-title">Stairs &amp; shutter — pick one, then click the ground to place it · R rotates it · Esc stops</div>
-  <button data-preset="stairs5">🪜 Straight 5 steps</button>
-  <button data-preset="stairs10">🪜 Straight 10 steps</button>
-  <button data-preset="stairsL">🪜 L-shaped</button>
-  <button data-preset="stairsU">🪜 U-shaped</button>
+  <div class="pp-title">Stairs — pick a shape, steps and width, then click the ground to place it · R rotates it · Esc stops</div>
+  <div class="pp-row"><span>Shape:</span>
+    <button data-shape="straight" class="on">Straight</button>
+    <button data-shape="L">L-shaped</button>
+    <button data-shape="U">U-shaped</button>
+  </div>
+  <div class="pp-row"><span>Steps:</span>
+    <button data-steps="10" class="on">10</button>
+    <button data-steps="20">20</button>
+    <button data-steps="50">50</button>
+    <button data-steps="custom">Custom</button>
+    <input id="stairCustom" type="number" min="1" max="100" value="12" title="Custom step count">
+  </div>
+  <div class="pp-row"><span>Width:</span>
+    <input id="stairWft" type="number" min="0" max="10" value="3"> ft
+    <input id="stairWin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span id="stairWBlocks" class="pp-note"></span>
+  </div>
+  <button data-preset="stairs">🪜 Place stairs</button>
   <button data-preset="shutter">🚪 Shutter door 6' × 7'</button>
   <button id="presetClose">✕ Close</button>
 </div>
@@ -169,6 +189,7 @@
   <button data-tool="pick">🎯 Pick</button>
   <button data-tool="select">⬚ Select</button>
   <button data-tool="expand">↔ Expand</button>
+  <button data-tool="move">🚚 Move</button>
 </div>
 <div id="selBox"></div>
 
@@ -298,17 +319,21 @@ let groundVisible = true;
 let selection = new Set();         // block keys
 let clipboard = [];                // [{dx,dy,dz,t,r}] relative to the copied min corner
 let pasteMode = false;             // ghost of the clipboard follows the mouse, click stamps it
-let presetMode = null;             // preset name being placed, or null
+let presetMode = null;             // 'stairs' | 'shutter' | null
 let presetRot = 0;                 // 0..3, R rotates the preset ghost
 let expandDrag = null;             // {anchor:[x,y,z], run, mode, len, cells:[]}
 let boxDrag = null;                // {x0,y0,x1,y1} screen coords for box-select
+
+/* ---- move tool ---- */
+let moveCarry = null;              // {items:[{x,y,z,t,r}], min:{x0,y0,z0,x1,y1,z1}, valid, target}
+const moveHidden = new Set();      // keys hidden from the renderer while being carried
 
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
 const instMeshes = [];             // per type: {mesh, keys[]}
 const groundMeshes = [];
 let ghost, floorBand, multiGhost, selGroup;
-const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.45, depthWrite:false });
+const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.55, depthWrite:false });
 const selBoxGeo = new THREE.BoxGeometry(1.04, 1.04, 1.04);
 const selBoxMat = new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.4, depthWrite:false });
 const raycaster = new THREE.Raycaster();
@@ -373,6 +398,9 @@ function initScene(){
   // selection highlight boxes
   selGroup = new THREE.Group(); selGroup.visible=false; scene.add(selGroup);
 
+  // always-on wall dimension labels (dimension line + ft/in tag above each wall)
+  wallLabelGroup = new THREE.Group(); scene.add(wallLabelGroup);
+
   buildGroundScenery();
   resize();
   window.addEventListener('resize', resize);
@@ -430,7 +458,7 @@ function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
 
 function rebuild(){
   const byType = TYPES.map(()=>[]);
-  for(const [k,v] of blocks){ byType[v.t].push([k, v]); }
+  for(const [k,v] of blocks){ if(moveHidden.has(k)) continue; byType[v.t].push([k, v]); }
   byType.forEach((list, ti)=>{
     const slot = instMeshes[ti];
     if(list.length > slot.mesh.instanceMatrix.array.length/16){
@@ -461,6 +489,7 @@ function rebuild(){
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
   });
+  updateWallLabels();
 }
 
 /* ================= undo / redo (single op or {batch:[ops]}) ================= */
@@ -479,7 +508,7 @@ function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); u
 function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
 
 /* ================= clear ================= */
-function clearBlocks(){ blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
+function clearBlocks(){ cancelMove(); blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
 function buildEmpty(){ clearBlocks(); rebuild(); updateStats(); scheduleSave(); }
 
 /* ================= floors ================= */
@@ -509,6 +538,15 @@ function floorAreaSqFt(fi){
   const b=floorBBox(fi);
   return b? b.w*b.d*FT*FT : 0;
 }
+/* bounding box of the WHOLE build, all floors — "Built so far" is a
+   whole-build number (like the block count next to it), so it must never
+   say "nothing yet" while blocks are on screen, whatever floor is active */
+function buildBBox(){
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,n=0;
+  for(const [k] of blocks){ const p=parseKey(k); n++;
+    if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
+  return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
+}
 function updateFloorBand(){
   const b=floorBBox(activeFloor);
   const w=b?b.w:12, d=b?b.d:12;
@@ -519,11 +557,98 @@ function updateFloorBand(){
 function updateStats(){
   $('#roBlocks').textContent = blocks.size.toLocaleString('en-IN');
   $('#roFloor').textContent = FLOORS[activeFloor].name;
-  const b=floorBBox(activeFloor);
+  const b=buildBBox();
   $('#roFoot').textContent = b? ftin(b.w*FT)+' × '+ftin(b.d*FT) : 'nothing yet';
-  const a=floorAreaSqFt(activeFloor);
+  const a=b? b.w*b.d*FT*FT : 0;
   $('#roArea').textContent = (Math.round(a*10)/10)+' sq ft';
   updateFloorBand();
+}
+
+/* ================= always-on wall dimension labels ================= */
+let wallLabelGroup=null;
+const wallLabelSprites=new Map();   // wall key -> {sprite, info}
+function drawLabelCanvas(g, text){
+  g.clearRect(0,0,256,64);
+  g.fillStyle='#fffbe6'; g.fillRect(0,0,256,64);
+  g.strokeStyle='#1a1a1a'; g.lineWidth=4; g.strokeRect(2,2,252,60);
+  g.fillStyle='#1a1a1a'; g.textAlign='center'; g.textBaseline='middle';
+  let size=30;
+  g.font='bold '+size+'px "Trebuchet MS", sans-serif';
+  while(g.measureText(text).width>238 && size>16){ size-=2; g.font='bold '+size+'px "Trebuchet MS", sans-serif'; }
+  g.fillText(text, 128, 34);
+}
+function makeLabelSprite(text){
+  const c=document.createElement('canvas'); c.width=256; c.height=64;
+  drawLabelCanvas(c.getContext('2d'), text);
+  const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:tex }));
+  sp.scale.set(11, 2.75, 1);
+  sp.userData.canvas=c;
+  sp.userData.text=text;
+  return sp;
+}
+function setLabelText(sp, text){
+  drawLabelCanvas(sp.userData.canvas.getContext('2d'), text);
+  sp.material.map.needsUpdate=true;
+  sp.userData.text=text;
+}
+function wallLabelText(w){ return ftin(w.lenFt)+' × '+ftin(w.heightFt); }
+/* every wall in the build: origin = leftmost/frontmost block of its run
+   at the lowest row of its vertical stack, per axis */
+function findWalls(){
+  const seen=new Set(), walls=[];
+  for(const [k,v] of blocks){
+    const [x,y,z]=parseKey(k);
+    for(const axis of ['x','z']){
+      const prev = axis==='x'? getBlock(x-1,y,z) : getBlock(x,y,z-1);
+      if(prev && prev.t===v.t) continue;
+      const below=getBlock(x,y-1,z);
+      if(below && below.t===v.t) continue;
+      const run=runAlong(x,y,z,axis);
+      if(!run) continue;
+      const info=wallInfo(x,y,z);
+      if(!info || info.axis!==axis) continue;
+      if(seen.has(info.key)) continue;
+      seen.add(info.key);
+      // only real walls get a label: at least 2 blocks long AND 2 high.
+      // single-layer rows (stair steps, floor slabs) would spam a label
+      // each — their size still shows in the readout panel on hover.
+      if(info.len>=2 && info.height>=2) walls.push(info);
+    }
+  }
+  return walls;
+}
+function updateWallLabels(){
+  if(!wallLabelGroup) return;
+  while(wallLabelGroup.children.length){
+    const ch=wallLabelGroup.children[0];
+    wallLabelGroup.remove(ch);
+    ch.traverse(o=>{ if(o.geometry) o.geometry.dispose();
+      if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  }
+  wallLabelSprites.clear();
+  const walls=findWalls().sort((a,b)=>b.len-a.len).slice(0,100);
+  for(const w of walls){
+    const yTop=w.y+w.height+0.35;
+    const cxp=w.axis==='x'? (w.a0+w.a1+1)/2 : w.fixed+0.5;
+    const czp=w.axis==='x'? w.fixed+0.5 : (w.a0+w.a1+1)/2;
+    // dimension line along the top of the wall, with end ticks — solid thin
+    // boxes, not 1px lines, so it stays visible from a normal camera distance
+    const lineMat=new THREE.MeshBasicMaterial({ color:0x1a1a1a });
+    const lineLen=w.a1+1-w.a0;
+    const main=new THREE.Mesh(new THREE.BoxGeometry(w.axis==='x'?lineLen:0.09, 0.09, w.axis==='x'?0.09:lineLen), lineMat);
+    main.position.set(cxp, yTop, czp);
+    wallLabelGroup.add(main);
+    for(const e of [w.a0, w.a1+1]){
+      const tick=new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.6, 0.09), lineMat);
+      tick.position.set(w.axis==='x'? e : w.fixed+0.5, yTop-0.25, w.axis==='x'? w.fixed+0.5 : e);
+      wallLabelGroup.add(tick);
+    }
+    const sp=makeLabelSprite(wallLabelText(w));
+    sp.position.set(cxp, yTop+1.75, czp);
+    wallLabelGroup.add(sp);
+    wallLabelSprites.set(w.key, { sprite:sp, info:w });
+  }
 }
 
 /* ================= save / load / export / import ================= */
@@ -585,7 +710,10 @@ function snapshot(){
 
 /* ================= toast ================= */
 let toastTimer=null;
-function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on');
+function toast(msg){ const t=$('#toast'); t.textContent=msg;
+  // sit just below the top bar, so it never covers the toolbar buttons
+  t.style.top=(document.querySelector('#topbar').offsetHeight+10)+'px';
+  t.classList.add('on');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'), 2600); }
 
 /* ================= picking / ghost preview ================= */
@@ -625,22 +753,43 @@ function updateHover(e){
   if(WALK.active){ ghost.visible=false; hover=null; return; }
   const hit=raycastVoxel(e);
   if(!hit){ ghost.visible=false; hover=null; hideMultiGhost();
-    $('#hoverTag').style.display='none'; $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; return; }
+    if(moveCarry){ moveCarry.valid=false; moveCarry.target=null;
+      $('#roHover').textContent='Moving '+moveCarry.items.length+' block'+(moveCarry.items.length>1?'s':'')+' — click to drop · Esc to cancel'; }
+    else $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+    $('#hoverTag').style.display='none'; $('#roWall').style.display='none'; return; }
   const [cx,cy,cz]=hit.cell;
   hover={ cell:hit.cell, block:hit.block, type:hit.type, valid:true };
+  // move tool: the ghost is the whole carried set, not one block
+  if(moveCarry){
+    updateMoveGhost();
+    ghost.visible=false;
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    tag.innerHTML='<b>Moving '+moveCarry.items.length+' block'+(moveCarry.items.length>1?'s':'')+'</b> · '+(moveCarry.valid?'click to drop':'blocked — spot is taken');
+    $('#roHover').innerHTML='Moving <b>'+moveCarry.items.length+' block'+(moveCarry.items.length>1?'s':'')+'</b> — click to drop · Esc to cancel';
+    return;
+  }
+  // wall under the cursor: show its size in the readout panel
+  const winfo = hit.block ? wallInfo(hit.block[0],hit.block[1],hit.block[2]) : null;
+  const wallEl=$('#roWall');
+  if(winfo && (winfo.len>=2 || winfo.height>=2)){
+    wallEl.style.display='block';
+    wallEl.innerHTML='🧱 Wall: <b>'+ftin(winfo.lenFt)+' long × '+ftin(winfo.heightFt)+' high</b> · '+winfo.blocks+' blocks';
+  } else wallEl.style.display='none';
   // paste / preset mode: the ghost is the whole clipboard / preset, not one block
   if(pasteMode || presetMode){
     const cells = pasteMode ? pasteCells(hit.cell)
-      : presetCells(presetMode, presetRot).map(c=>({ x:hit.cell[0]+c.dx, y:hit.cell[1]+c.dy, z:hit.cell[2]+c.dz }))
+      : currentPresetCells().map(c=>({ x:hit.cell[0]+c.dx, y:hit.cell[1]+c.dy, z:hit.cell[2]+c.dz }))
         .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
     showMultiGhost(cells);
     ghost.visible=false;
     const tag=$('#hoverTag');
     tag.style.display='block';
     tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
-    tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):PRESETS[presetMode].label)+'</b> · click to place';
+    tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):currentPresetLabel())+'</b> · click to place';
     $('#roHover').innerHTML = pasteMode ? 'Click to paste <b>'+cells.length+'</b> blocks here — Esc to stop'
-      : 'Click to place <b>'+PRESETS[presetMode].label+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
+      : 'Click to place <b>'+currentPresetLabel()+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
     return;
   }
   const occupied=getBlock(cx,cy,cz)!==null;
@@ -668,6 +817,13 @@ function updateSelectionHighlight(){
     selGroup.add(m);
   }
   $('#roSel').textContent = selection.size? ' · Selected: '+selection.size+' block'+(selection.size>1?'s':'') : '';
+  const sz=$('#roSelSize');
+  if(selection.size){
+    const bb=selectionBBox();
+    const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT, h=(bb.y1-bb.y0+1)*FT;
+    sz.style.display='block';
+    sz.textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' wide × '+ftin(d)+' deep × '+ftin(h)+' high';
+  } else sz.style.display='none';
 }
 function clearSelection(){ selection.clear(); updateSelectionHighlight(); }
 function selectBlockKey(k, additive){
@@ -686,8 +842,9 @@ function bboxOfKeys(keys){
 }
 function selectionBBox(){ return selection.size? bboxOfKeys([...selection]) : null; }
 
-/* ================= multi-block ghost (Expand / Paste / presets) ================= */
-function showMultiGhost(cells){
+/* ================= multi-block ghost (Expand / Paste / presets / move) ================= */
+function showMultiGhost(cells, color){
+  multiGhostMat.color.set(color||0x7CFC00);
   while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]);
   if(!cells.length){ multiGhost.visible=false; return; }
   for(const c of cells){
@@ -702,7 +859,10 @@ function hideMultiGhost(){ multiGhost.visible=false; while(multiGhost.children.l
 /* ================= copy / paste ================= */
 function copySelection(){
   let keys=[...selection].filter(k=>blocks.has(k));
-  if(!keys.length && hover && hover.block) keys=[key3(hover.block[0],hover.block[1],hover.block[2])];
+  if(!keys.length && hover && hover.block){
+    const hk=key3(hover.block[0],hover.block[1],hover.block[2]);
+    if(blocks.has(hk)) keys=[hk];   // the hovered block may have been cleared since
+  }
   if(!keys.length){ toast('Nothing to copy — select a block first'); return 0; }
   const bb=bboxOfKeys(keys);
   clipboard = keys.map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
@@ -730,46 +890,81 @@ function setPasteMode(on){
   pasteMode = !!on;
   $('#btnPaste').classList.toggle('on', pasteMode);
   if(pasteMode) toast('Paste mode — click to place, Esc to stop');
-  if(!pasteMode) hideMultiGhost();
+  if(!pasteMode){ hideMultiGhost(); $('#hoverTag').style.display='none';
+    $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; }
 }
 
 /* ================= stair + shutter presets ================= */
-const PRESETS = {
-  stairs5:  { label:'Straight 5 steps', cells:(()=>{ const a=[]; for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2}); return a; })() },
-  stairs10: { label:'Straight 10 steps', cells:(()=>{ const a=[]; for(let i=0;i<10;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2}); return a; })() },
-  stairsL:  { label:'L-shaped stairs', cells:(()=>{ const a=[];
-    for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2});
-    a.push({dx:0,dy:5,dz:5,t:2,r:0});                       // landing (wood)
-    for(let i=0;i<5;i++) a.push({dx:1+i,dy:6+i,dz:5,t:6,r:1});
-    return a; })() },
-  stairsU:  { label:'U-shaped stairs', cells:(()=>{ const a=[];
-    for(let i=0;i<5;i++) a.push({dx:0,dy:i,dz:i,t:6,r:2});
-    a.push({dx:0,dy:5,dz:5,t:2,r:0}); a.push({dx:1,dy:5,dz:5,t:2,r:0}); // landing
-    for(let i=0;i<5;i++) a.push({dx:1,dy:6+i,dz:4-i,t:6,r:0});
-    return a; })() },
-  shutter:  { label:'Shutter door 6\' × 7\'', cells:(()=>{ const a=[];
-    for(let x=0;x<12;x++) for(let y=0;y<14;y++) a.push({dx:x,dy:y,dz:0,t:8,r:0});
-    return a; })() },
-};
+/* stairs: pick a shape AND a step count AND a width — every step stays an
+   ordinary block. Width is in blocks (1 block = 6 in); default 3 ft = 6 blocks. */
+let stairShape='straight', stairSteps=10, stairCustom=12, stairWidthBlocks=6;
+function currentStepCount(){ return stairSteps==='custom'? clamp(Math.round(stairCustom)||10, 1, 100) : stairSteps; }
+function stairCells(shape, steps, w){
+  const cells=[];
+  if(shape==='straight'){
+    for(let i=0;i<steps;i++) for(let x=0;x<w;x++) cells.push({dx:x,dy:i,dz:i,t:6,r:2});
+    return cells;
+  }
+  const n1=Math.ceil(steps/2), n2=steps-n1;
+  for(let i=0;i<n1;i++) for(let x=0;x<w;x++) cells.push({dx:x,dy:i,dz:i,t:6,r:2});
+  if(shape==='L'){
+    for(let x=0;x<w;x++) for(let z=0;z<w;z++) cells.push({dx:x,dy:n1,dz:n1+z,t:2,r:0});   // landing
+    for(let j=0;j<n2;j++) for(let z=0;z<w;z++) cells.push({dx:w+j,dy:n1+1+j,dz:n1+z,t:6,r:1});
+  } else { // U
+    for(let x=0;x<2*w;x++) for(let z=0;z<w;z++) cells.push({dx:x,dy:n1,dz:n1+z,t:2,r:0}); // landing
+    for(let j=0;j<n2;j++) for(let z=0;z<w;z++) cells.push({dx:w+z,dy:n1+1+j,dz:n1-1-j,t:6,r:0});
+  }
+  return cells;
+}
+const SHUTTER_CELLS=(()=>{ const a=[];
+  for(let x=0;x<12;x++) for(let y=0;y<14;y++) a.push({dx:x,dy:y,dz:0,t:8,r:0});
+  return a; })();
+function currentPresetCells(){
+  if(presetMode==='shutter') return SHUTTER_CELLS.map(c=>rotOffset(c, presetRot));
+  if(presetMode==='stairs') return stairCells(stairShape, currentStepCount(), stairWidthBlocks).map(c=>rotOffset(c, presetRot));
+  return [];
+}
+function currentPresetLabel(){
+  if(presetMode==='shutter') return "Shutter door 6' × 7'";
+  if(presetMode==='stairs') return (stairShape==='straight'?'Straight':stairShape==='L'?'L-shaped':'U-shaped')+' '+currentStepCount()+' steps · '+ftin(stairWidthBlocks*FT)+' wide';
+  return '';
+}
+function placeCurrentPreset(ox,oy,oz){
+  const cells=currentPresetCells().map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
+    .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells);
+  if(n) toast(currentPresetLabel()+' placed — '+n+' blocks');
+  return n;
+}
+function placeStairs(shape, steps, ox,oy,oz, rot=0){
+  const cells=stairCells(shape, steps, stairWidthBlocks).map(c=>rotOffset(c, rot))
+    .map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
+    .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells);
+  if(n) toast((shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps placed — '+n+' blocks');
+  return n;
+}
+function updateStairWidthLabel(){ const el=$('#stairWBlocks'); if(el) el.textContent='= '+stairWidthBlocks+' blocks · '+ftin(stairWidthBlocks*FT); }
+function applyStairWidth(){
+  const ft=parseFloat($('#stairWft').value)||0, inch=parseFloat($('#stairWin').value)||0;
+  stairWidthBlocks=clamp(Math.round((ft+inch/12)*2),1,20);
+  const snapped=stairWidthBlocks*FT;
+  $('#stairWft').value=Math.floor(snapped);
+  $('#stairWin').value=Math.round((snapped-Math.floor(snapped))*12*2)/2;
+  updateStairWidthLabel();
+}
 function rotOffset(o, rot){
   // rotate (dx,dz) by rot*90° about the origin; stair direction rotates with it
   let dx=o.dx, dz=o.dz, r=o.r||0;
   for(let i=0;i<rot;i++){ const nx=dz, nz=-dx; dx=nx; dz=nz; r=(r+3)%4; }
   return { dx, dy:o.dy, dz, t:o.t, r };
 }
-function presetCells(name, rot){ return PRESETS[name].cells.map(c=>rotOffset(c, rot)); }
-function placePreset(name, ox,oy,oz, rot=0){
-  const cells=presetCells(name, rot).map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
-    .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells);
-  if(n) toast(PRESETS[name].label+' placed — '+n+' blocks');
-  return n;
-}
 function setPresetMode(name){
   presetMode=name; presetRot=0;
   $$('#presetPanel button[data-preset]').forEach(b=>b.classList.toggle('on', b.dataset.preset===name));
-  if(name) toast(PRESETS[name].label+' — click the ground to place, R rotates, Esc stops');
-  if(!name) hideMultiGhost();
+  if(name) toast(currentPresetLabel()+' — click the ground to place, R rotates, Esc stops');
+  if(!name){ hideMultiGhost(); $('#hoverTag').style.display='none';
+    $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; }
 }
 function togglePresetPanel(show){
   const p=$('#presetPanel');
@@ -780,41 +975,65 @@ function togglePresetPanel(show){
 }
 
 /* ================= expand tool ================= */
+/* straight run of same-type blocks through (x,y,z) along one axis */
+function runAlong(x,y,z,axis){
+  const b=getBlock(x,y,z); if(!b) return null;
+  let s=0,e=0;
+  const get=(v)=> axis==='x'? getBlock(x+v,y,z) : getBlock(x,y,z+v);
+  while(true){ const nb=get(s-1); if(nb&&nb.t===b.t) s--; else break; }
+  while(true){ const nb=get(e+1); if(nb&&nb.t===b.t) e++; else break; }
+  return { type:b.t, y, axis, s, e, len:e-s+1,
+    fixed: axis==='x'? z : x, a0: axis==='x'? x+s : z+s, a1: axis==='x'? x+e : z+e };
+}
 /* the straight run of same-type blocks through (x,y,z) — the longer of the x / z runs */
 function wallRun(x,y,z){
-  const b=getBlock(x,y,z); if(!b) return null;
-  const run=(axis)=>{
-    let s=0,e=0;
-    const get=(v)=> axis==='x'? getBlock(x+v,y,z) : getBlock(x,y,z+v);
-    while(true){ const nb=get(s-1); if(nb&&nb.t===b.t) s--; else break; }
-    while(true){ const nb=get(e+1); if(nb&&nb.t===b.t) e++; else break; }
-    return { axis, s, e, len:e-s+1 };
-  };
-  const rx=run('x'), rz=run('z');
-  const r = rx.len>=rz.len ? rx : rz;
-  return { type:b.t, y, axis:r.axis, s:r.s, e:r.e, len:r.len,
-    fixed: r.axis==='x'? z : x, a0: r.axis==='x'? x+r.s : z+r.s, a1: r.axis==='x'? x+r.e : z+r.e };
+  const rx=runAlong(x,y,z,'x'), rz=runAlong(x,y,z,'z');
+  if(!rx) return null;
+  return rx.len>=rz.len ? rx : rz;
 }
-function expandCells(run, mode, dir, len){
+/* full wall info for the wall through (x,y,z): length, height, block count */
+function wallInfo(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return null;
+  let baseY=y;
+  while(true){ const below=getBlock(x,baseY-1,z); if(below&&below.t===b.t) baseY--; else break; }
+  const run=wallRun(x,baseY,z);
+  if(!run) return null;
+  let blocks=0, height=0;
+  for(let a=run.a0;a<=run.a1;a++){
+    const bx=run.axis==='x'?a:run.fixed, bz=run.axis==='x'?run.fixed:a;
+    let h=0;
+    while(true){ const nb=getBlock(bx, run.y+h, bz); if(nb&&nb.t===run.type) h++; else break; }
+    height=Math.max(height,h); blocks+=h;
+  }
+  return { type:run.type, axis:run.axis, fixed:run.fixed, y:run.y, a0:run.a0, a1:run.a1,
+    len:run.len, lenFt:run.len*FT, height, heightFt:height*FT, blocks,
+    key: run.axis+'|'+run.fixed+'|'+run.a0+'|'+run.a1+'|'+run.type+'|'+run.y };
+}
+function expandCells(run, mode, dir, len, height=1){
   const cells=[];
   if(len<=0) return cells;
   if(mode==='up'){
+    // layers go on top of the whole wall, not on top of the grabbed row
+    const topY=run.y+(height||1)-1;
     for(let layer=1; layer<=len; layer++)
       for(let a=run.a0; a<=run.a1; a++){
         const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
-        if(!getBlock(x, run.y+layer, z)) cells.push({ x, y:run.y+layer, z, t:run.type, r:0 });
+        if(!getBlock(x, topY+layer, z)) cells.push({ x, y:topY+layer, z, t:run.type, r:0 });
       }
   } else {
+    // longer: extend the whole height of the wall, not just the grabbed row
     for(let i=1;i<=len;i++){
       const a = dir>0 ? run.a1+i : run.a0-i;
-      const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
-      if(!getBlock(x, run.y, z)) cells.push({ x, y:run.y, z, t:run.type, r:0 });
+      for(let h=0; h<(height||1); h++){
+        const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
+        if(!getBlock(x, run.y+h, z)) cells.push({ x, y:run.y+h, z, t:run.type, r:0 });
+      }
     }
   }
   return cells;
 }
-function expandCommit(run, mode, dir, len){
-  const cells=expandCells(run, mode, dir, len).filter(c=>inBounds(c.x,c.y,c.z));
+function expandCommit(run, mode, dir, len, height=1){
+  const cells=expandCells(run, mode, dir, len, height).filter(c=>inBounds(c.x,c.y,c.z));
   const n=applyBatch(cells);
   if(n) toast('Wall expanded +'+n+' blocks');
   return n;
@@ -845,17 +1064,30 @@ function expandDragUpdate(e){
     }
   }
   d.mode=mode; d.dir=dir; d.len=len;
-  d.cells=expandCells(run, mode, dir, len);
+  d.cells=expandCells(run, mode, dir, len, d.height);
   showMultiGhost(d.cells);
+  // live-update the wall's on-wall dimension label while dragging
+  const wi=wallInfo(d.anchor[0],d.anchor[1],d.anchor[2]);
+  if(wi){
+    const sp=wallLabelSprites.get(wi.key);
+    if(sp){
+      const projLen = mode==='up'? wi.lenFt : wi.lenFt + len*FT;
+      const projH = mode==='up'? wi.heightFt + len*FT : wi.heightFt;
+      setLabelText(sp.sprite, ftin(projLen)+' × '+ftin(projH));
+    }
+  }
   $('#roHover').textContent = len===0 ? 'Drag to expand the wall — sideways = longer, up = taller'
-    : mode==='up' ? 'Expand taller: +'+len+' layer'+(len>1?'s':'')+' · '+ftin(len*FT)+' higher'
-    : 'Expand longer: +'+len+' block'+(len>1?'s':'')+' · '+ftin(len*FT);
+    : mode==='up' ? 'Expand taller: +'+len+' layer'+(len>1?'s':'')+' · '+d.cells.length+' blocks · '+ftin(len*FT)+' higher'
+    : 'Expand longer: +'+len+' column'+(len>1?'s':'')+' · '+d.cells.length+' blocks · '+ftin(len*FT);
 }
 function expandStart(e, hit){
   const [x,y,z]=hit.block;
-  const run=wallRun(x,y,z);
-  if(!run) return false;
-  expandDrag={ anchor:[x,y,z], run, mode:'h', dir:1, len:0, cells:[], startX:e.clientX, startY:e.clientY };
+  // the whole wall, from its base row — expanding "longer" grows every layer,
+  // and "taller" adds layers on top of the wall's top, whichever row was grabbed
+  const info=wallInfo(x,y,z);
+  if(!info) return false;
+  const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
+  expandDrag={ anchor:[x,y,z], run, height:info.height, mode:'h', dir:1, len:0, cells:[], startX:e.clientX, startY:e.clientY };
   controls.enabled=false;
   return true;
 }
@@ -863,8 +1095,75 @@ function expandFinish(){
   const d=expandDrag; expandDrag=null;
   controls.enabled=true;
   hideMultiGhost();
-  if(d && d.len>0) expandCommit(d.run, d.mode, d.dir, d.len);
+  if(d && d.len>0) expandCommit(d.run, d.mode, d.dir, d.len, d.height);
   $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= move tool ================= */
+/* Pick up one block, or the whole selection if the clicked block is in it.
+   The blocks stay in the map (so undo stays honest) but are hidden from the
+   renderer while carried; the ghost shows where they will land. */
+function startMove(x,y,z){
+  const k=key3(x,y,z);
+  if(!blocks.has(k)) return false;
+  let keys;
+  if(selection.has(k)) keys=[...selection].filter(kk=>blocks.has(kk));
+  else { keys=[k]; selection=new Set([k]); updateSelectionHighlight(); }
+  if(!keys.length) return false;
+  moveCarry={ items:keys.map(kk=>{ const [px,py,pz]=parseKey(kk); const b=blocks.get(kk);
+      return { x:px, y:py, z:pz, t:b.t, r:b.r||0 }; }),
+    min:bboxOfKeys(keys), valid:false, target:null };
+  moveHidden.clear(); keys.forEach(kk=>moveHidden.add(kk));
+  rebuild();
+  updateMoveGhost();
+  return true;
+}
+/* where the carried set would land if its min corner went to targetCell */
+function moveTargetCells(targetCell){
+  const m=moveCarry; if(!m) return [];
+  return m.items.map(it=>({ x:targetCell[0]+(it.x-m.min.x0), y:targetCell[1]+(it.y-m.min.y0), z:targetCell[2]+(it.z-m.min.z0), t:it.t, r:it.r }));
+}
+function moveCellsValid(cells){
+  for(const c of cells){
+    if(!inBounds(c.x,c.y,c.z)) return false;
+    if(getBlock(c.x,c.y,c.z) && !moveHidden.has(key3(c.x,c.y,c.z))) return false;
+  }
+  return true;
+}
+function updateMoveGhost(){
+  if(!moveCarry) return;
+  if(!hover){ hideMultiGhost(); moveCarry.valid=false; moveCarry.target=null; return; }
+  const cells=moveTargetCells(hover.cell);
+  const valid=moveCellsValid(cells);
+  moveCarry.valid=valid; moveCarry.target=hover.cell;
+  showMultiGhost(cells, valid?0x7CFC00:0xff4444);
+}
+function dropMove(){
+  const m=moveCarry; if(!m) return false;
+  if(!m.valid || !m.target){ toast("Can't move there — that spot is taken"); return false; }
+  const pairs=m.items.map(it=>({ from:it,
+    to:{ x:m.target[0]+(it.x-m.min.x0), y:m.target[1]+(it.y-m.min.y0), z:m.target[2]+(it.z-m.min.z0) } }));
+  const moved=pairs.filter(p=> p.from.x!==p.to.x || p.from.y!==p.to.y || p.from.z!==p.to.z);
+  const newKeys=new Set(pairs.map(p=>key3(p.to.x,p.to.y,p.to.z)));
+  moveHidden.clear(); moveCarry=null; hideMultiGhost();
+  $('#hoverTag').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+  if(!moved.length){ rebuild(); updateSelectionHighlight(); return true; }  // dropped where it was: nothing to do
+  const erases=moved.map(p=>({ x:p.from.x, y:p.from.y, z:p.from.z, t:null }));
+  const places=moved.map(p=>({ x:p.to.x, y:p.to.y, z:p.to.z, t:p.from.t, r:p.from.r }));
+  const n=applyBatch([...erases, ...places]);
+  selection=newKeys; updateSelectionHighlight();
+  const fi=floorOfY(Math.min(...pairs.map(p=>p.to.y)));
+  if(fi!==activeFloor) setFloor(fi);
+  if(n) toast('Moved '+moved.length+' block'+(moved.length>1?'s':''));
+  return n>0;
+}
+function cancelMove(){
+  if(!moveCarry) return;
+  moveHidden.clear(); moveCarry=null; hideMultiGhost();
+  $('#hoverTag').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+  rebuild(); updateSelectionHighlight();
 }
 
 /* ================= erase a whole wall / delete / rotate ================= */
@@ -1004,7 +1303,15 @@ function bindPointer(){
     }
     if(e.button!==0) return;
     if(pasteMode){ if(hit) pasteAt(hit.cell); return; }
-    if(presetMode){ if(hit) placePreset(presetMode, hit.cell[0], hit.cell[1], hit.cell[2], presetRot); return; }
+    if(presetMode){ if(hit) placeCurrentPreset(hit.cell[0], hit.cell[1], hit.cell[2]); return; }
+    if(tool==='move'){
+      if(!moveCarry){
+        if(hit&&hit.block) startMove(hit.block[0],hit.block[1],hit.block[2]);
+      } else {
+        dropMove();
+      }
+      return;
+    }
     if(tool==='select'){
       if(hit&&hit.block) selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), e.shiftKey);
       else if(!e.shiftKey) clearSelection();
@@ -1074,6 +1381,7 @@ function buildFloorBar(){
   });
 }
 function setTool(t){
+  if(moveCarry) cancelMove();
   tool=t;
   $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
@@ -1115,7 +1423,9 @@ function buildWalker(){
 }
 function walkStart(){
   if(WALK.active) return;
+  cancelMove();
   WALK.active=true;
+  if(wallLabelGroup) wallLabelGroup.visible=false;
   savedCam={ pos:camera.position.clone(), tgt:controls.target.clone() };
   controls.enabled=false;
   // spawn on the grass at the origin, facing +z
@@ -1132,6 +1442,7 @@ function walkStop(){
   if(!WALK.active) return;
   WALK.active=false;
   walker.visible=false;
+  if(wallLabelGroup) wallLabelGroup.visible=true;
   controls.enabled=true;
   if(savedCam){ camera.position.copy(savedCam.pos); controls.target.copy(savedCam.tgt); controls.update(); }
   $('#walkHint').style.display='none';
@@ -1242,6 +1553,7 @@ function bindKeys(){
     const k=e.code;
     if(k==='Escape'){
       if(WALK.active){ walkStop(); }
+      else if(moveCarry){ cancelMove(); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
       else if(pasteMode){ setPasteMode(false); }
       else if(ctxMenuOpen()){ hideCtxMenu(); }
@@ -1261,6 +1573,7 @@ function bindKeys(){
       if(k==='KeyP') setTool('pick');
       if(k==='KeyL') setTool('select');
       if(k==='KeyX') setTool('expand');
+      if(k==='KeyM') setTool('move');
       if(k==='KeyR'){
         if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
         else rotateSelection();
@@ -1322,6 +1635,15 @@ function init(){
   $('#btnPresets').onclick=()=>togglePresetPanel();
   $('#presetClose').onclick=()=>togglePresetPanel(false);
   $$('#presetPanel button[data-preset]').forEach(b=>b.onclick=()=>setPresetMode(b.dataset.preset));
+  $$('#presetPanel button[data-shape]').forEach(b=>b.onclick=()=>{ stairShape=b.dataset.shape;
+    $$('#presetPanel button[data-shape]').forEach(x=>x.classList.toggle('on', x===b)); });
+  $$('#presetPanel button[data-steps]').forEach(b=>b.onclick=()=>{ stairSteps=b.dataset.steps==='custom'?'custom':+b.dataset.steps;
+    $$('#presetPanel button[data-steps]').forEach(x=>x.classList.toggle('on', x===b)); });
+  $('#stairCustom').onchange=()=>{ stairCustom=clamp(parseInt($('#stairCustom').value)||10,1,100); $('#stairCustom').value=stairCustom; };
+  $('#stairCustom').oninput=()=>{ stairCustom=clamp(parseInt($('#stairCustom').value)||10,1,100); };
+  $('#stairWft').onchange=applyStairWidth;
+  $('#stairWin').onchange=applyStairWidth;
+  updateStairWidthLabel();
   $$('#ctxMenu button').forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); hideCtxMenu(); });
   $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
@@ -1369,15 +1691,50 @@ window.__mc = {
   pasteAt(x,y,z){ return pasteAt([x,y,z]); },
   setPasteMode(on){ setPasteMode(on); },
   pasteModeOn(){ return pasteMode; },
-  presetNames(){ return Object.keys(PRESETS); },
-  placePreset(name,x,y,z,rot){ return placePreset(name,x,y,z,rot||0); },
+  presetNames(){ return ['straight','L','U','shutter']; },
+  placePreset(name,x,y,z,rot){
+    if(name==='shutter'){
+      const cells=SHUTTER_CELLS.map(c=>rotOffset(c,rot||0))
+        .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }))
+        .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+      return applyBatch(cells);
+    }
+    return placeStairs(name, currentStepCount(), x,y,z,rot||0);
+  },
+  placeStairs(shape,steps,x,y,z,rot){ return placeStairs(shape,steps,x,y,z,rot||0); },
+  setStairShape(s){ stairShape=s; },
+  setStairSteps(n){ stairSteps=n; },
+  setStairCustom(n){ stairCustom=n; stairSteps='custom'; },
+  stepCount(){ return currentStepCount(); },
+  setStairWidth(ft,inch){ stairWidthBlocks=clamp(Math.round(((ft||0)+(inch||0)/12)*2),1,20); updateStairWidthLabel(); return stairWidthBlocks; },
+  stairWidthBlocks(){ return stairWidthBlocks; },
   presetModeOn(){ return presetMode; },
   setPresetMode(name){ setPresetMode(name); },
   rotatePreset(){ presetRot=(presetRot+1)%4; return presetRot; },
+  wallInfo(x,y,z){ const w=wallInfo(x,y,z); return w? { ...w } : null; },
+  wallLabels(){ return findWalls().map(w=>({ text:wallLabelText(w), lenFt:w.lenFt, heightFt:w.heightFt, blocks:w.blocks,
+    cx: w.axis==='x'? (w.a0+w.a1+1)/2 : w.fixed+0.5, cy: w.y+w.height,
+    cz: w.axis==='x'? w.fixed+0.5 : (w.a0+w.a1+1)/2 })); },
+  labelTexts(){ return [...wallLabelSprites.values()].map(v=>v.sprite.userData.text); },
+  selSize(){ if(!selection.size) return null; const bb=selectionBBox();
+    return { n:selection.size, wFt:(bb.x1-bb.x0+1)*FT, dFt:(bb.z1-bb.z0+1)*FT, hFt:(bb.y1-bb.y0+1)*FT }; },
+  move:{
+    start(x,y,z){ return startMove(x,y,z); },
+    to(x,y,z){ if(!moveCarry) return null;
+      const cells=moveTargetCells([x,y,z]); const valid=moveCellsValid(cells);
+      moveCarry.valid=valid; moveCarry.target=[x,y,z];
+      showMultiGhost(cells, valid?0x7CFC00:0xff4444); return { valid, n:cells.length }; },
+    drop(){ return dropMove(); },
+    cancel(){ cancelMove(); },
+    carrying(){ return !!moveCarry; },
+    valid(){ return moveCarry? moveCarry.valid : false; },
+  },
   eraseWall(x,y,z){ return eraseRun(x,y,z); },
   rotateSel(){ return rotateSelection(); },
   deleteSel(){ return deleteSelection(); },
-  expandAt(x,y,z,mode,dir,len){ const run=wallRun(x,y,z); if(!run) return 0; return expandCommit(run,mode,dir,len); },
+  expandAt(x,y,z,mode,dir,len){ const info=wallInfo(x,y,z); if(!info) return 0;
+    const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
+    return expandCommit(run,mode,dir,len,info.height); },
   wallRun(x,y,z){ return wallRun(x,y,z); },
   clearAll(){ clearBlocks(); scheduleSave(); },
   menuOpen(){ return ctxMenuOpen(); },
