@@ -75,6 +75,20 @@
   #presetPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  /* ---------- templates / blueprints panels (same bottom-centre spot) ---------- */
+  #templatePanel,#blueprintPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+    background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
+  #templatePanel.on,#blueprintPanel.on{display:flex}
+  #templatePanel .pp-title,#blueprintPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #templatePanel button,#blueprintPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 10px;color:#222}
+  #templatePanel .pp-row,#blueprintPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  .tpl-item{flex-basis:100%;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
+  .tpl-item .tpl-name{font-weight:800;color:#ffd83d;white-space:nowrap}
+  .tpl-item .tpl-desc{flex:1;font-weight:700}
+  .tpl-item .tpl-size{font-weight:800;white-space:nowrap;color:#9be36d}
+  .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
   #fillPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
@@ -139,6 +153,10 @@
     <button id="btnExport" title="Download this project as JSON">⬇ Export</button>
     <button id="btnImport" title="Open a project JSON">⬆ Import</button>
     <span class="sep"></span>
+    <button id="btnTemplates" title="Start from a ready-made build">🏠 Templates</button>
+    <button id="btnBlueprints" title="Save a selection as a reusable blueprint">💾 Blueprints</button>
+    <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
+    <span class="sep"></span>
     <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
     <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
   </div>
@@ -173,6 +191,7 @@
   <div id="roWall" class="dim" style="display:none"></div>
   <div id="roTool" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
+  <div id="roSaved" class="dim"></div>
 </div>
 
 <div id="help">
@@ -208,6 +227,20 @@
   <button data-preset="stairs">🪜 Place stairs</button>
   <button data-preset="shutter">🚪 Shutter door 6' × 7'</button>
   <button id="presetClose">✕ Close</button>
+</div>
+
+<div id="templatePanel">
+  <div class="pp-title">Templates — load a starter build you can edit block by block · loading replaces the current build (it asks first)</div>
+  <div id="templateList" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div>
+  <button id="templateClose">✕ Close</button>
+</div>
+
+<div id="blueprintPanel">
+  <div class="pp-title">Blueprints — save a selection, place it again anywhere · saved in this browser only</div>
+  <div class="pp-row"><button id="btnSaveBlueprint">💾 Save selection as blueprint…</button>
+    <span id="bpHint" class="pp-note"></span></div>
+  <div id="blueprintList" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div>
+  <button id="blueprintClose">✕ Close</button>
 </div>
 
 <div id="fillPanel">
@@ -754,12 +787,45 @@ function updateWallLabels(){
 }
 
 /* ================= save / load / export / import ================= */
+/* one shared shape for the localStorage save, the JSON export and the
+   share-link loader: { version:2, name, blocks:[[x,y,z,t,r]...],
+   measures:[{a:[x,y,z], b:[x,y,z]}] } — version 1 files (no measures)
+   still load, they just start with no measures */
 let saveTimer=null;
-function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveLocal, 600); }
+function saveTimeStr(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function projectData(){
+  return { version:2, name:projectName,
+    blocks:[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; }),
+    measures: measures.map(m=>({ a:m.a, b:m.b })) };
+}
+function validMeasure(m){
+  return m&&Array.isArray(m.a)&&Array.isArray(m.b)&&m.a.length===3&&m.b.length===3
+    && m.a.every(n=>Number.isFinite(n)) && m.b.every(n=>Number.isFinite(n));
+}
+function loadProjectData(p){
+  if(!p||!Array.isArray(p.blocks)) throw new Error('bad file');
+  blocks.clear();
+  for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
+  measures.length=0;
+  if(Array.isArray(p.measures)) for(const m of p.measures){
+    if(validMeasure(m)) measures.push({ a:[...m.a], b:[...m.b],
+      ft:Math.hypot(m.b[0]-m.a[0],m.b[1]-m.a[1],m.b[2]-m.a[2])*FT });
+  }
+  projectName = p.name||'Imported design';
+  $('#projName').textContent = projectName;
+  undoStack.length=0; redoStack.length=0;
+  clearSelection();
+  rebuild(); updateStats(); renderMeasures(); updateMeasuresBtn();
+  return blocks.size;
+}
+function scheduleSave(){
+  const el=$('#roSaved'); if(el) el.textContent='💾 Saving…';
+  clearTimeout(saveTimer); saveTimer=setTimeout(saveLocal, 600);
+}
 function saveLocal(){
   try{
-    const arr=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; });
-    localStorage.setItem(LSKEY, JSON.stringify({ version:1, name:projectName, blocks:arr }));
+    localStorage.setItem(LSKEY, JSON.stringify(projectData()));
+    const el=$('#roSaved'); if(el) el.textContent='💾 Saved ✓ '+saveTimeStr();
   }catch(e){}
 }
 function loadLocal(){
@@ -767,37 +833,26 @@ function loadLocal(){
     const raw=localStorage.getItem(LSKEY); if(!raw) return false;
     const p=JSON.parse(raw);
     if(!p||!Array.isArray(p.blocks)) return false;
-    blocks.clear();
-    for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
-    projectName = p.name||'My Build';
-    $('#projName').textContent = projectName;
-    clearSelection();
-    rebuild(); updateStats();
+    loadProjectData(p);
+    saveLocal();   // re-save in the current shape, so an old v1 save upgrades
     return true;
   }catch(e){ return false; }
 }
 function exportJSON(){
-  const arr=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; });
-  const blob=new Blob([JSON.stringify({ version:1, name:projectName, blocks:arr },null,1)], { type:'application/json' });
+  const blob=new Blob([JSON.stringify(projectData(),null,1)], { type:'application/json' });
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=(projectName||'design').replace(/\s+/g,'-').toLowerCase()+'-minecraft.json';
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
-  toast('Project exported — '+arr.length.toLocaleString('en-IN')+' blocks');
+  toast('Project exported — '+blocks.size.toLocaleString('en-IN')+' blocks'
+    +(measures.length?' · '+measures.length+' measure'+(measures.length>1?'s':''):''));
 }
 function importJSON(file){
   const rd=new FileReader();
   rd.onload=()=>{
     try{
-      const p=JSON.parse(rd.result);
-      if(!p||!Array.isArray(p.blocks)) throw new Error('bad file');
-      blocks.clear();
-      for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
-      projectName = p.name||'Imported design';
-      $('#projName').textContent = projectName;
-      undoStack.length=0; redoStack.length=0;
-      clearSelection();
-      rebuild(); updateStats(); saveLocal();
-      toast('Imported — '+blocks.size.toLocaleString('en-IN')+' blocks');
+      const n=loadProjectData(JSON.parse(rd.result));
+      saveLocal();
+      toast('Imported — '+n.toLocaleString('en-IN')+' blocks');
     }catch(e){ toast('That file could not be opened'); }
   };
   rd.readAsText(file);
@@ -808,6 +863,136 @@ function snapshot(){
   a.href=renderer.domElement.toDataURL('image/png');
   a.download='minecraft-design.png'; a.click();
   toast('Photo saved');
+}
+
+/* ================= share link: the whole build in the URL hash ================= */
+/* Compact bit-packed encoding, no dependency: version, name, blocks sorted
+   by (y,z,x) with zigzag-varint deltas, then tape measures. Base64url, so
+   it can live in a URL hash. A small house is a few hundred characters;
+   a big one gets a warning above ~1,800. */
+function BitW(){
+  const bytes=[]; let cur=0, n=0;
+  function bit(b){ cur=(cur<<1)|(b?1:0); n++; if(n===8){ bytes.push(cur); cur=0; n=0; } }
+  return {
+    bits(v,cnt){ for(let i=cnt-1;i>=0;i--) bit((v>>i)&1); },
+    varint(v){ do{ let b=v&0x7f; v>>>=7; if(v) b|=0x80; this.bits(b,8); }while(v); },
+    zigzag(v){ this.varint((v<<1)^(v>>31)); },
+    bytes(){ if(n){ cur<<=(8-n); bytes.push(cur); } return bytes; },
+  };
+}
+function BitR(bytes){
+  let pos=0; // bit position
+  function bit(){ const b=(bytes[pos>>3]>>(7-(pos&7)))&1; pos++; return b; }
+  return {
+    bits(cnt){ let v=0; for(let i=0;i<cnt;i++) v=(v<<1)|bit(); return v; },
+    varint(){ let v=0, s=0; while(true){ const b=this.bits(8); v|=(b&0x7f)<<s; if(!(b&0x80)) break; s+=7; if(s>28) break; } return v>>>0; },
+    zigzag(){ const v=this.varint(); return (v>>>1)^-(v&1); },
+  };
+}
+function b64urlEncode(bytes){
+  let s=''; for(let i=0;i<bytes.length;i+=8192) s+=String.fromCharCode.apply(null, bytes.slice(i,i+8192));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(str){
+  str=str.replace(/-/g,'+').replace(/_/g,'/');
+  while(str.length%4) str+='=';
+  const bin=atob(str); const out=[];
+  for(let i=0;i<bin.length;i++) out.push(bin.charCodeAt(i));
+  return out;
+}
+function encodeShare(){
+  const cells=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; })
+    .sort((a,b)=> a.y-b.y || a.z-b.z || a.x-b.x);
+  const w=BitW();
+  w.varint(1); // version
+  const nameBytes=new TextEncoder().encode(projectName||'My Build');
+  w.varint(Math.min(nameBytes.length,64));
+  for(let i=0;i<Math.min(nameBytes.length,64);i++) w.bits(nameBytes[i],8);
+  w.varint(cells.length);
+  let px=0, py=0, pz=0;
+  cells.forEach((c,i)=>{
+    if(i===0){ w.bits(c.x+40,7); w.bits(c.y+30,7); w.bits(c.z+40,8); }
+    else { w.zigzag(c.x-px); w.zigzag(c.y-py); w.zigzag(c.z-pz); }
+    w.bits(c.t,4); w.bits(c.r,2);
+    px=c.x; py=c.y; pz=c.z;
+  });
+  w.varint(measures.length);
+  for(const m of measures){
+    w.bits(m.a[0]+40,7); w.bits(m.a[1]+30,7); w.bits(m.a[2]+40,8);
+    w.bits(m.b[0]+40,7); w.bits(m.b[1]+30,7); w.bits(m.b[2]+40,8);
+  }
+  return b64urlEncode(w.bytes());
+}
+function decodeShare(str){
+  try{
+    const bytes=b64urlDecode(str);
+    const r=BitR(bytes);
+    if(r.varint()!==1) return null;
+    const nlen=r.varint(); if(nlen>64) return null;
+    const nb=[]; for(let i=0;i<nlen;i++) nb.push(r.bits(8));
+    const name=new TextDecoder().decode(new Uint8Array(nb))||'Shared build';
+    const n=r.varint(); if(n>200000) return null;
+    const cells=[]; let px=0, py=0, pz=0;
+    for(let i=0;i<n;i++){
+      let x,y,z;
+      if(i===0){ x=r.bits(7)-40; y=r.bits(7)-30; z=r.bits(8)-40; }
+      else { x=px+r.zigzag(); y=py+r.zigzag(); z=pz+r.zigzag(); }
+      const t=r.bits(4), rr=r.bits(2);
+      if(t>=TYPES.length||!inBounds(x,y,z)) return null;
+      cells.push({ x,y,z,t,r:rr }); px=x; py=y; pz=z;
+    }
+    const nm=r.varint(); if(nm>1000) return null;
+    const ms=[];
+    for(let i=0;i<nm;i++){
+      const a=[r.bits(7)-40, r.bits(7)-30, r.bits(8)-40];
+      const b=[r.bits(7)-40, r.bits(7)-30, r.bits(8)-40];
+      ms.push({ a, b, ft:Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])*FT });
+    }
+    return { name, cells, measures:ms };
+  }catch(e){ return null; }
+}
+function applyShared(data){
+  blocks.clear();
+  for(const c of data.cells) blocks.set(key3(c.x,c.y,c.z), { t:c.t, r:c.r||0 });
+  measures.length=0;
+  for(const m of data.measures||[]) measures.push(m);
+  projectName=data.name; $('#projName').textContent=projectName;
+  undoStack.length=0; redoStack.length=0;
+  clearSelection();
+  rebuild(); updateStats(); renderMeasures(); updateMeasuresBtn(); saveLocal();
+}
+function shareBuild(){
+  const payload=encodeShare();
+  const url=location.origin+location.pathname+'#s='+payload;
+  const done=()=>{
+    if(payload.length>1800) toast('Share link copied — it is long ('+payload.length.toLocaleString('en-IN')+' chars); it works best for smaller builds');
+    else toast('Share link copied — anyone opening it sees this build');
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, ()=>fallbackCopy(url,done));
+  else fallbackCopy(url,done);
+  return url;
+}
+function fallbackCopy(text, done){
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  if(done) done();
+}
+function loadSharedFromHash(){
+  const m=(location.hash||'').match(/^#s=([A-Za-z0-9\-_]+)$/);
+  if(!m) return false;
+  const data=decodeShare(m[1]);
+  if(!data){ toast('That share link could not be read'); return false; }
+  if(blocks.size && !confirm('Open the shared build "'+data.name+'"? Your current build will be replaced.')) return false;
+  applyShared(data);
+  // strip the hash once the build is loaded: the build is now autosaved,
+  // so a later reload must load the saved build, not the shared snapshot
+  // again (which would wipe anything built since)
+  try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
+  toast('Shared build loaded — '+data.cells.length.toLocaleString('en-IN')+' blocks');
+  return true;
 }
 
 /* ================= toast ================= */
@@ -1106,7 +1291,188 @@ function togglePresetPanel(show){
   p.classList.toggle('on', on);
   $('#btnPresets').classList.toggle('on', on);
   $('#fillPanel').classList.toggle('on', !on && tool==='fill');
+  if(on){ $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on'); }
   if(!on) setPresetMode(null);
+}
+
+/* ================= starter templates ================= */
+/* Four small starter builds, all ordinary blocks, fully editable after
+   loading. Loading replaces the current build — it asks first. */
+function tplRect(x0,x1,y0,y1,z0,z1,t){
+  const cells=[];
+  for(let x=x0;x<=x1;x++) for(let y=y0;y<=y1;y++) for(let z=z0;z<=z1;z++) cells.push({x,y,z,t,r:0});
+  return cells;
+}
+function tplWalls(x0,x1,z0,z1,y0,y1,t){
+  const cells=[];
+  for(let y=y0;y<=y1;y++){
+    for(let x=x0;x<=x1;x++){ cells.push({x,y,z:z0,t,r:0}); cells.push({x,y,z:z1,t,r:0}); }
+    for(let z=z0+1;z<=z1-1;z++){ cells.push({x:x0,y,z,t,r:0}); cells.push({x:x1,y,z,t,r:0}); }
+  }
+  return cells;
+}
+function tplCut(cells, pred){ return cells.filter(c=>!pred(c)); }
+function cottageCells(){
+  let c=[];
+  c.push(...tplRect(0,15,1,1,0,11,2));                        // wood floor 16 x 12 (8' x 6')
+  let walls=tplWalls(0,15,0,11,2,17,4);                       // brick walls, 16 high (8 ft)
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=5 && cell.x<=10 && cell.y<=15);   // front door 3' x 7'
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=12 && cell.x<=14 && cell.y>=8 && cell.y<=11); // front window
+  walls=tplCut(walls, cell=> cell.z===11 && cell.x>=5 && cell.x<=10 && cell.y>=8 && cell.y<=11); // back window
+  walls=tplCut(walls, cell=> cell.x===0 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11);   // left window
+  walls=tplCut(walls, cell=> cell.x===15 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11);  // right window
+  c.push(...walls);
+  c.push(...tplRect(-1,16,18,18,-1,12,7));                    // slab roof, 1-block overhang
+  return c;
+}
+function flatCells(){
+  let c=[];
+  c.push(...tplRect(0,23,1,1,0,11,2));                        // wood floor 24 x 12 (12' x 6')
+  let walls=tplWalls(0,23,0,11,2,17,4);
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=2 && cell.x<=7 && cell.y<=15);    // front door
+  walls=tplCut(walls, cell=> cell.z===0 && cell.x>=14 && cell.x<=19 && cell.y>=8 && cell.y<=11); // front window
+  walls=tplCut(walls, cell=> cell.z===11 && cell.x>=2 && cell.x<=7 && cell.y>=8 && cell.y<=11);
+  walls=tplCut(walls, cell=> cell.z===11 && cell.x>=14 && cell.x<=19 && cell.y>=8 && cell.y<=11);
+  walls=tplCut(walls, cell=> cell.x===0 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11);
+  walls=tplCut(walls, cell=> cell.x===23 && cell.z>=4 && cell.z<=7 && cell.y>=8 && cell.y<=11);
+  c.push(...walls);
+  let div=tplRect(12,12,2,17,1,10,4);                         // dividing wall (between the front and back walls)
+  div=tplCut(div, cell=> cell.z>=4 && cell.z<=9 && cell.y<=15); // door between the rooms
+  c.push(...div);
+  c.push(...tplRect(-1,24,18,18,-1,12,7));                    // slab roof
+  return c;
+}
+function gardenCells(){
+  let c=[];
+  c.push(...tplRect(0,19,1,4,0,0,3));                         // front wall, 20 long, 4 high (2 ft)
+  c.push(...tplRect(0,0,1,4,1,11,3));                         // left side
+  c.push(...tplRect(19,19,1,4,1,11,3));                       // right side
+  c=c.filter(cell=>!(cell.z===0 && cell.x>=7 && cell.x<=12));   // gate, 3 ft wide
+  c.push(...tplRect(6,6,5,8,0,0,4));                          // brick gate posts, rising above the wall
+  c.push(...tplRect(13,13,5,8,0,0,4));
+  c.push(...tplRect(7,12,1,1,-3,-1,1));                       // dirt path up to the gate
+  return c;
+}
+function stairDemoCells(){
+  const cells=stairCells('straight',20,6).map(c=>({ x:c.dx, y:1+c.dy, z:c.dz, t:c.t, r:c.r }));
+  cells.push(...tplRect(0,5,21,21,19,24,2));                  // landing, 6 x 6
+  for(let z=0;z<20;z++)                                        // side rails, 2 high above each step
+    for(const x of [-1,6])
+      for(let y=z+2;y<=z+3;y++) cells.push({ x, y, z, t:4, r:0 });
+  return cells;
+}
+const TEMPLATES=[
+  { id:'cottage', name:'Small cottage', desc:"One-room cottage — door, four windows, slab roof", cells:cottageCells },
+  { id:'flat', name:'Two-room flat', desc:"Two rooms with a door between them — windows all round", cells:flatCells },
+  { id:'garden', name:'Garden wall + gate', desc:"Low stone garden wall, brick gate posts, dirt path", cells:gardenCells },
+  { id:'stairs', name:'Staircase demo', desc:"20-step stair, 3 ft wide, landing and side rails", cells:stairDemoCells },
+];
+function templateInfo(t){
+  const cells=t.cells();
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+  for(const c of cells){ x0=Math.min(x0,c.x); x1=Math.max(x1,c.x); z0=Math.min(z0,c.z); z1=Math.max(z1,c.z); }
+  return { cells, n:cells.length, wFt:(x1-x0+1)*FT, dFt:(z1-z0+1)*FT };
+}
+function loadTemplate(id){
+  const t=TEMPLATES.find(t=>t.id===id); if(!t) return 0;
+  if(blocks.size && !confirm('Load "'+t.name+'"? Your current build will be replaced.')) return 0;
+  const info=templateInfo(t);
+  clearBlocks();
+  const n=applyBatch(info.cells);
+  projectName=t.name; $('#projName').textContent=projectName;
+  scheduleSave();
+  toast(t.name+' loaded — '+n+' blocks, fully editable');
+  return n;
+}
+function renderTemplatePanel(){
+  const list=$('#templateList'); list.innerHTML='';
+  for(const t of TEMPLATES){
+    const info=templateInfo(t);
+    const row=document.createElement('div'); row.className='tpl-item';
+    const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=t.name;
+    const ds=document.createElement('span'); ds.className='tpl-desc'; ds.textContent=t.desc;
+    const sz=document.createElement('span'); sz.className='tpl-size';
+    sz.textContent=ftin(info.wFt)+' × '+ftin(info.dFt)+' · '+info.n+' blocks';
+    const b=document.createElement('button'); b.textContent='Load';
+    b.onclick=()=>{ loadTemplate(t.id); toggleTemplatePanel(false); };
+    row.append(nm,ds,sz,b); list.appendChild(row);
+  }
+}
+function toggleTemplatePanel(show){
+  const p=$('#templatePanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnTemplates').classList.toggle('on',on);
+  if(on){ renderTemplatePanel();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnBlueprints').classList.remove('on'); }
+}
+
+/* ================= blueprints: save a selection, place it again ================= */
+const BPKEY='home-designer-minecraft-blueprints-v1';
+function loadBlueprints(){ try{ return JSON.parse(localStorage.getItem(BPKEY))||[]; }catch(e){ return []; } }
+function saveBlueprints(list){ try{ localStorage.setItem(BPKEY, JSON.stringify(list)); }catch(e){} }
+function saveSelectionAsBlueprint(name){
+  const keys=[...selection].filter(k=>blocks.has(k));
+  if(!keys.length) return 0;
+  name=(name||'').trim();
+  const existing=loadBlueprints();
+  if(!name) name='Blueprint '+(existing.length+1);
+  const bb=bboxOfKeys(keys);
+  const cells=keys.map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
+    return { dx:x-bb.x0, dy:y-bb.y0, dz:z-bb.z0, t:b.t, r:b.r||0 }; });
+  const list=existing.filter(bp=>bp.name!==name);
+  list.push({ name, cells, w:bb.x1-bb.x0+1, d:bb.z1-bb.z0+1, h:bb.y1-bb.y0+1 });
+  saveBlueprints(list);
+  renderBlueprintPanel();
+  toast('"'+name+'" saved — '+cells.length+' blocks');
+  return cells.length;
+}
+function placeBlueprint(name){
+  const bp=loadBlueprints().find(b=>b.name===name);
+  if(!bp||!bp.cells.length) return false;
+  clipboard=bp.cells.map(c=>({ ...c }));
+  setPasteMode(true);
+  return true;
+}
+function deleteBlueprint(name){
+  saveBlueprints(loadBlueprints().filter(b=>b.name!==name));
+  renderBlueprintPanel();
+  return true;
+}
+function renderBlueprintPanel(){
+  const list=$('#blueprintList'); list.innerHTML='';
+  const bps=loadBlueprints();
+  $('#bpHint').textContent = selection.size? selection.size+' block'+(selection.size>1?'s':'')+' selected' : 'Select blocks first, then save';
+  if(!bps.length){
+    const d=document.createElement('div'); d.className='tpl-empty';
+    d.textContent='No blueprints saved yet — select some blocks and save one.';
+    list.appendChild(d); return;
+  }
+  for(const bp of bps){
+    const row=document.createElement('div'); row.className='tpl-item';
+    const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=bp.name;
+    const ds=document.createElement('span'); ds.className='tpl-desc';
+    ds.textContent=bp.cells.length+' blocks';
+    const sz=document.createElement('span'); sz.className='tpl-size';
+    sz.textContent=ftin(bp.w*FT)+' × '+ftin(bp.d*FT)+' × '+ftin(bp.h*FT);
+    const place=document.createElement('button'); place.textContent='Place';
+    place.onclick=()=>{ placeBlueprint(bp.name); toggleBlueprintPanel(false); };
+    const del=document.createElement('button'); del.textContent='✕';
+    del.title='Delete this blueprint';
+    del.onclick=()=>{ if(confirm('Delete blueprint "'+bp.name+'"?')) deleteBlueprint(bp.name); };
+    row.append(nm,ds,sz,place,del); list.appendChild(row);
+  }
+}
+function toggleBlueprintPanel(show){
+  const p=$('#blueprintPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnBlueprints').classList.toggle('on',on);
+  if(on){ renderBlueprintPanel();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#templatePanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on'); }
 }
 
 /* ================= expand tool ================= */
@@ -1493,6 +1859,7 @@ function addMeasure(a,b){
   measures.push({ a:[...a], b:[...b], ft });
   renderMeasures();
   updateMeasuresBtn();
+  scheduleSave();   // measures are part of the save now — they survive a reload
   $('#roTool').style.display='block';
   $('#roTool').textContent='📏 Tape: '+measures.length+' measure'+(measures.length>1?'s':'')+' pinned · Esc clears';
   toast('Measured '+ftin(ft));
@@ -1531,6 +1898,7 @@ function clearMeasures(){
   measures.length=0;
   renderMeasures();
   updateMeasuresBtn();
+  scheduleSave();
   toast('Measures cleared');
 }
 function updateMeasuresBtn(){
@@ -1832,6 +2200,8 @@ function setTool(t){
   // the fill panel and the stair panel share the same bottom-centre spot —
   // never show both at once
   $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
+  $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+  $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
   if(t!=='fill' && t!=='line') hideSizeBar();
   if(pasteMode) setPasteMode(false);
   if(presetMode) setPresetMode(null);
@@ -2013,6 +2383,8 @@ function bindKeys(){
       else if(moveCarry){ cancelMove(); }
       else if(fillDrag){ cancelFillDrag(); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
+      else if($('#templatePanel').classList.contains('on')){ toggleTemplatePanel(false); }
+      else if($('#blueprintPanel').classList.contains('on')){ toggleBlueprintPanel(false); }
       else if(pasteMode){ setPasteMode(false); }
       else if(lineStart){ cancelLine(); }
       else if(tapeStart){ tapeStart=null; startMarker.visible=false; $('#roTool').style.display='none'; }
@@ -2098,6 +2470,16 @@ function init(){
   $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
   $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
   $('#btnPresets').onclick=()=>togglePresetPanel();
+  $('#btnTemplates').onclick=()=>toggleTemplatePanel();
+  $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
+  $('#btnShare').onclick=()=>shareBuild();
+  $('#templateClose').onclick=()=>toggleTemplatePanel(false);
+  $('#blueprintClose').onclick=()=>toggleBlueprintPanel(false);
+  $('#btnSaveBlueprint').onclick=()=>{
+    const name=prompt('Name this blueprint:', '');
+    if(name===null) return;
+    if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
+  };
   $('#presetClose').onclick=()=>togglePresetPanel(false);
   $$('#presetPanel button[data-preset]').forEach(b=>b.onclick=()=>setPresetMode(b.dataset.preset));
   $$('#presetPanel button[data-shape]').forEach(b=>b.onclick=()=>{ stairShape=b.dataset.shape;
@@ -2137,6 +2519,7 @@ function init(){
     projectName='My Build'; $('#projName').textContent=projectName;
     updateStats();
   }
+  loadSharedFromHash();   // a #s= link replaces whatever was loaded above
   updateUndoBtns();
   resize();   // position the help panel + size bar under the finished toolbar
   window.__ready=true;
@@ -2250,6 +2633,27 @@ window.__mc = {
   },
   parseSize(s){ return parseFtIn(s); },
   applySize(s){ return applyExactSize(s); },
+  templates:{
+    list(){ return TEMPLATES.map(t=>{ const info=templateInfo(t); return { id:t.id, name:t.name, n:info.n, wFt:info.wFt, dFt:info.dFt }; }); },
+    load(id){ return loadTemplate(id); },
+    cells(id){ const t=TEMPLATES.find(t=>t.id===id); return t? templateInfo(t).cells : null; },
+  },
+  blueprints:{
+    save(name){ return saveSelectionAsBlueprint(name); },
+    list(){ return loadBlueprints().map(b=>({ name:b.name, n:b.cells.length, w:b.w, d:b.d, h:b.h })); },
+    place(name){ return placeBlueprint(name); },
+    delete(name){ return deleteBlueprint(name); },
+    count(){ return loadBlueprints().length; },
+  },
+  share:{
+    encode(){ return encodeShare(); },
+    decode(s){ return decodeShare(s); },
+    load(s){ const d=decodeShare(s); if(!d) return 0; applyShared(d); return d.cells.length; },
+    url(){ return shareBuild(); },
+  },
+  exportData(){ return projectData(); },
+  importData(p){ return loadProjectData(p); },
+  saveStatus(){ return $('#roSaved').textContent; },
   sizeBarVisible(){ return $('#sizeBar').classList.contains('on'); },
   clearAll(){ clearBlocks(); scheduleSave(); },
   menuOpen(){ return ctxMenuOpen(); },
