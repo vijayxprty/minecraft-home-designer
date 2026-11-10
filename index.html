@@ -29,12 +29,12 @@
   .actions button.warn{background:#ff9d5c}
   .actions .sep{width:2px;background:rgba(255,255,255,.35);margin:2px 2px}
   #btnClearMeasures{display:none}
-  .camrow{display:flex;gap:4px;align-items:center;flex-basis:100%;flex-wrap:wrap}
+  .camrow{display:flex;gap:3px;align-items:center;flex-basis:100%;flex-wrap:wrap}
   .camrow .lbl{font-size:12px;font-weight:800;opacity:.95;white-space:nowrap}
-  .camrow button{background:#c9ecff;color:#0b3550;border-color:#14506e}
+  .camrow button{background:#c9ecff;color:#0b3550;border-color:#14506e;padding:4px 5px}
   .camrow button.on{background:#ffd83d;color:#4a3200}
   #toolSeg{display:flex;gap:0;flex-wrap:wrap}
-  #toolSeg button{border-radius:0;padding:4px 6px}
+  #toolSeg button{border-radius:0;border-width:2px;padding:4px 4px;font-size:11px}
   #toolSeg button:first-child{border-radius:4px 0 0 4px}
   #toolSeg button:last-child{border-radius:0 4px 4px 0}
   /* ---------- More + Sun dropdown menus ---------- */
@@ -145,14 +145,24 @@
   .tpl-item .tpl-size{font-weight:800;white-space:nowrap;color:#9be36d}
   .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
-  #fillPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
-  #fillPanel.on{display:flex}
-  #fillPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #fillPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #fillPanel.on,#wallPanel.on{display:flex}
+  #fillPanel .pp-title,#wallPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #fillPanel button,#wallPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
-  #fillPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
-  #fillPanel .pp-note{flex-basis:100%;color:#fff;font-size:12px;font-weight:700}
+  #fillPanel button.on,#wallPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #fillPanel .pp-note,#wallPanel .pp-note{flex-basis:100%;color:#fff;font-size:12px;font-weight:700}
+  #wallPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #wallPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px;color:#222;background:#fff}
+  #wallPanel .pp-row .pp-note{flex-basis:auto;color:#ffd83d;font-weight:800}
+  #wallPanel .pp-row b{color:#ffd83d}
+  /* ---------- camera tour bar ---------- */
+  #tourBar{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:11;display:none;
+    background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
+  #tourBar button{margin-left:10px;background:#ff5c5c;color:#fff;border:2px solid #7a0000;border-radius:4px;
+    font-weight:800;padding:4px 10px}
+  #tourBar button:disabled{background:#888;border-color:#555;cursor:default}
   #sizeBar{position:fixed;left:10px;top:110px;z-index:11;display:none;align-items:center;gap:8px;
     background:#fff;color:#222;border:3px solid #1e4d16;border-radius:8px;padding:7px 10px;
     font-size:13px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.35)}
@@ -169,10 +179,21 @@
     padding:7px 10px;border-radius:5px}
   #ctxMenu button:hover{background:#444}
   #ctxMenu button.on{background:#3a7d2c}
+  #ctxMenu button:disabled{opacity:.4;cursor:default}
+  /* ---------- camera gizmo (Blender-style, top-right) ---------- */
+  #gizmo{position:fixed;right:10px;top:110px;z-index:9;width:120px;height:120px;cursor:grab;touch-action:none;user-select:none}
+  #gizmo:active{cursor:grabbing}
+  #gizmo svg{width:120px;height:120px;display:block;overflow:visible}
+  #gizmo .gax{cursor:pointer}
+  #gizmo .gax circle{stroke:#fff;stroke-width:1.5}
+  #gizmo .gax text{fill:#fff;font:800 13px system-ui,sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  #gizmo .gcen{cursor:pointer}
+  #gizmo .gcen circle{fill:rgba(0,0,0,.45);stroke:#fff;stroke-width:1.5}
   /* ---------- box-select rectangle ---------- */
   #selBox{position:fixed;z-index:9;display:none;border:2px dashed #ffd83d;background:rgba(255,216,61,.12);pointer-events:none}
   @media (max-width:760px){
     #help{display:none}
+    #gizmo{display:none}
     #palette button{width:52px;font-size:9px}
     #palette button canvas{width:28px;height:28px}
     #readout{max-width:200px;font-size:12px}
@@ -201,6 +222,7 @@
     <span class="sep"></span>
     <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
     <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
+    <button id="btnTour" title="Fly a slow cinematic tour around the build — Esc stops">🎥 Tour</button>
     <span class="sep"></span>
     <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
@@ -210,10 +232,10 @@
     <button data-cam="front">Front</button>
     <button data-cam="eye">Eye 5'6"</button>
     <span id="toolSeg">
-      <button data-tool="build" class="on" title="Click a face to place a block (B)">🧱 Build</button>
+      <button data-tool="build" class="on" title="Click a face to place a block — Shift+drag draws a straight line (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
-      <button data-tool="select" title="Click a block to select it, Shift-click to add more, drag a box to select many (S)">⬚ Select</button>
+      <button data-tool="select" title="Click a block to select it, Shift-click adds its whole row, double-click selects all connected, drag a box to select many (S)">⬚ Select</button>
       <button data-tool="expand" title="Click a wall and drag to make it longer or taller (X)">↔ Expand</button>
       <button data-tool="move" title="Click a block to pick it up, click again to drop it — or select many and move them together (M)">🚚 Move</button>
       <button data-tool="fill" title="Drag two corners to fill a box — Solid, Hollow, Walls, Outline or Keep (F)">📦 Fill</button>
@@ -221,7 +243,10 @@
       <button data-tool="tape" title="Click two points to measure between them — the label stays pinned (T)">📐 Tape</button>
       <button data-tool="dropper" title="Click a block to pick its type (I) — Alt+click in Build does the same">💧 Dropper</button>
       <button data-tool="flood" title="Click a block to repaint its whole connected run of the same material (U)">🪣 Flood</button>
+      <button data-tool="wall" title="Drag a straight wall line, set its height, cut a door or window gap (W)">🏗️ Wall</button>
     </span>
+    <button id="btnGrid" class="on" title="Show / hide the 1-ft grid on the grass (major lines every 1 ft)">▦ Grid</button>
+    <button id="btnSnap" title="Snap Fill / Line / Wall drags to whole feet (1 ft)">🧲 Snap</button>
     <button id="btnSun" title="Day / evening / night lighting">☀️ Day</button>
     <button id="btnTouch" title="Touch mode — bigger buttons, tap to build, long-press a block to erase">📱 Touch</button>
     <span class="lbl" style="margin-left:auto">· <span id="projName">My Build</span></span>
@@ -278,6 +303,8 @@
   <div id="roWarn" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
   <div id="roSaved" class="dim"></div>
+  <div id="roFps" class="dim"></div>
+  <div id="roBig" class="dim" style="display:none"></div>
 </div>
 
 <div id="help">
@@ -285,12 +312,15 @@
   <b>Right-click</b> = tool menu<br>
   <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
   <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–9</b> pick block · <b>B E P I S X M F L T U</b> tools<br>
-  <b>I</b> dropper · <b>U</b> flood · <b>Alt+click</b> pick a type<br>
+  <b>1–9</b> pick block · <b>B E P I S X M F L T U W</b> tools<br>
+  <b>I</b> dropper · <b>U</b> flood · <b>W</b> wall · <b>Alt+click</b> pick a type<br>
   <b>Ctrl+C / V</b> copy / paste · <b>R</b> rotate<br>
   <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo<br>
   <b>?</b> all shortcuts · <b>H</b> labels on / off<br>
-  <b>☀️</b> sun · <b>📱</b> touch in the top bar · <b>F</b> first-person in Walk
+  <b>🎥</b> tour · <b>▦</b> grid · <b>🧲</b> snap in the top bar · <b>F</b> first-person in Walk<br>
+  <b>Shift+click</b> select a whole row · <b>Double-click</b> select all connected<br>
+  <b>Shift+drag</b> in Build draws a straight line of blocks · <b>Gizmo</b> top-right — click an axis to snap, drag to orbit<br>
+  <b>Space</b> hold for the hand — drag to move the view · <b>Scroll</b> zooms to the cursor
 </div>
 
 <div id="presetPanel">
@@ -339,6 +369,25 @@
   <button data-mode="outline" title="Outer shell only, leaving whatever is inside alone">Outline</button>
   <button data-mode="keep" title="Fill only the empty cells — never overwrites your work">Keep</button>
   <div class="pp-note">Solid and Hollow replace blocks in the box — one Ctrl+Z undoes a whole fill.</div>
+</div>
+
+<div id="wallPanel">
+  <div class="pp-title">Wall — drag a straight wall line on the grass, then set its height and gaps · W to switch · Esc stops</div>
+  <div class="pp-row"><span>Length:</span><b id="wallLen">—</b><span class="pp-note">drag on the grass to set it</span></div>
+  <div class="pp-row"><span>Height:</span>
+    <input id="wallHft" type="number" min="0" max="20" value="8"> ft
+    <input id="wallHin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span id="wallHBlocks" class="pp-note"></span></div>
+  <div class="pp-row"><span>Gap:</span>
+    <button data-gap="none" class="on">No gap</button>
+    <button data-gap="door" title="A 3-ft wide, 7-ft tall opening at floor level">🚪 Door 3' × 7'</button>
+    <button data-gap="window" title="A 4-ft wide, 3-ft tall opening with its sill 3 ft up">🪟 Window 4' × 3' · sill 3'</button></div>
+  <div class="pp-row" id="wallGapRow" style="display:none"><span>Gap from wall start:</span>
+    <input id="wallGapFt" type="number" min="0" max="100" step="0.5" value="0"> ft
+    <button id="wallGapCentre">Centre it</button>
+    <span id="wallGapNote" class="pp-note"></span></div>
+  <button id="btnBuildWall">🧱 Build wall</button>
+  <button id="wallClose">✕ Close</button>
 </div>
 
 <div id="mirrorPanel">
@@ -396,8 +445,12 @@
     <b>Room labels</b><span>Click a room label to rename it · H hides all labels</span>
     <b>W A S D · Q / E</b><span>Fly · down / up (Shift = faster)</span>
     <b>Drag · Scroll</b><span>Look around · zoom</span>
+    <b>Camera gizmo</b><span>Top-right — click an axis to snap to that view, drag to orbit, centre for the angle view</span>
+    <b>Space (hold)</b><span>Hand tool — drag to move the view · scroll zooms to the cursor</span>
     <b>Right-click</b><span>Tool menu</span>
-    <b>Shift + click</b><span>Add a block to the selection · erase a whole wall</span>
+    <b>Shift + click</b><span>Select the whole row (Select tool) · erase a whole wall (Erase tool)</span>
+    <b>Double-click</b><span>Select all connected blocks of the same material</span>
+    <b>Shift + drag</b><span>Draw a straight line of blocks (Build tool)</span>
     <b>10'6" + Enter</b><span>Exact length while filling a box or drawing a line</span>
     <b>Esc</b><span>Cancel what you're doing / close a panel / exit Walk</span>
     <b>H</b><span>Show / hide the white wall dimension labels</span>
@@ -427,6 +480,14 @@
   <span class="hint">Enter = apply · Esc = close</span>
 </div>
 
+<div id="gizmo" title="Camera gizmo — click an axis to snap to that view, drag to orbit, click the centre for the angle view">
+  <svg viewBox="0 0 120 120">
+    <g class="gax" data-axis="x"><line id="gx-line" x1="60" y1="60" x2="100" y2="60" stroke="#e5484d" stroke-width="3" stroke-linecap="round"/><circle id="gx-dot" cx="100" cy="60" r="11" fill="#e5484d"/><text id="gx-lab" x="100" y="60">X</text></g>
+    <g class="gax" data-axis="y"><line id="gy-line" x1="60" y1="60" x2="60" y2="20" stroke="#46a758" stroke-width="3" stroke-linecap="round"/><circle id="gy-dot" cx="60" cy="20" r="11" fill="#46a758"/><text id="gy-lab" x="60" y="20">Y</text></g>
+    <g class="gax" data-axis="z"><line id="gz-line" x1="60" y1="60" x2="100" y2="100" stroke="#3e63dd" stroke-width="3" stroke-linecap="round"/><circle id="gz-dot" cx="100" cy="100" r="11" fill="#3e63dd"/><text id="gz-lab" x="100" y="100">Z</text></g>
+    <g class="gcen"><circle id="g-cen" cx="60" cy="60" r="9"/><circle cx="60" cy="60" r="3" fill="#fff" stroke="none"/></g>
+  </svg>
+</div>
 <div id="ctxMenu">
   <div class="cm-title">Switch tool</div>
   <button data-tool="build">🧱 Build</button>
@@ -440,10 +501,15 @@
   <button data-tool="tape">📐 Tape</button>
   <button data-tool="dropper">💧 Dropper</button>
   <button data-tool="flood">🪣 Flood</button>
+  <button data-tool="wall">🏗️ Wall</button>
+  <div style="height:2px;background:rgba(255,255,255,.2);margin:4px 6px"></div>
+  <button id="ctxRow" title="Select the whole row of this block">↔ Select row</button>
+  <button id="ctxConnected" title="Select every connected block of this material">🔗 Select all connected</button>
 </div>
 <div id="selBox"></div>
 
 <div id="walkHint">🚶 Walk — <span id="walkFloor">Ground</span> · WASD / arrows to move · drag to look · Shift to run · <button id="btnWalkFP" title="First-person view, eye 5'6&quot; (F)">👁 First-person</button> <button id="btnExitWalk">✕ Exit walk</button></div>
+<div id="tourBar">🎥 Tour — slow orbit around the build · Esc stops <button id="btnTourRec" title="Record this tour as a .webm video">● Record</button> <button id="btnTourStop">✕ Stop</button></div>
 <div id="hoverTag"></div>
 <div id="toast"></div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
@@ -620,6 +686,30 @@ let viewMode='normal';               // 'normal' | 'isolate' | 'dollhouse'
 const DOLL_CUT=10;                   // dollhouse: blocks up to 10 above a floor's base stay visible (walls cut at eye level)
 let mirrorLine=null;                 // magenta bar on the ground marking the mirror plane
 
+/* ---- wall tool (round 9) ---- */
+let wallDrag = null;               // {anchor:[x,y,z], cur:[x,y,z]} while a wall line is being dragged
+let wallPlacing = false;           // pointer is down, the drag is live
+let wallHeightBlocks = 16;         // 8 ft
+let wallGap = 'none';              // 'none' | 'door' | 'window'
+let wallGapFt = null;              // distance from the wall start in ft; null = centred
+let wallGhost = null, wallGapGhost = null;
+
+/* ---- 1-ft grid + whole-foot snap (round 9) ---- */
+let gridGroup = null, gridOn = true;
+let gridCounts = { minor:0, major:0 };
+let snapOn = false;                // when on, Fill / Line / Wall drags snap to whole feet
+
+/* ---- performance guardrails (round 9) ---- */
+const QUALITY_LEVELS = [2, 1.5, 1.25, 1];   // pixel-ratio caps, best -> lightest
+let qualityIdx = 0;
+let fpsFrames = 0, fpsTime = 0, currentFps = 0;
+let fpsLowTime = 0, fpsHighTime = 0, fpsOverride = null;   // fpsOverride is a test hook: feed fake fps to the governor
+let largeWarned = false;           // the 20,000-block warning, once per build
+
+/* ---- camera tour + recording (round 9) ---- */
+const TOUR = { active:false, angle:0, speed:Math.PI*2/45, radius:60, height:40, cy:10, cx:0, cz:0,
+  saved:null, recorder:null, chunks:[], recording:false, lastRecording:null };
+
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
 let sunLight=null, hemiLight=null;   // the sun + sky fill — the Day / Evening / Night control moves these
@@ -717,13 +807,31 @@ function initScene(){
   startMarker.visible = false; scene.add(startMarker);
   measureGroup = new THREE.Group(); scene.add(measureGroup);
 
+  // wall tool ghost (translucent wall + dark edges + red gap preview)
+  wallGhost = new THREE.Group();
+  wallGhost.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+    new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.25, depthWrite:false })));
+  wallGhost.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
+    new THREE.LineBasicMaterial({ color:0x1a1a1a })));
+  wallGapGhost = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+    new THREE.MeshBasicMaterial({ color:0xff4444, transparent:true, opacity:0.5, depthWrite:false }));
+  wallGapGhost.visible=false;
+  wallGhost.add(wallGapGhost);
+  wallGhost.visible = false; scene.add(wallGhost);
+
   buildGroundScenery();
   resize();
   window.addEventListener('resize', resize);
+  // the toolbar can grow after load (a button's label changes, a panel
+  // button appears) — keep the help panel and size bar under it, always
+  if(window.ResizeObserver){
+    new ResizeObserver(()=>resize()).observe(document.querySelector('#topbar'));
+  }
   (function animate(){
     requestAnimationFrame(animate);
     tick(clockDelta());
-    if(!WALK.active) controls.update();
+    if(!WALK.active && !TOUR.active) controls.update();
+    updateGizmo();
     renderer.render(scene, camera);
   })();
 }
@@ -736,7 +844,8 @@ function resize(){
   // tall the toolbar wraps to at this width
   const tb=document.querySelector('#topbar');
   if(tb){ const top=(tb.offsetHeight+10)+'px';
-    $('#help').style.top=top; $('#sizeBar').style.top=top; }
+    const gz=$('#gizmo'); if(gz) gz.style.top=top;
+    $('#help').style.top=(tb.offsetHeight+138)+'px'; $('#sizeBar').style.top=top; }
 }
 function buildGroundScenery(){
   // one plain grass base to build on — no plot, no hole, no road.
@@ -749,6 +858,176 @@ function buildGroundScenery(){
   const m=new THREE.Mesh(new THREE.BoxGeometry(102,1,150), grassMats);
   m.position.set(11, 0.5, 35); m.receiveShadow=true; m.userData.ground=true;
   scene.add(m); groundMeshes.push(m);
+  buildGrid();
+}
+
+/* ================= 1-ft grid + whole-foot snap (round 9) ================= */
+/* the grass base spans x -40..62, z -40..110; minor lines every block (6 in),
+   major lines every 2 blocks (1 ft) so a room's feet read off the ground */
+function buildGrid(){
+  gridGroup = new THREE.Group();
+  const minor=[], major=[];
+  const Y=1.02, X0=-40, X1=62, Z0=-40, Z1=110;
+  for(let x=X0;x<=X1;x++){ const a=(x%2===0)?major:minor; a.push(x,Y,Z0, x,Y,Z1); }
+  for(let z=Z0;z<=Z1;z++){ const a=(z%2===0)?major:minor; a.push(X0,Y,z, X1,Y,z); }
+  const mk=(arr,op)=>{ const g=new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(arr,3));
+    return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color:0xffffff, transparent:true, opacity:op })); };
+  const minorLines=mk(minor,0.10), majorLines=mk(major,0.30);
+  gridCounts={ minor:minor.length/6, major:major.length/6 };
+  gridGroup.add(minorLines, majorLines);
+  gridGroup.visible=gridOn;
+  scene.add(gridGroup);
+}
+function setGrid(on){
+  gridOn=!!on;
+  if(gridGroup) gridGroup.visible=gridOn;
+  $('#btnGrid').classList.toggle('on', gridOn);
+  try{ localStorage.setItem('mc-grid', gridOn?'1':'0'); }catch(e){}
+  return gridOn;
+}
+function loadGridPref(){ try{ if(localStorage.getItem('mc-grid')==='0') setGrid(false); }catch(e){} }
+function setSnap(on){
+  snapOn=!!on;
+  $('#btnSnap').classList.toggle('on', snapOn);
+  try{ localStorage.setItem('mc-snap', snapOn?'1':'0'); }catch(e){}
+  return snapOn;
+}
+function loadSnapPref(){ try{ if(localStorage.getItem('mc-snap')==='1') setSnap(true); }catch(e){} }
+/* round a dragged cell so each side's block count is a whole number of feet
+   (even blocks): a 6-block run is 3 ft, so the end cell is the one that
+   makes the run length even */
+function snapCellTo(a, c){
+  if(!snapOn) return [...c];
+  return [0,1,2].map(i=>{
+    const d=c[i]-a[i];
+    if(d===0) return a[i];
+    const len=Math.abs(d)+1;
+    const sl=Math.max(1, Math.round(len/2)*2);
+    return a[i]+Math.sign(d)*(sl-1);
+  });
+}
+/* the whole-feet size a drag would snap to, for the readout hint */
+function snapFtStr(w,d,h){
+  const r=v=>Math.round(v/2)*2;
+  return ftin(r(w)*FT)+' × '+ftin(r(d)*FT)+' × '+ftin(r(h)*FT);
+}
+
+/* ================= performance guardrails (round 9) ================= */
+/* live FPS in the readout; if the frame rate stays low the pixel ratio
+   steps down (and steps back up when it recovers) — never blocks building */
+function perfTick(dt){
+  fpsFrames++; fpsTime+=dt;
+  if(fpsTime<0.5) return;
+  const fps = fpsOverride!=null ? fpsOverride : fpsFrames/fpsTime;
+  currentFps=Math.round(fps);
+  fpsFrames=0; fpsTime=0;
+  const el=$('#roFps');
+  if(el) el.textContent='⚡ '+currentFps+' fps · quality '+(qualityIdx===0?'High':qualityIdx===QUALITY_LEVELS.length-1?'Low':'Med');
+  if(fps<30){ fpsLowTime+=0.5; fpsHighTime=0; }
+  else if(fps>55){ fpsHighTime+=0.5; fpsLowTime=0; }
+  else { fpsLowTime=0; fpsHighTime=0; }
+  if(fpsLowTime>=3 && qualityIdx<QUALITY_LEVELS.length-1){ setQuality(qualityIdx+1); fpsLowTime=0; }
+  else if(fpsHighTime>=5 && qualityIdx>0){ setQuality(qualityIdx-1); fpsHighTime=0; }
+}
+function setQuality(i){
+  const prev=qualityIdx;
+  qualityIdx=clamp(i,0,QUALITY_LEVELS.length-1);
+  if(renderer) renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY_LEVELS[qualityIdx]));
+  if(qualityIdx>prev) toast('Graphics eased to keep it smooth — the build is untouched');
+  return qualityIdx;
+}
+
+/* ================= camera tour + recording (round 9) ================= */
+/* a slow cinematic orbit around the whole build; Esc stops it and the
+   camera returns to where it was. Recording uses the canvas stream +
+   MediaRecorder straight to a .webm download — no server, no dependency. */
+function tourSupported(){ return typeof MediaRecorder!=='undefined' && !!renderer && !!renderer.domElement.captureStream; }
+function tourRecordMime(){
+  if(typeof MediaRecorder==='undefined') return null;
+  for(const m of ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'])
+    if(MediaRecorder.isTypeSupported(m)) return m;
+  return null;
+}
+function tourTarget(){
+  let y0=1e9, y1=-1e9;
+  for(const [k] of blocks){ const y=parseKey(k)[1]; if(y<y0)y0=y; if(y>y1)y1=y; }
+  const b=buildBBox();
+  if(!b) return { cx:0, cz:0, cy:10, r:60, h:40 };
+  const cx=(b.x0+b.x1+1)/2, cz=(b.z0+b.z1+1)/2;
+  const w=b.x1-b.x0+1, d=b.z1-b.z0+1, h=y1-y0+1;
+  return { cx, cz, cy:Math.max(10,(y0+y1+1)/2), r:Math.max(55, Math.max(w,d)*0.75+30), h:Math.max(30, h+25) };
+}
+function tourStart(){
+  if(TOUR.active) return false;
+  if(WALK.active) walkStop();
+  setTool('build');   // a tour is a viewing mode: clear any half-built tool state (wall drag, panels) so nothing sits under the tour bar
+  const t=tourTarget();
+  TOUR.active=true; TOUR.angle=0; TOUR.cx=t.cx; TOUR.cz=t.cz; TOUR.cy=t.cy; TOUR.radius=t.r; TOUR.height=t.h;
+  TOUR.saved={ pos:camera.position.clone(), tgt:controls.target.clone() };
+  controls.enabled=false;
+  $('#tourBar').style.display='block';
+  updateTourRecBtn();
+  $('#btnTour').textContent='🎥 Tour ✓';
+  $('#btnTour').classList.add('on');
+  toast('Tour — slow orbit around the build · Esc stops');
+  return true;
+}
+function tourStop(){
+  if(!TOUR.active) return false;
+  if(TOUR.recording) tourStopRecord();
+  TOUR.active=false;
+  controls.enabled=true;
+  if(TOUR.saved){ camera.position.copy(TOUR.saved.pos); controls.target.copy(TOUR.saved.tgt); controls.update(); }
+  $('#tourBar').style.display='none';
+  $('#btnTour').textContent='🎥 Tour';
+  $('#btnTour').classList.remove('on');
+  return true;
+}
+function tourTick(dt){
+  if(!TOUR.active) return;
+  TOUR.angle += TOUR.speed*dt;
+  camera.position.set(TOUR.cx + Math.cos(TOUR.angle)*TOUR.radius, TOUR.height, TOUR.cz + Math.sin(TOUR.angle)*TOUR.radius);
+  camera.lookAt(TOUR.cx, TOUR.cy, TOUR.cz);
+}
+function updateTourRecBtn(){
+  const b=$('#btnTourRec');
+  const ok=tourSupported() && tourRecordMime();
+  b.disabled=!ok;
+  b.title= ok? 'Record this tour as a .webm video' : 'Video recording is not supported in this browser';
+  b.textContent=TOUR.recording?'● Recording…':'● Record';
+}
+function tourStartRecord(){
+  if(!TOUR.active || TOUR.recording) return false;
+  const mime=tourRecordMime();
+  if(!mime || !renderer.domElement.captureStream){ toast('Video recording is not supported in this browser'); return false; }
+  try{
+    const stream=renderer.domElement.captureStream(30);
+    TOUR.chunks=[];
+    TOUR.recorder=new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond:5000000 });
+    TOUR.recorder.ondataavailable=e=>{ if(e.data && e.data.size) TOUR.chunks.push(e.data); };
+    TOUR.recorder.onstop=()=>{
+      const blob=new Blob(TOUR.chunks, { type:mime });
+      TOUR.lastRecording={ mime, bytes:blob.size };
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='tour-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.webm';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+      toast('Tour video saved ('+Math.round(blob.size/1024)+' KB)');
+    };
+    TOUR.recorder.start(250);
+    TOUR.recording=true;
+    updateTourRecBtn();
+    return true;
+  }catch(err){ toast('Video recording failed in this browser'); return false; }
+}
+function tourStopRecord(){
+  if(!TOUR.recording || !TOUR.recorder) return false;
+  TOUR.recording=false;
+  try{ TOUR.recorder.stop(); }catch(e){}
+  updateTourRecBtn();
+  return true;
 }
 
 /* ================= block data + instanced rebuild ================= */
@@ -832,7 +1111,8 @@ function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); u
 function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
 
 /* ================= clear ================= */
-function clearBlocks(){ cancelMove(); cancelFillDrag(); cancelLine();
+function clearBlocks(){ cancelMove(); cancelFillDrag(); cancelLine(); cancelWallDrag();
+  largeWarned=false;
   if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   measures.length=0; renderMeasures(); updateMeasuresBtn();
   blocks.clear(); undoStack.length=0; redoStack.length=0; selection.clear(); updateSelectionHighlight(); rebuild(); updateStats(); }
@@ -891,6 +1171,21 @@ function updateStats(){
   $('#roFoot').textContent = b? ftin(b.w*FT)+' × '+ftin(b.d*FT) : 'nothing yet';
   const a=b? b.w*b.d*FT*FT : 0;
   $('#roArea').textContent = (Math.round(a*10)/10)+' sq ft';
+  // a very large build may slow down on phones — warn once per build and
+  // keep the warning visible in the readout (a toast alone would be
+  // overwritten by the next fill's toast)
+  const rb=$('#roBig');
+  if(blocks.size>=20000){
+    rb.style.display='block';
+    rb.textContent='⚠ Big build — '+blocks.size.toLocaleString('en-IN')+' blocks · may slow down on phones';
+    if(!largeWarned){
+      largeWarned=true;
+      toast('Big build — '+blocks.size.toLocaleString('en-IN')+' blocks. It may slow down on phones — use 👁 Isolate to work floor by floor.');
+    }
+  } else {
+    rb.style.display='none';
+    largeWarned=false;
+  }
   updateFloorBand();
   updateSymmetryReadout();
 }
@@ -1173,7 +1468,23 @@ function roomLabelHit(e){
   const sprites=roomLabelGroup.children.filter(c=>c.isSprite && c.visible);
   const hits=raycaster.intersectObjects(sprites, false);
   if(!hits.length) return null;
-  return hits[0].object.userData.roomKey || null;
+  const sp=hits[0].object;
+  // the tag is a big floating billboard; only count a click near its centre
+  // as a label click — a click on its edge is really aimed at the block
+  // behind it (the room tag floats just above the roof, so its bottom edge
+  // covers the roof's centre from the normal camera)
+  const c=projectToScreenPoint(sp.position.x, sp.position.y, sp.position.z);
+  if(c){
+    const D=camera.position.distanceTo(sp.position);
+    const pxPerUnit=innerHeight/(2*D*Math.tan(camera.fov*Math.PI/360));
+    const hw=sp.scale.x/2*pxPerUnit*0.7, hh=sp.scale.y/2*pxPerUnit*0.7;
+    if(Math.abs(e.clientX-c.x)>hw || Math.abs(e.clientY-c.y)>hh) return null;
+  }
+  // a block in front of the label wins the click — clicking a wall in front
+  // of a label must select the wall, not open the rename box behind it
+  const vox=raycastVoxel(e);
+  if(vox && vox.dist!=null && vox.dist < hits[0].distance) return null;
+  return sp.userData.roomKey || null;
 }
 
 /* ================= clearance warnings (round 8) ================= */
@@ -2149,7 +2460,7 @@ function raycastVoxel(e){
     const n=h.face.normal.clone();
     const p=h.point.clone().addScaledVector(n, -0.01);
     const cx=Math.floor(p.x), cy=Math.floor(p.y), cz=Math.floor(p.z);
-    return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)], type:null };
+    return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)], type:null, dist:h.distance };
   }
   const ti=h.object.userData.type;
   const slot=instMeshes[ti];
@@ -2160,7 +2471,7 @@ function raycastVoxel(e){
   const m=new THREE.Matrix4(); h.object.getMatrixAt(h.instanceId, m);
   const q=new THREE.Quaternion().setFromRotationMatrix(m);
   const n=h.face.normal.clone().applyQuaternion(q).round();
-  return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti };
+  return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti, dist:h.distance };
 }
 function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
 function updateHover(e){
@@ -2304,6 +2615,48 @@ function selectBlockKey(k, additive){
   if(selection.has(k)){ if(additive) selection.delete(k); }
   else selection.add(k);
   updateSelectionHighlight();
+}
+/* ================= row + connected selection (round 9) ================= */
+/* Shift+click in Select: the whole contiguous row of the same material —
+   the longer of the X / Z runs through the clicked block, stopping at any
+   gap or different material. Double-click: every connected block of the
+   same material (the flood region), so one click grabs a whole roof. */
+function rowCells(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return [];
+  const t=b.t;
+  const run=(axis)=>{
+    const cells=[[x,y,z]];
+    for(const s of [1,-1]){
+      let i=1;
+      while(true){
+        const c=axis==='x'? [x+s*i,y,z] : [x,y,z+s*i];
+        const g=getBlock(c[0],c[1],c[2]);
+        if(!g || g.t!==t) break;
+        cells.push(c); i++;
+      }
+    }
+    return cells;
+  };
+  const rx=run('x'), rz=run('z');
+  return rx.length>=rz.length? rx : rz;
+}
+function selectRow(x,y,z,additive){
+  const cells=rowCells(x,y,z);
+  if(!cells.length){ toast('Click a block to select its row'); return 0; }
+  if(!additive) selection.clear();
+  cells.forEach(c=>selection.add(key3(c[0],c[1],c[2])));
+  updateSelectionHighlight();
+  toast('Row selected — '+cells.length+' block'+(cells.length>1?'s':'')+' · '+TYPES[getBlock(x,y,z).t].name);
+  return cells.length;
+}
+function selectConnected(x,y,z,additive){
+  const reg=floodRegion(x,y,z);
+  if(!reg){ toast('Click a block to select it'); return 0; }
+  if(!additive) selection.clear();
+  reg.keys.forEach(k=>selection.add(k));
+  updateSelectionHighlight();
+  toast('Selected '+reg.keys.length+' connected '+TYPES[reg.type].name+' block'+(reg.keys.length>1?'s':''));
+  return reg.keys.length;
 }
 function bboxOfKeys(keys){
   let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;
@@ -2884,13 +3237,14 @@ function refreshFillReadout(){
   const info=fillBoxInfo(); if(!info) return;
   const ro=$('#roTool'); ro.style.display='block';
   ro.textContent='📦 Fill ('+fillMode+'): '+ftin(info.w*FT)+' × '+ftin(info.d*FT)+' × '+ftin(info.h*FT)+' · '+info.cells+' blocks'
-    +(info.tooBig?' — too big, max '+FILL_MAX.toLocaleString('en-IN'):'');
+    +(info.tooBig?' — too big, max '+FILL_MAX.toLocaleString('en-IN'):'')
+    +(snapOn?' · 🧲 1-ft snap':(info.w%2||info.d%2||info.h%2)?' · snap → '+snapFtStr(info.w,info.d,info.h):'');
   $('#sizeNow').textContent='now: '+ftin(Math.max(info.w,info.d,info.h)*FT);
 }
 function fillDragUpdate(e){
   const d=fillDrag; if(!d) return;
   const hit=raycastVoxel(e);
-  if(hit) d.cur=[...hit.cell];
+  if(hit) d.cur=snapCellTo(d.anchor, hit.cell);
   if(fillLocked) d.cur[fillLocked.axis]=d.anchor[fillLocked.axis]+fillLocked.dir*(fillLocked.len-1);
   updateFillGhost();
   refreshFillReadout();
@@ -2983,7 +3337,9 @@ function updateLinePreview(){
   showMultiGhost(cells.map(c=>({ x:c[0], y:c[1], z:c[2] })));
   const n=cells.length;
   $('#roTool').style.display='block';
-  $('#roTool').textContent='📏 Line: '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+' — click the end point to place · Esc to cancel';
+  $('#roTool').textContent='📏 Line: '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)
+    +(snapOn?' · 🧲 1-ft snap':(n%2?' · snap → '+ftin(Math.round(n/2)*2*FT):''))
+    +' — click the end point to place · Esc to cancel';
   $('#sizeNow').textContent='now: '+ftin(n*FT);
   $('#roHover').textContent='Click the end point to place the line — or type a length + Enter';
 }
@@ -3003,7 +3359,7 @@ function lineClick(cell){
 }
 function updateLineAim(e){
   const hit=raycastVoxel(e);
-  if(hit) lineAim=[...hit.cell];
+  if(hit) lineAim=snapCellTo(lineStart, hit.cell);
   computeLineEnd();
   updateLinePreview();
 }
@@ -3011,6 +3367,161 @@ function cancelLine(){
   lineStart=null; lineAim=null; lineEnd=null; lineLockedLen=null;
   if(startMarker) startMarker.visible=false;
   hideMultiGhost();
+  hideSizeBar();
+  $('#hoverTag').style.display='none';
+  $('#roTool').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= wall tool (round 9) ================= */
+/* drag a straight wall line, set its height, cut a door or window gap —
+   the finished wall is ordinary blocks with a real gap, fully editable */
+function wallAxis(a,b){
+  const dx=b[0]-a[0], dz=b[2]-a[2];
+  return Math.abs(dx)>=Math.abs(dz)?'x':'z';
+}
+/* normalised drag: axis, cell range along the wall, fixed coordinate, base y, length */
+function wallInfo2(){
+  const d=wallDrag; if(!d) return null;
+  const axis=wallAxis(d.anchor, d.cur);
+  const ai=axis==='x'?0:2;
+  const a0=Math.min(d.anchor[ai], d.cur[ai]), a1=Math.max(d.anchor[ai], d.cur[ai]);
+  const fixed=axis==='x'? d.anchor[2] : d.anchor[0];
+  return { axis, a0, a1, fixed, y:d.anchor[1], len:a1-a0+1 };
+}
+/* the cells a wall would place, without touching the build.
+   gap 'door': 6 blocks (3 ft) wide, 14 tall (7 ft) from the floor.
+   gap 'window': 8 blocks (4 ft) wide, 6 tall (3 ft), sill 6 blocks (3 ft) up.
+   gapFt is the gap's distance from the wall start in ft; null = centred. */
+function wallCells(a,b,height,gap,gapFt){
+  const axis=wallAxis(a,b);
+  const ai=axis==='x'?0:2;
+  const a0=Math.min(a[ai],b[ai]), a1=Math.max(a[ai],b[ai]);
+  const fixed=axis==='x'? a[2] : a[0];
+  const y0=a[1];
+  const len=a1-a0+1;
+  const cellAt=(i,y)=> axis==='x'? { x:i, y, z:fixed, t:selType, r:0 } : { x:fixed, y, z:i, t:selType, r:0 };
+  let gapStart=null, gapEnd=null, gapY0=null, gapH=0;
+  if(gap==='door'){
+    if(height<14) return { cells:null, error:'Wall is too short for a 7-ft door — make it at least 7 ft high' };
+    const gw=6;
+    if(len<gw+2) return { cells:null, error:'Wall is too short for a 3-ft door — drag at least 4 ft' };
+    const off=gapFt==null? Math.floor((len-gw)/2) : clamp(Math.round(gapFt*2), 0, len-gw);
+    gapStart=a0+off; gapEnd=gapStart+gw-1; gapY0=y0; gapH=14;
+  } else if(gap==='window'){
+    if(height<12) return { cells:null, error:'Wall is too short for a window with a 3-ft sill — make it at least 6 ft high' };
+    const gw=8;
+    if(len<gw+2) return { cells:null, error:'Wall is too short for a 4-ft window — drag at least 5 ft' };
+    const off=gapFt==null? Math.floor((len-gw)/2) : clamp(Math.round(gapFt*2), 0, len-gw);
+    gapStart=a0+off; gapEnd=gapStart+gw-1; gapY0=y0+6; gapH=6;
+  }
+  const cells=[];
+  for(let i=a0;i<=a1;i++) for(let y=y0;y<y0+height;y++){
+    if(gapStart!=null && i>=gapStart && i<=gapEnd && y>=gapY0 && y<gapY0+gapH) continue;
+    cells.push(cellAt(i,y));
+  }
+  return { cells, gapStart, gapEnd, gapY0, gapH, axis, len, height };
+}
+function updateWallGhost(){
+  const info=wallInfo2();
+  if(!info || !wallGhost){ if(wallGhost) wallGhost.visible=false; return; }
+  wallGhost.visible=true;
+  if(info.axis==='x'){
+    wallGhost.position.set((info.a0+info.a1+1)/2, info.y+wallHeightBlocks/2, info.fixed+0.5);
+    wallGhost.scale.set(info.len, wallHeightBlocks, 1);
+  } else {
+    wallGhost.position.set(info.fixed+0.5, info.y+wallHeightBlocks/2, (info.a0+info.a1+1)/2);
+    wallGhost.scale.set(1, wallHeightBlocks, info.len);
+  }
+  // red preview box where the gap will be cut
+  const res=wallCells(wallDrag.anchor, wallDrag.cur, wallHeightBlocks, wallGap, wallGapFt);
+  if(res.cells && res.gapStart!=null){
+    const glen=res.gapEnd-res.gapStart+1;
+    wallGapGhost.visible=true;
+    if(info.axis==='x'){
+      wallGapGhost.position.set((res.gapStart+res.gapEnd+1)/2, res.gapY0+res.gapH/2, info.fixed+0.5);
+      wallGapGhost.scale.set(glen, res.gapH, 1);
+    } else {
+      wallGapGhost.position.set(info.fixed+0.5, res.gapY0+res.gapH/2, (res.gapStart+res.gapEnd+1)/2);
+      wallGapGhost.scale.set(1, res.gapH, glen);
+    }
+  } else wallGapGhost.visible=false;
+}
+function updateWallPanel(){
+  const info=wallInfo2();
+  $('#wallLen').textContent=info? ftin(info.len*FT)+' · '+info.len+' blocks' : '—';
+  $('#wallHBlocks').textContent='= '+wallHeightBlocks+' blocks · '+ftin(wallHeightBlocks*FT);
+  $$('#wallPanel button[data-gap]').forEach(b=>b.classList.toggle('on', b.dataset.gap===wallGap));
+  $('#wallGapRow').style.display=wallGap==='none'?'none':'flex';
+  if(info && wallGap!=='none'){
+    const gw=wallGap==='door'?6:8;
+    const maxFt=Math.max(0,(info.len-gw)*FT);
+    $('#wallGapNote').textContent='max '+ftin(maxFt)+' from the start';
+    // prefill the gap distance (centred) unless the user is typing in it
+    if(document.activeElement!==$('#wallGapFt')){
+      const centred=Math.floor((info.len-gw)/2)*FT;
+      $('#wallGapFt').value=wallGapFt==null? centred : wallGapFt;
+    }
+  }
+}
+function applyWallHeight(){
+  const ft=parseFloat($('#wallHft').value)||0, inch=parseFloat($('#wallHin').value)||0;
+  wallHeightBlocks=clamp(Math.round((ft+inch/12)*2),2,40);
+  $('#wallHft').value=Math.floor(wallHeightBlocks/2);
+  $('#wallHin').value=(wallHeightBlocks%2)*6;
+  updateWallPanel(); updateWallGhost();
+}
+function wallStart(e, cell){
+  wallDrag={ anchor:[...cell], cur:[...cell] };
+  wallPlacing=true;
+  controls.enabled=false;
+  showSizeBar(true);
+  updateWallGhost(); updateWallPanel();
+  wallDragUpdate(e);
+}
+function wallDragUpdate(e){
+  const d=wallDrag; if(!d) return;
+  const hit=raycastVoxel(e);
+  if(hit) d.cur=snapCellTo(d.anchor, hit.cell);
+  updateWallGhost(); updateWallPanel();
+  const info=wallInfo2();
+  if(info){
+    const ro=$('#roTool'); ro.style.display='block';
+    ro.textContent='🧱 Wall: '+ftin(info.len*FT)+' long × '+ftin(wallHeightBlocks*FT)+' high'
+      +(snapOn?' · 🧲 1-ft snap':'')+' — release, set gaps, then Build wall';
+    $('#sizeNow').textContent='now: '+ftin(info.len*FT);
+    $('#roHover').textContent='Release to set the wall length — then pick a gap and Build wall';
+  }
+}
+function wallFinish(){
+  // the drag is done but the wall is not built yet — the panel stays open
+  // so the height and gaps can be set, then Build wall commits it
+  wallPlacing=false;
+  controls.enabled=true; downPos=null;
+  hideSizeBar();
+  updateWallGhost(); updateWallPanel();
+}
+function wallBuild(){
+  const info=wallInfo2(); if(!info){ toast('Drag a wall line first'); return 0; }
+  const res=wallCells(wallDrag.anchor, wallDrag.cur, wallHeightBlocks, wallGap, wallGapFt);
+  if(!res.cells){ toast(res.error); return 0; }
+  const todo=res.cells.filter(c=>inBounds(c.x,c.y,c.z));
+  const skipped=todo.filter(c=>getBlock(c.x,c.y,c.z)).length;
+  const fresh=todo.filter(c=>!getBlock(c.x,c.y,c.z));
+  let mirrorBlocked=0;
+  if(symmetry.on){ const m=mirrorOfCells(fresh, symmetry.axis, mirrorCenter); fresh.push(...m.cells); mirrorBlocked=m.blocked; }
+  const n=applyBatch(fresh.filter(c=>!getBlock(c.x,c.y,c.z)));
+  const gapTxt=wallGap==='none'?'':wallGap==='door'?' · door gap 3 ft wide':' · window gap 4 ft wide, sill 3 ft';
+  if(n) toast('Wall built — '+n+' blocks · '+ftin(info.len*FT)+' long × '+ftin(wallHeightBlocks*FT)+' high'+gapTxt
+    +(skipped?' · '+skipped+' skipped (already built)':'')
+    +(mirrorBlocked?' · '+mirrorBlocked+' mirrored spot'+(mirrorBlocked>1?'s':'')+' taken':''));
+  cancelWallDrag();
+  return n;
+}
+function cancelWallDrag(){
+  wallDrag=null; wallPlacing=false;
+  controls.enabled=true; downPos=null;
+  if(wallGhost) wallGhost.visible=false;
   hideSizeBar();
   $('#hoverTag').style.display='none';
   $('#roTool').style.display='none';
@@ -3123,6 +3634,18 @@ function applyExactSize(str){
     toast('Length set to '+ftin(n*FT));
     return { tool:'line', len:n, ft:n*FT };
   }
+  if(wallDrag){
+    // a typed length sets the wall line along its dominant horizontal axis
+    const a=wallDrag.anchor, c=wallDrag.cur;
+    const dx=c[0]-a[0], dz=c[2]-a[2];
+    const ax=Math.abs(dx)>=Math.abs(dz)?0:2;
+    const delta=ax===0?dx:dz;
+    const dir=delta===0?1:Math.sign(delta);
+    wallDrag.cur[ax]=a[ax]+dir*(n-1);
+    updateWallGhost(); updateWallPanel();
+    toast('Length set to '+ftin(n*FT));
+    return { tool:'wall', len:n, ft:n*FT };
+  }
   toast('Start a box or a line first, then type a length');
   return null;
 }
@@ -3171,13 +3694,240 @@ function rotateSelection(){
   return n>0;
 }
 
+/* ================= Shift+drag line in Build (round 9) ================= */
+/* Hold Shift and drag in the Build tool: a straight line of the picked
+   block type, locked to the dominant drag direction (X, Z or up), with a
+   live ghost + length in ft/in. Releasing commits it as one undo step —
+   the fast inline version of the two-click Line tool. */
+let buildDrag=null;   // { anchor:[x,y,z], cur:[x,y,z] } while Shift+dragging in Build
+function buildLineEndFrom(anchor, cur){
+  const dx=cur[0]-anchor[0], dy=cur[1]-anchor[1], dz=cur[2]-anchor[2];
+  let ax=0;
+  if(Math.abs(dy)>Math.abs(dx) && Math.abs(dy)>=Math.abs(dz)) ax=1;
+  else if(Math.abs(dz)>Math.abs(dx)) ax=2;
+  const end=[...anchor];
+  end[ax]=anchor[ax]+(ax===0?dx: ax===1?dy: dz);
+  return end;
+}
+function buildLineInfo(){
+  if(!buildDrag) return null;
+  const end=buildLineEndFrom(buildDrag.anchor, buildDrag.cur);
+  const cells=lineCells(buildDrag.anchor, end);
+  const ax = end[0]!==buildDrag.anchor[0]? 'x' : end[1]!==buildDrag.anchor[1]? 'y' : 'z';
+  return { anchor:[...buildDrag.anchor], end, cells, n:cells.length, axis:ax, lenFt:cells.length*FT };
+}
+function updateBuildDragGhost(){
+  const info=buildLineInfo(); if(!info) return;
+  showMultiGhost(info.cells.map(c=>({ x:c[0], y:c[1], z:c[2] })));
+  const ro=$('#roTool'); ro.style.display='block';
+  ro.textContent='🧱 Build line: '+info.n+' block'+(info.n>1?'s':'')+' · '+ftin(info.lenFt)
+    +(snapOn?' · 🧲 1-ft snap':'')+' — release to place · Esc to cancel';
+  $('#roHover').textContent='Release to place the line — or press Esc to cancel';
+}
+function buildDragStart(e, cell){
+  buildDrag={ anchor:[...cell], cur:[...cell] };
+  controls.enabled=false;
+  updateBuildDragGhost();
+}
+function buildDragUpdate(e){
+  if(!buildDrag) return;
+  const hit=raycastVoxel(e);
+  if(hit) buildDrag.cur=snapCellTo(buildDrag.anchor, hit.cell);
+  updateBuildDragGhost();
+}
+function buildDragFinish(){
+  const d=buildDrag; buildDrag=null;
+  controls.enabled=true; downPos=null;
+  hideMultiGhost();
+  $('#roTool').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+  if(!d) return 0;
+  const end=buildLineEndFrom(d.anchor, d.cur);
+  return lineCommit(d.anchor, end);
+}
+function cancelBuildDrag(){
+  buildDrag=null;
+  controls.enabled=true; downPos=null;
+  hideMultiGhost();
+  $('#roTool').style.display='none';
+  $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= camera gizmo (Blender-style, round 9) ================= */
+/* A small overlay in the top-right that always mirrors the camera
+   orientation: X red, Y green, Z blue. Click an axis end to snap to that
+   view, click the centre for the angle view, drag to orbit — all without
+   touching the canvas, so a selection is never disturbed. */
+const GIZMO_AXES=[
+  { name:'x', v:[1,0,0], color:'#e5484d', line:'gx-line', dot:'gx-dot', lab:'gx-lab' },
+  { name:'y', v:[0,1,0], color:'#46a758', line:'gy-line', dot:'gy-dot', lab:'gy-lab' },
+  { name:'z', v:[0,0,1], color:'#3e63dd', line:'gz-line', dot:'gz-dot', lab:'gz-lab' },
+];
+let gizmoDrag=null;   // { x, y, moved } while dragging the gizmo to orbit
+function updateGizmo(){
+  const g=$('#gizmo'); if(!g) return;
+  const q=camera.quaternion.clone().invert();
+  const pts=GIZMO_AXES.map(a=>{
+    const v=new THREE.Vector3(...a.v).applyQuaternion(q);
+    const toward=v.z;   // >0: the axis points toward the viewer
+    const len=toward>=0? 40 : 25;
+    return { a, sx:60+v.x*len, sy:60-v.y*len, toward };
+  });
+  // axes that point away are drawn first, so the ones facing the viewer sit
+  // on top; the centre circle always stays on top
+  const svg=g.querySelector('svg');
+  pts.sort((p,q)=>p.toward-q.toward);
+  for(const p of pts){
+    const grp=svg.querySelector('.gax[data-axis="'+p.a.name+'"]');
+    const ln=document.getElementById(p.a.line);
+    ln.setAttribute('x2', p.sx.toFixed(1)); ln.setAttribute('y2', p.sy.toFixed(1));
+    const dot=document.getElementById(p.a.dot);
+    dot.setAttribute('cx', p.sx.toFixed(1)); dot.setAttribute('cy', p.sy.toFixed(1));
+    const lab=document.getElementById(p.a.lab);
+    lab.setAttribute('x', p.sx.toFixed(1)); lab.setAttribute('y', p.sy.toFixed(1));
+    grp.setAttribute('opacity', p.toward>=0? '1' : '0.45');
+    svg.appendChild(grp);
+  }
+  svg.appendChild(svg.querySelector('.gcen'));
+}
+function gizmoSnap(axis){
+  if(WALK.active || TOUR.active) return;
+  flushOrbitDrift();
+  if(axis==='x'){ camera.position.set(78, 16, 0); controls.target.set(0, 10, 0); controls.update(); }
+  else if(axis==='y'){ setCam('top'); }
+  else if(axis==='z'){ setCam('front'); }
+  else { setCam('iso'); }
+  const name=axis==='y'? 'top' : axis==='z'? 'front' : axis==='x'? null : 'iso';
+  $$('.camrow [data-cam]').forEach(b=>b.classList.toggle('on', !!name && b.dataset.cam===name));
+  toast(axis==='x'? 'Side view — looking from the X side'
+    : axis==='y'? 'Top view — looking straight down'
+    : axis==='z'? 'Front view'
+    : 'Angle view');
+}
+function gizmoOrbitBy(dx,dy){
+  const off=camera.position.clone().sub(controls.target);
+  const sph=new THREE.Spherical().setFromVector3(off);
+  sph.theta -= dx*0.005;
+  sph.phi = clamp(sph.phi - dy*0.005, 0.05, Math.PI-0.05);
+  off.setFromSpherical(sph);
+  camera.position.copy(controls.target).add(off);
+  camera.lookAt(controls.target);
+  controls.update();
+}
+function bindGizmo(){
+  const g=$('#gizmo'); if(!g) return;
+  g.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    if(WALK.active || TOUR.active) return;
+    // record what was pressed NOW: pointer capture retargets the pointerup
+    // to the gizmo div, so e.target there is never the axis dot
+    const axEl=e.target.closest? e.target.closest('.gax') : null;
+    const cenEl=e.target.closest? e.target.closest('.gcen') : null;
+    gizmoDrag={ x:e.clientX, y:e.clientY, moved:0,
+      axis: axEl? axEl.dataset.axis : (cenEl? 'centre' : null) };
+    g.setPointerCapture(e.pointerId);
+  });
+  g.addEventListener('pointermove', e=>{
+    if(!gizmoDrag) return;
+    const dx=e.clientX-gizmoDrag.x, dy=e.clientY-gizmoDrag.y;
+    gizmoDrag.x=e.clientX; gizmoDrag.y=e.clientY;
+    gizmoDrag.moved+=Math.abs(dx)+Math.abs(dy);
+    if(gizmoDrag.moved>3) gizmoOrbitBy(dx,dy);
+  });
+  g.addEventListener('pointerup', e=>{
+    if(!gizmoDrag) return;
+    const wasDrag=gizmoDrag.moved>5;
+    const axis=gizmoDrag.axis;
+    gizmoDrag=null;
+    if(wasDrag) return;   // it was an orbit drag, not a click
+    if(axis) gizmoSnap(axis==='centre'? null : axis);
+  });
+  g.addEventListener('pointercancel', ()=>{ gizmoDrag=null; });
+}
+
+/* ================= Space hand tool + zoom-to-cursor (round 9) ================= */
+/* Hold Space (normal orbit view, not Walk): the hand tool turns on
+   temporarily — drag pans the view across the ground, like Figma. Release
+   Space and the previous tool is back. Scrolling zooms toward the point
+   under the cursor, not the screen centre. */
+let spaceHeld=false;   // Space is held: the hand tool is on temporarily
+let panDrag=null;      // { x, y, moved } while Space+dragging to pan
+function setHand(on){
+  if(on===spaceHeld) return;
+  spaceHeld=on;
+  if(!panDrag) renderer.domElement.style.cursor = on? 'grab' : '';
+  const ro=$('#roTool');
+  if(on){ ro.style.display='block'; ro.textContent='✋ Hand — drag to move the view · release Space to go back'; }
+  else if(!fillDrag && !lineStart && !wallDrag && !buildDrag && !panDrag){ ro.style.display='none'; }
+}
+function panBy(dx,dy){
+  const el=renderer.domElement;
+  const dist=camera.position.distanceTo(controls.target);
+  const halfH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*dist;
+  const sx=halfH*2/el.clientHeight;   // world units per screen pixel
+  const right=new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0);
+  const up=new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1);
+  const off=new THREE.Vector3().addScaledVector(right, -dx*sx).addScaledVector(up, dy*sx);
+  controls.target.add(off);
+  camera.position.add(off);
+  controls.update();
+}
+function panDragUpdate(e){
+  if(!panDrag) return;
+  const dx=e.clientX-panDrag.x, dy=e.clientY-panDrag.y;
+  panDrag.x=e.clientX; panDrag.y=e.clientY;
+  panDrag.moved+=Math.abs(dx)+Math.abs(dy);
+  panBy(dx,dy);
+}
+function endPanDrag(){
+  panDrag=null;
+  controls.enabled=true;
+  renderer.domElement.style.cursor = spaceHeld? 'grab' : '';
+}
+function cursorGroundPoint(sx,sy){
+  const rect=renderer.domElement.getBoundingClientRect();
+  const ndc=new THREE.Vector2(((sx-rect.left)/rect.width)*2-1, -((sy-rect.top)/rect.height)*2+1);
+  const ray=new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0), -1);   // grass top, y=1
+  const p=new THREE.Vector3();
+  return ray.ray.intersectPlane(plane, p)? p : null;
+}
+function zoomToCursor(e){
+  const s=Math.exp(e.deltaY*0.0011);   // wheel up (deltaY<0) → s<1 → zoom in
+  const hitP=cursorGroundPoint(e.clientX, e.clientY);
+  if(!hitP){
+    // looking at the sky: plain dolly toward the target
+    const dist=camera.position.distanceTo(controls.target);
+    const nd=clamp(dist*s, 8, 320);
+    camera.position.sub(controls.target).multiplyScalar(nd/dist).add(controls.target);
+    controls.update();
+    return;
+  }
+  // Figma-style zoom-to-cursor: the target slides toward the point under
+  // the cursor and the camera dollies toward the new target — the point
+  // stays under the cursor and the zoom centres on it. The offset is read
+  // BEFORE the target moves, or the dolly changes the view direction and
+  // the cursor point drifts away.
+  const off=camera.position.clone().sub(controls.target);
+  controls.target.lerp(hitP, 1-s);
+  const nd=clamp(off.length()*s, 8, 320);
+  camera.position.copy(controls.target).addScaledVector(off, nd/off.length());
+  if(camera.position.y<2.5) camera.position.y=2.5;   // stay just above the grass
+  controls.update();
+}
+
 /* ================= right-click tool menu ================= */
+let ctxTarget=null;   // block the right-click menu was opened on (for Select row / Select all connected)
 function showCtxMenu(x,y){
   const m=$('#ctxMenu');
+  m.classList.add('on');   // show first, so the real height can be measured
   m.style.left=Math.min(x, innerWidth-190)+'px';
-  m.style.top=Math.min(y, innerHeight-360)+'px';
-  m.classList.add('on');
+  // clamp so the whole menu fits on screen, however low the click was
+  m.style.top=Math.max(8, Math.min(y, innerHeight-m.offsetHeight-8))+'px';
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===tool));
+  const hasBlock=!!ctxTarget;
+  $('#ctxRow').disabled=!hasBlock;
+  $('#ctxConnected').disabled=!hasBlock;
 }
 function hideCtxMenu(){ $('#ctxMenu').classList.remove('on'); }
 function ctxMenuOpen(){ return $('#ctxMenu').classList.contains('on'); }
@@ -3227,9 +3977,12 @@ function bindPointer(){
       }
       return;
     }
+    if(panDrag){ panDragUpdate(e); return; }
     if(expandDrag){ expandDragUpdate(e); return; }
     if(boxDrag){ updateBoxDrag(e); return; }
     if(fillDrag){ fillDragUpdate(e); return; }
+    if(wallDrag && wallPlacing){ wallDragUpdate(e); return; }
+    if(buildDrag){ buildDragUpdate(e); return; }
     if(lineStart){ updateLineAim(e); return; }
     if(!downPos) updateHover(e);
   });
@@ -3243,10 +3996,26 @@ function bindPointer(){
       clearTimeout(lpTimer);
       lpTimer=setTimeout(()=>{ lpFired=true; longPressErase(e); }, 450);
     }
+    // Space = the hand tool (Figma-style): drag pans the view instead of
+    // orbiting or starting a tool drag — it wins over Shift+drag building too
+    if(e.button===0 && spaceHeld && !(touchMode && e.pointerType==='touch')){
+      panDrag={ x:e.clientX, y:e.clientY, moved:0 };
+      controls.enabled=false;
+      renderer.domElement.style.cursor='grabbing';
+      return;
+    }
     if(pasteMode || presetMode) return;   // a paste/preset click must not start a drag
     if(e.button===0 && tool==='fill' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
       if(hit) fillStart(e, hit.cell);
+    }
+    if(e.button===0 && tool==='wall' && !(touchMode && e.pointerType==='touch')){
+      const hit=raycastVoxel(e);
+      if(hit) wallStart(e, hit.cell);
+    }
+    if(e.button===0 && e.shiftKey && tool==='build' && !(touchMode && e.pointerType==='touch')){
+      const hit=raycastVoxel(e);
+      if(hit) buildDragStart(e, hit.cell);
     }
     if(e.button===0 && tool==='select' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
@@ -3267,6 +4036,14 @@ function bindPointer(){
     if(expandDrag){ expandFinish(); downPos=null; return; }
     if(boxDrag){ finishBoxDrag(); downPos=null; return; }
     if(fillDrag){ fillFinish(); downPos=null; return; }
+    if(wallDrag && wallPlacing){ wallFinish(); return; }
+    if(buildDrag){ buildDragFinish(); downPos=null; return; }
+    if(panDrag){
+      const pmoved=Math.hypot(e.clientX-panDrag.x, e.clientY-panDrag.y);
+      endPanDrag();
+      if(pmoved>6){ downPos=null; return; }   // it was a pan drag — swallow the click
+      // a click (no real drag): fall through to the normal click logic below
+    }
     if(!downPos) return;
     const moved=Math.hypot(e.clientX-downPos[0], e.clientY-downPos[1]);
     const dt=Date.now()-downTime;
@@ -3282,6 +4059,7 @@ function bindPointer(){
     // a click anywhere else closes the open rename box instead of placing a block
     if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
     if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
+      ctxTarget=(hit&&hit.block)? [...hit.block] : null;
       showCtxMenu(e.clientX, e.clientY);
       return;
     }
@@ -3299,7 +4077,10 @@ function bindPointer(){
       return;
     }
     if(tool==='select'){
-      if(hit&&hit.block) selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), e.shiftKey);
+      if(hit&&hit.block){
+        if(e.shiftKey) selectRow(hit.block[0],hit.block[1],hit.block[2], true);
+        else selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), false);
+      }
       else if(!e.shiftKey) clearSelection();
       return;
     }
@@ -3343,10 +4124,32 @@ function bindPointer(){
     }
     placeBuildBlock(cx,cy,cz,selType,r);
   });
+  // double-click in Select grabs every connected block of the same material
+  // (a whole roof at once); the two single clicks before it only select one
+  // block, and this replaces that with the connected set
+  el.addEventListener('dblclick', e=>{
+    if(WALK.active) return;
+    if(ctxMenuOpen()) return;
+    if($('#renameBox').classList.contains('on')) return;
+    if(tool!=='select') return;
+    const hit=raycastVoxel(e);
+    if(hit&&hit.block) selectConnected(hit.block[0],hit.block[1],hit.block[2], e.shiftKey);
+  });
   // a fill drag released outside the canvas still has to finish, or the
   // controls stay disabled and the ghost stays on screen
-  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); });
-  window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); });
+  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); if(wallDrag && wallPlacing) wallFinish(); if(buildDrag) buildDragFinish(); if(panDrag) endPanDrag(); });
+  window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); if(wallDrag) cancelWallDrag(); if(buildDrag) cancelBuildDrag(); if(panDrag) endPanDrag(); });
+  // scroll zooms toward the cursor (Figma-style), not the screen centre.
+  // Caught on window in the capture phase so OrbitControls' own wheel zoom
+  // (dolly toward the target) never also runs — pinch zoom on touch is
+  // untouched, it goes through OrbitControls' touch handlers.
+  window.addEventListener('wheel', e=>{
+    if(e.target!==renderer.domElement) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(WALK.active || TOUR.active) return;
+    zoomToCursor(e);
+  }, { passive:false, capture:true });
 }
 
 /* ================= palette + floor bar + tools UI ================= */
@@ -3385,6 +4188,8 @@ function setTool(t){
   if(moveCarry) cancelMove();
   if(fillDrag) cancelFillDrag();
   if(lineStart) cancelLine();
+  if(wallDrag) cancelWallDrag();
+  if(buildDrag) cancelBuildDrag();
   if(tapeStart){ tapeStart=null; if(startMarker) startMarker.visible=false; }
   tool=t;
   $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
@@ -3392,15 +4197,23 @@ function setTool(t){
   // the fill panel and the stair panel share the same bottom-centre spot —
   // never show both at once
   $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
+  $('#wallPanel').classList.toggle('on', t==='wall' && !$('#presetPanel').classList.contains('on'));
   if(t==='fill'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); }
+  if(t==='wall'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); updateWallPanel(); }
   $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
   $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
   if(t!=='fill' && t!=='line') hideSizeBar();
   if(pasteMode) setPasteMode(false);
   if(presetMode) setPresetMode(null);
 }
+function flushOrbitDrift(){
+  // OrbitControls keeps applying a decaying rotation after a drag; flush it
+  // so a snapped view lands exactly where asked instead of drifting away
+  if(controls.enableDamping){ controls.enableDamping=false; controls.update(); controls.enableDamping=true; }
+}
 function setCam(name){
   if(WALK.active) return;
+  flushOrbitDrift();
   const c={x:0, z:0};
   if(name==='iso'){ camera.position.set(c.x+62, 78, c.z-62); controls.target.set(c.x, 10, c.z); }
   else if(name==='top'){ camera.position.set(c.x, 135, c.z+0.5); controls.target.set(c.x, 0, c.z); }
@@ -3596,8 +4409,8 @@ function walkStep(dt){
 window.__keys=new Set();
 function bindKeys(){
   window.addEventListener('keydown', e=>{
-    // while sizing a box or a line, number keys go straight into the size box
-    if((fillDrag||lineStart) && e.target.tagName!=='INPUT' && /^(Digit\d|Quote|Period)$/.test(e.code)){
+    // while sizing a box, a line or a wall, number keys go straight into the size box
+    if((fillDrag||lineStart||wallDrag) && e.target.tagName!=='INPUT' && /^(Digit\d|Quote|Period)$/.test(e.code)){
       const inp=$('#sizeInput');
       inp.focus();
       const ch = e.code==='Quote'?"'": e.code==='Period'?'.': e.code.slice(5);
@@ -3612,9 +4425,13 @@ function bindKeys(){
       if($('#warnPanel').classList.contains('on')){ toggleWarnPanel(false); return; }
       if($('#moreMenu').classList.contains('on')){ toggleMoreMenu(false); return; }
       if($('#sunMenu').classList.contains('on')){ toggleSunMenu(false); return; }
+      if(TOUR.active){ tourStop(); return; }
       if(WALK.active){ if(WALK.fp) setWalkFP(false); else walkStop(); }
       else if(moveCarry){ cancelMove(); }
       else if(fillDrag){ cancelFillDrag(); }
+      else if(buildDrag){ cancelBuildDrag(); }
+      else if(wallDrag){ cancelWallDrag(); }
+      else if(tool==='wall'){ setTool('build'); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
       else if($('#templatePanel').classList.contains('on')){ toggleTemplatePanel(false); }
       else if($('#blueprintPanel').classList.contains('on')){ toggleBlueprintPanel(false); }
@@ -3652,17 +4469,20 @@ function bindKeys(){
       if(k==='KeyF') setTool('fill');
       if(k==='KeyL') setTool('line');
       if(k==='KeyT') setTool('tape');
+      // W is also fly-forward: a tap switches to the Wall tool, holding it still flies
+      if(k==='KeyW' && !e.repeat){ setTool('wall'); return; }
       if(k==='KeyR'){
         if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
         else rotateSelection();
       }
       if(k>='Digit1'&&k<='Digit9') selectType(+k.slice(5)-1);
     }
+    if(k==='Space' && !WALK.active && !TOUR.active) setHand(true);
     window.__keys.add(k);
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(k)) e.preventDefault();
   });
-  window.addEventListener('keyup', e=>window.__keys.delete(e.code));
-  window.addEventListener('blur', ()=>window.__keys.clear());
+  window.addEventListener('keyup', e=>{ window.__keys.delete(e.code); if(e.code==='Space') setHand(false); });
+  window.addEventListener('blur', ()=>{ window.__keys.clear(); setHand(false); if(panDrag) endPanDrag(); });
 }
 function flyTick(dt){
   if(WALK.active) return;
@@ -3685,9 +4505,11 @@ function flyTick(dt){
 
 /* ================= main tick ================= */
 function tick(dt){
+  perfTick(dt);
   flyTick(dt);
   if(WALK.active) walkStep(dt);
   if(WALK.active) return;
+  tourTick(dt);
   // keep the floor band under the active floor
   floorBand.position.y = FLOORS[activeFloor].base + 1.03;
   updateLabelVisibility();   // two white tags must never cover each other
@@ -3755,6 +4577,11 @@ function init(){
   $('#stairWin').onchange=applyStairWidth;
   updateStairWidthLabel();
   $$('#ctxMenu button').forEach(b=>b.onclick=()=>{ setTool(b.dataset.tool); hideCtxMenu(); });
+  // the two selection actions in the right-click menu (no data-tool, so the
+  // forEach above would have called setTool(undefined) on them)
+  $('#ctxRow').onclick=()=>{ hideCtxMenu(); if(!ctxTarget){ toast('Right-click a block first'); return; } setTool('select'); selectRow(ctxTarget[0],ctxTarget[1],ctxTarget[2], true); };
+  $('#ctxConnected').onclick=()=>{ hideCtxMenu(); if(!ctxTarget){ toast('Right-click a block first'); return; } setTool('select'); selectConnected(ctxTarget[0],ctxTarget[1],ctxTarget[2], false); };
+  bindGizmo();
   $$('#fillPanel button[data-mode]').forEach(b=>b.onclick=()=>{ fillMode=b.dataset.mode; updateFillPanel();
     if(fillDrag) refreshFillReadout(); });
   $('#btnClearMeasures').onclick=()=>clearMeasures();
@@ -3767,6 +4594,18 @@ function init(){
   updateFillPanel();
   $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
+  $('#btnTour').onclick=()=>TOUR.active?tourStop():tourStart();
+  $('#btnTourStop').onclick=tourStop;
+  $('#btnTourRec').onclick=()=>TOUR.recording?tourStopRecord():tourStartRecord();
+  $('#btnGrid').onclick=()=>setGrid(!gridOn);
+  $('#btnSnap').onclick=()=>setSnap(!snapOn);
+  $$('#wallPanel button[data-gap]').forEach(b=>b.onclick=()=>{ wallGap=b.dataset.gap; wallGapFt=null; updateWallPanel(); updateWallGhost(); });
+  $('#wallHft').onchange=applyWallHeight;
+  $('#wallHin').onchange=applyWallHeight;
+  $('#wallGapFt').onchange=()=>{ wallGapFt=clamp(parseFloat($('#wallGapFt').value)||0,0,100); $('#wallGapFt').value=wallGapFt; updateWallGhost(); };
+  $('#wallGapCentre').onclick=()=>{ wallGapFt=null; updateWallPanel(); updateWallGhost(); };
+  $('#btnBuildWall').onclick=()=>wallBuild();
+  $('#wallClose').onclick=()=>{ cancelWallDrag(); setTool('build'); };
   $('#btnExitWalk').onclick=walkStop;
   $('#btnWalkFP').onclick=()=>setWalkFP(!WALK.fp);
   $('#btnMore').onclick=()=>toggleMoreMenu();
@@ -3820,6 +4659,8 @@ function init(){
   loadLabelsPref();   // wall labels: on by default, remembered choice wins
   loadSunPref();      // sunlight: Day by default, remembered choice wins
   loadTouchPref();    // touch mode: off by default, remembered choice wins
+  loadGridPref();     // 1-ft grid: on by default, remembered choice wins
+  loadSnapPref();     // whole-foot snap: off by default, remembered choice wins
   updateUndoBtns();
   resize();   // position the help panel + size bar under the finished toolbar
   window.__ready=true;
@@ -3938,6 +4779,41 @@ window.__mc = {
   },
   selection(){ return [...selection]; },
   select(x,y,z,add){ selectBlockKey(key3(x,y,z), !!add); },
+  rowSelect(x,y,z,add){ return selectRow(x,y,z,add!==false); },
+  connectedSelect(x,y,z,add){ return selectConnected(x,y,z,!!add); },
+  rowCells(x,y,z){ return rowCells(x,y,z); },
+  connectedCells(x,y,z){ const r=floodRegion(x,y,z); return r? r.keys.map(k=>parseKey(k)) : []; },
+  buildLine:{
+    active(){ return !!buildDrag; },
+    start(a){ buildDrag={ anchor:[...a], cur:[...a] }; controls.enabled=false; updateBuildDragGhost(); return true; },
+    dragTo(c){ if(!buildDrag) return null; buildDrag.cur=snapCellTo(buildDrag.anchor, [...c]); updateBuildDragGhost(); return buildLineInfo(); },
+    info(){ return buildLineInfo(); },
+    ghostOn(){ return multiGhost.visible; },
+    readout(){ return $('#roTool').textContent; },
+    commit(){ return buildDragFinish(); },
+    cancel(){ cancelBuildDrag(); },
+  },
+  gizmo:{
+    exists(){ return !!document.querySelector('#gizmo'); },
+    visible(){ const g=document.querySelector('#gizmo'); return !!g && g.getBoundingClientRect().width>0; },
+    axes(){ return GIZMO_AXES.map(a=>({ name:a.name, color:a.color, label:document.getElementById(a.lab).textContent })); },
+    dotPos(name){ const d=document.getElementById('g'+name+'-dot'); if(!d) return null; const r=d.getBoundingClientRect(); return { x:r.left+r.width/2, y:r.top+r.height/2 }; },
+    centrePos(){ const d=document.getElementById('g-cen'); if(!d) return null; const r=d.getBoundingClientRect(); return { x:r.left+r.width/2, y:r.top+r.height/2 }; },
+    snap(axis){ gizmoSnap(axis); return true; },
+    camPos(){ return [camera.position.x, camera.position.y, camera.position.z]; },
+    camTarget(){ return [controls.target.x, controls.target.y, controls.target.z]; },
+  },
+  hand:{
+    space(){ return spaceHeld; },
+    setSpace(on){ setHand(!!on); return spaceHeld; },
+    cursor(){ return renderer.domElement.style.cursor; },
+    hint(){ return $('#roTool').textContent; },
+    hintVisible(){ return $('#roTool').style.display!=='none'; },
+    target(){ return [controls.target.x, controls.target.y, controls.target.z]; },
+    panBy(dx,dy){ panBy(dx,dy); return true; },
+    cursorPoint(sx,sy){ const p=cursorGroundPoint(sx,sy); return p? [p.x, p.y, p.z] : null; },
+    zoomAt(sx,sy,deltaY){ zoomToCursor({ clientX:sx, clientY:sy, deltaY }); return true; },
+  },
   clearSel(){ clearSelection(); },
   copy(){ return copySelection(); },
   clipboardSize(){ return clipboard.length; },
@@ -3996,7 +4872,7 @@ window.__mc = {
     box(a,b,mode){ return fillBox(a,b,mode||fillMode); },
     start(a){ fillDrag={ anchor:[...a], cur:[...a] }; fillLocked=null;
       updateFillGhost(); showSizeBar(true); return true; },
-    dragTo(c){ if(!fillDrag) return null; fillDrag.cur=[...c];
+    dragTo(c){ if(!fillDrag) return null; fillDrag.cur=snapCellTo(fillDrag.anchor, [...c]);
       if(fillLocked) fillDrag.cur[fillLocked.axis]=fillDrag.anchor[fillLocked.axis]+fillLocked.dir*(fillLocked.len-1);
       updateFillGhost(); refreshFillReadout(); return fillBoxInfo(); },
     info(){ return fillBoxInfo(); },
@@ -4009,12 +4885,28 @@ window.__mc = {
     start(a){ lineStart=[...a]; lineAim=[...a]; lineEnd=null; lineLockedLen=null;
       startMarker.position.set(a[0]+0.5, a[1]+0.5, a[2]+0.5); startMarker.visible=true;
       showSizeBar(true); updateLinePreview(); return true; },
-    aim(c){ if(!lineStart) return null; lineAim=[...c]; computeLineEnd(); updateLinePreview();
+    aim(c){ if(!lineStart) return null; lineAim=snapCellTo(lineStart, [...c]); computeLineEnd(); updateLinePreview();
       return lineCells(lineStart, lineEnd||lineAim||lineStart).length; },
     commit(a,b){ const s=a||lineStart; const e=lineEnd||b||lineAim; if(!s) return 0;
       const n=lineCommit(s,e); cancelLine(); return n; },
     active(){ return !!lineStart; },
     cancel(){ cancelLine(); },
+  },
+  wall:{
+    start(a){ wallDrag={ anchor:[...a], cur:[...a] }; wallPlacing=false; updateWallGhost(); updateWallPanel(); return true; },
+    dragTo(c){ if(!wallDrag) return null; wallDrag.cur=snapCellTo(wallDrag.anchor, [...c]); updateWallGhost(); updateWallPanel(); return wallInfo2(); },
+    info(){ return wallInfo2(); },
+    cells(a,b,h,gap,gapFt){ const r=wallCells(a,b,h,gap,gapFt);
+      return r.cells? { n:r.cells.length, gapStart:r.gapStart, gapEnd:r.gapEnd, gapY0:r.gapY0, gapH:r.gapH, axis:r.axis, len:r.len } : { error:r.error }; },
+    build(){ return wallBuild(); },
+    cancel(){ cancelWallDrag(); },
+    active(){ return !!wallDrag; },
+    panelOpen(){ return $('#wallPanel').classList.contains('on'); },
+    setHeight(ft,inch){ wallHeightBlocks=clamp(Math.round(((ft||0)+(inch||0)/12)*2),2,40); updateWallPanel(); updateWallGhost(); return wallHeightBlocks; },
+    heightBlocks(){ return wallHeightBlocks; },
+    setGap(g){ if(!['none','door','window'].includes(g)) return false; wallGap=g; wallGapFt=null; updateWallPanel(); updateWallGhost(); return true; },
+    gap(){ return wallGap; },
+    setGapFt(ft){ wallGapFt=clamp(+ft||0,0,100); updateWallPanel(); updateWallGhost(); return wallGapFt; },
   },
   tape:{
     measure(a,b){ return addMeasure(a,b); },
@@ -4063,6 +4955,40 @@ window.__mc = {
     setFP(on){ return setWalkFP(on); },
     camY(){ return camera.position.y; },
     walkerVisible(){ return walker? walker.visible : false; },
+  },
+  grid:{
+    on(){ return gridOn; },
+    set(on){ return setGrid(on); },
+    visible(){ return gridGroup? gridGroup.visible : false; },
+    counts(){ return { ...gridCounts }; },
+  },
+  snap:{
+    on(){ return snapOn; },
+    set(on){ return setSnap(on); },
+    cellTo(a,c){ return snapCellTo(a,c); },
+  },
+  perf:{
+    fps(){ return currentFps; },
+    fpsLine(){ return $('#roFps').textContent; },
+    quality(){ return qualityIdx; },
+    setQuality(i){ return setQuality(i); },
+    pixelRatio(){ return renderer? renderer.getPixelRatio() : null; },
+    overrideFps(v){ fpsOverride=(v==null?null:+v); return fpsOverride; },
+    largeWarned(){ return largeWarned; },
+    bigLine(){ return { visible: $('#roBig').style.display!=='none', text: $('#roBig').textContent }; },
+  },
+  tour:{
+    start(){ return tourStart(); },
+    stop(){ return tourStop(); },
+    active(){ return TOUR.active; },
+    camPos(){ return { x:camera.position.x, y:camera.position.y, z:camera.position.z }; },
+    barVisible(){ return $('#tourBar').style.display!=='none'; },
+    supported(){ return tourSupported() && !!tourRecordMime(); },
+    mime(){ return tourRecordMime(); },
+    record(){ return tourStartRecord(); },
+    stopRecord(){ return tourStopRecord(); },
+    recording(){ return TOUR.recording; },
+    lastRecording(){ return TOUR.lastRecording? { ...TOUR.lastRecording } : null; },
   },
   projectToScreen(x,y,z){ return projectToScreenPoint(x,y,z); },
 };
