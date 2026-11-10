@@ -115,6 +115,28 @@
   #mirrorPanel input,#replacePanel select{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;color:#222;background:#fff}
   #mirrorPanel input{width:56px}
   #cheatPanel{max-height:62vh;overflow:auto}
+  /* ---------- clearance warnings panel + inline room rename (round 8) ---------- */
+  #warnPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+    background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
+  #warnPanel.on{display:flex}
+  #warnPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #warnPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 10px;color:#222}
+  #warnList{flex-basis:100%;display:flex;flex-direction:column;gap:6px}
+  .warn-item{display:flex;gap:8px;align-items:center;background:rgba(255,184,77,.14);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
+  .warn-ic{font-weight:800;color:#ffb84d;white-space:nowrap}
+  .warn-tx{flex:1;font-weight:700}
+  .warn-fl{font-weight:800;white-space:nowrap;color:#9be36d}
+  .warn-note{flex-basis:100%;color:#ffd83d;font-size:11px;font-weight:700;line-height:1.5}
+  #roWarn{cursor:pointer;color:#ffb84d}
+  #renameBox{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:30;display:none;
+    background:rgba(0,0,0,.75);border:3px solid #ffd83d;border-radius:8px;padding:10px;gap:8px;flex-wrap:wrap;max-width:420px}
+  #renameBox.on{display:flex}
+  #renameBox .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #renameBox input{flex:1;border:2px solid #555;border-radius:4px;padding:7px 9px;font-weight:800;font-size:14px;color:#222;background:#fff;min-width:180px}
+  #renameBox button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 12px;color:#222}
+  #renameBox button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
   .cheat-grid{flex-basis:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;color:#fff;font-size:12px;font-weight:700}
   .cheat-grid b{color:#ffd83d;white-space:nowrap}
   .tpl-item{flex-basis:100%;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
@@ -226,6 +248,8 @@
   <div class="msep"></div>
   <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
   <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
+  <button id="btnPlan" title="Download a top-down 2D plan of the active floor as a PNG">🗺️ Plan PNG</button>
+  <button id="btnGLB" title="Download this build as a 3D .glb model (opens in Blender and other 3D tools)">🧊 Export 3D (.glb)</button>
   <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
   <div class="msep"></div>
   <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
@@ -251,6 +275,7 @@
   <div id="roSym" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
   <div id="roTool" class="dim" style="display:none"></div>
+  <div id="roWarn" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
   <div id="roSaved" class="dim"></div>
 </div>
@@ -381,6 +406,20 @@
   <button id="cheatClose">✕ Close</button>
 </div>
 
+<div id="warnPanel">
+  <div class="pp-title">Clearance warnings — doors, corridors and ceilings that are tighter than comfortable</div>
+  <div id="warnList"></div>
+  <div class="warn-note">Rules of thumb used here — not building code: doors and corridors at least 3 ft wide, ceilings at least 8 ft high. Warnings update live as you build; fix the gap and the warning goes away.</div>
+  <button id="warnClose">✕ Close</button>
+</div>
+
+<div id="renameBox">
+  <div class="pp-title">Rename room</div>
+  <input id="renameInput" maxlength="24" spellcheck="false" autocomplete="off">
+  <button id="renameSave" class="on">Save</button>
+  <button id="renameCancel">Cancel</button>
+</div>
+
 <div id="sizeBar">
   <span>Length:</span>
   <input id="sizeInput" placeholder="10'6&quot;" spellcheck="false" autocomplete="off">
@@ -414,6 +453,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
 /* ================= constants: 1 block = 6 in = 0.5 ft ================= */
 const FT = 0.5;                       // feet per block (1 block = 6 in)
@@ -773,6 +813,7 @@ function rebuild(){
   });
   updateWallLabels();
   updateRoomLabels();
+  updateClearance();
 }
 
 /* ================= undo / redo (single op or {batch:[ops]}) ================= */
@@ -1049,15 +1090,17 @@ function detectRooms(){
         }
       }
       if(comp.length<4) continue;   // at least 1 sq ft to count as a room
-      let mx=1e9,mz=1e9,sx=0,sz=0,maxY=y0;
+      let mx=1e9,mz=1e9,sx=0,sz=0,maxY=y0, rx0=1e9,rx1=-1e9,rz0=1e9,rz1=-1e9;
       for(const [cx,cz] of comp){
         sx+=cx; sz+=cz;
+        if(cx<rx0)rx0=cx; if(cx>rx1)rx1=cx; if(cz<rz0)rz0=cz; if(cz>rz1)rz1=cz;
         if(cz<mz||(cz===mz&&cx<mx)){ mx=cx; mz=cz; }
         for(let y=y0;y<=FLOORS[fi].base+20;y++) if(getBlock(cx,y,cz)) maxY=Math.max(maxY,y);
       }
       const rkey=fi+'|'+mx+'|'+mz;   // lowest-left cell: stable across small edits
       rooms.push({ fi, key:rkey, cells:comp.length, areaSqFt:comp.length*FT*FT,
         cx:sx/comp.length+0.5, cz:sz/comp.length+0.5, maxY,
+        x0:rx0, x1:rx1, z0:rz0, z1:rz1, cellsArr:comp,
         name:roomNames.get(rkey)||'Room' });
     }
   }
@@ -1098,6 +1141,30 @@ function renameRoom(key, name){
   toast('Room renamed to "'+name+'"');
   return true;
 }
+/* inline room rename (round 8): the old native prompt() is gone —
+   renaming now uses a small box in the app, styled like the other
+   panels, so it feels like the tool. Enter saves, Esc cancels. */
+let renameTarget=null;
+function openRenameBox(key){
+  const info=roomLabelSprites.get(key);
+  renameTarget=key;
+  $('#renameInput').value=info? info.info.name : 'Room';
+  $('#renameBox').classList.add('on');
+  const inp=$('#renameInput');
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 0);
+  return true;
+}
+function closeRenameBox(){
+  renameTarget=null;
+  $('#renameBox').classList.remove('on');
+  return true;
+}
+function commitRenameBox(){
+  if(!renameTarget) return closeRenameBox();
+  const ok=renameRoom(renameTarget, $('#renameInput').value);
+  closeRenameBox();
+  return ok;
+}
 /* click on a room label (raycast the sprites) — null when nothing hit */
 function roomLabelHit(e){
   if(!roomLabelGroup || !roomLabelGroup.visible) return null;
@@ -1107,6 +1174,190 @@ function roomLabelHit(e){
   const hits=raycaster.intersectObjects(sprites, false);
   if(!hits.length) return null;
   return hits[0].object.userData.roomKey || null;
+}
+
+/* ================= clearance warnings (round 8) ================= */
+/* House-planning rules of thumb — NOT building code, and the panel says
+   so: doors and corridors at least 3 ft wide, ceilings at least 8 ft
+   high. All three are read off the block data, live, on every rebuild:
+   - door: a gap in a wall line that is open at floor level (no block at
+     the first level above the floor slab) but has wall above it (a
+     lintel, 4 ft up or higher), flanked by wall columns on both sides.
+     Windows don't match — their sill blocks sit at floor level — and a
+     gate in a low wall doesn't either, because there is no lintel above.
+   - corridor: an enclosed room whose bounding box is long and narrow —
+     under 3 ft one way and at least 6 ft the other way.
+   - ceiling: a room where the lowest overhead block above the floor is
+     under 8 ft up. Stair steps don't count (they are the way up, not a
+     ceiling), and open-roof rooms have no ceiling and never warn. */
+const WARN_DOOR_MIN=6;      // blocks = 3 ft
+const WARN_CORRIDOR_MIN=6;  // blocks = 3 ft
+const WARN_CORRIDOR_LEN=12; // blocks = 6 ft
+const WARN_CEIL_MIN=16;     // blocks = 8 ft
+let clearanceWarnings=[];
+function detectClearance(){
+  const warns=[];
+  for(let fi=0; fi<FLOORS.length; fi++){
+    const B=FLOORS[fi].base, yWalk=B+2, yLintel0=B+8, yTop=B+17;
+    const b=floorBBox(fi); if(!b) continue;
+    // stair blocks are steps, not walls: a flight of steps reads as a
+    // row of "openings with a lintel above" if stairs count, so the
+    // wall/lintel tests below ignore them (a real door's lintel and
+    // flanking walls are ordinary blocks)
+    const isWallCol=(x,z)=>{ for(let y=yWalk;y<=yTop;y++){ const bl=getBlock(x,y,z); if(bl&&bl.t!==6) return true; } return false; };
+    const hasLintel=(x,z)=>{ for(let y=yLintel0;y<=yTop;y++){ const bl=getBlock(x,y,z); if(bl&&bl.t!==6) return true; } return false; };
+    // --- door gaps: open at floor level, lintel above, walled both sides
+    const cand=new Set();
+    for(let x=b.x0-1;x<=b.x1+1;x++) for(let z=b.z0-1;z<=b.z1+1;z++){
+      if(getBlock(x,yWalk,z)) continue;          // blocked at floor level (sill / solid wall)
+      if(!hasLintel(x,z)) continue;              // no wall above — open ground, not a door
+      if((isWallCol(x-1,z)&&isWallCol(x+1,z)) || (isWallCol(x,z-1)&&isWallCol(x,z+1))) cand.add(key3(x,0,z));
+    }
+    const used=new Set();
+    for(const k of cand){
+      if(used.has(k)) continue;
+      const [x,,z]=parseKey(k);
+      let run=[k]; used.add(k);
+      let nx=x+1; while(cand.has(key3(nx,0,z))){ run.push(key3(nx,0,z)); used.add(key3(nx,0,z)); nx++; }
+      nx=x-1; while(cand.has(key3(nx,0,z))){ run.push(key3(nx,0,z)); used.add(key3(nx,0,z)); nx--; }
+      if(run.length===1){
+        let nz=z+1; while(cand.has(key3(x,0,nz))){ run.push(key3(x,0,nz)); used.add(key3(x,0,nz)); nz++; }
+        nz=z-1; while(cand.has(key3(x,0,nz))){ run.push(key3(x,0,nz)); used.add(key3(x,0,nz)); nz--; }
+      }
+      const w=run.length;
+      if(w<WARN_DOOR_MIN){
+        warns.push({ type:'door', floor:FLOORS[fi].name, fi, room:null, sizeFt:w*FT,
+          text:'Door gap only '+ftin(w*FT)+' wide — needs 3\' 0"' });
+      }
+    }
+    // --- corridors + ceilings, from the enclosed rooms on this floor.
+    // Rooms come from the main detection plus the low-roof pass below
+    // (main detection first — it is the one the labels use; the
+    // low-roof pass only fills in rooms a low roof hides).
+    const seenRooms=new Map();
+    for(const r of detectRooms().filter(r=>r.fi===fi)) seenRooms.set(r.key, r);
+    for(const r of detectLowRoofRooms(fi)) if(!seenRooms.has(r.key)) seenRooms.set(r.key, r);
+    for(const r of seenRooms.values()){
+      const w=r.x1-r.x0+1, d=r.z1-r.z0+1;
+      const narrow=Math.min(w,d), long=Math.max(w,d);
+      if(narrow<WARN_CORRIDOR_MIN && long>=WARN_CORRIDOR_LEN){
+        warns.push({ type:'corridor', floor:FLOORS[fi].name, fi, room:r.name, sizeFt:narrow*FT,
+          text:'Corridor only '+ftin(narrow*FT)+' wide — needs 3\' 0"' });
+      }
+      let minOver=null;
+      for(const [cx,cz] of r.cellsArr){
+        for(let y=yWalk;y<=B+20;y++){
+          const bl=getBlock(cx,y,cz);
+          if(bl && bl.t!==6){ minOver=minOver===null? y-yWalk : Math.min(minOver, y-yWalk); break; }
+        }
+      }
+      if(minOver!==null && minOver<WARN_CEIL_MIN){
+        warns.push({ type:'ceiling', floor:FLOORS[fi].name, fi, room:r.name, sizeFt:minOver*FT,
+          text:'Ceiling only '+ftin(minOver*FT)+' high in "'+r.name+'" — needs 8\' 0"' });
+      }
+    }
+  }
+  return warns;
+}
+/* Low-roof rooms (round 8): the main room detection treats any column
+   with a block in the wall band as a wall — so a roof slab below 8 ft
+   makes the whole room read as solid wall and the room vanishes, which
+   would make a low ceiling undetectable. This second pass closes rooms
+   only on low blocks (up to 3.5 ft) and on a block at the very top of
+   the band (a door lintel), so a low roof doesn't hide the room. It
+   exists only for the ceiling check; the labels keep using the main
+   detection. One honest limit: a roof flush with the wall top (a 7.5 ft
+   ceiling) still reads as wall and is missed. */
+function detectLowRoofRooms(fi){
+  const rooms=[];
+  const B=FLOORS[fi].base;
+  const b=floorBBox(fi); if(!b) return rooms;
+  const x0=b.x0-2, x1=b.x1+2, z0=b.z0-2, z1=b.z1+2;
+  const k2=(x,z)=>x+','+z;
+  const isWall=(x,z)=>{
+    for(let y=B+2;y<=B+7;y++) if(getBlock(x,y,z)) return true;
+    return !!getBlock(x,B+17,z);
+  };
+  const ext=new Set(); const q=[];
+  for(let x=x0;x<=x1;x++){ q.push([x,z0]); q.push([x,z1]); }
+  for(let z=z0;z<=z1;z++){ q.push([x0,z]); q.push([x1,z]); }
+  while(q.length){
+    const [x,z]=q.pop(); const k=k2(x,z);
+    if(ext.has(k)||isWall(x,z)) continue;
+    ext.add(k);
+    for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=x+dx, nz=z+dz;
+      if(nx>=x0&&nx<=x1&&nz>=z0&&nz<=z1&&!ext.has(k2(nx,nz))) q.push([nx,nz]);
+    }
+  }
+  const seen=new Set();
+  for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
+    if(isWall(x,z)||ext.has(k2(x,z))||seen.has(k2(x,z))) continue;
+    const comp=[]; const cq=[[x,z]]; seen.add(k2(x,z));
+    while(cq.length){
+      const [cx,cz]=cq.pop(); comp.push([cx,cz]);
+      for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const nx=cx+dx, nz=cz+dz;
+        if(nx<x0||nx>x1||nz<z0||nz>z1) continue;
+        const nk=k2(nx,nz);
+        if(seen.has(nk)||ext.has(nk)||isWall(nx,nz)) continue;
+        seen.add(nk); cq.push([nx,nz]);
+      }
+    }
+    if(comp.length<4) continue;
+    let mx=1e9,mz=1e9,sx=0,sz=0, rx0=1e9,rx1=-1e9,rz0=1e9,rz1=-1e9;
+    for(const [cx,cz] of comp){
+      sx+=cx; sz+=cz;
+      if(cx<rx0)rx0=cx; if(cx>rx1)rx1=cx; if(cz<rz0)rz0=cz; if(cz>rz1)rz1=cz;
+      if(cz<mz||(cz===mz&&cx<mx)){ mx=cx; mz=cz; }
+    }
+    const rkey=fi+'|'+mx+'|'+mz;
+    rooms.push({ fi, key:rkey, cells:comp.length, areaSqFt:comp.length*FT*FT,
+      cx:sx/comp.length+0.5, cz:sz/comp.length+0.5,
+      x0:rx0, x1:rx1, z0:rz0, z1:rz1, cellsArr:comp,
+      name:roomNames.get(rkey)||'Room' });
+  }
+  return rooms;
+}
+function updateClearance(){
+  clearanceWarnings=detectClearance();
+  const el=$('#roWarn');
+  if(el){
+    if(clearanceWarnings.length){
+      el.style.display='block';
+      el.textContent='⚠ '+clearanceWarnings.length+' clearance warning'+(clearanceWarnings.length>1?'s':'')+' — click to see';
+    } else el.style.display='none';
+  }
+  if($('#warnPanel').classList.contains('on')) renderWarnPanel();
+}
+function renderWarnPanel(){
+  const list=$('#warnList'); list.innerHTML='';
+  if(!clearanceWarnings.length){
+    const d=document.createElement('div'); d.className='tpl-empty';
+    d.textContent='No clearance problems — every door and corridor is at least 3 ft wide and every ceiling at least 8 ft high.';
+    list.appendChild(d); return;
+  }
+  for(const w of clearanceWarnings){
+    const row=document.createElement('div'); row.className='warn-item';
+    const ic=document.createElement('span'); ic.className='warn-ic'; ic.textContent='⚠';
+    const tx=document.createElement('span'); tx.className='warn-tx'; tx.textContent=w.text;
+    const fl=document.createElement('span'); fl.className='warn-fl'; fl.textContent=w.floor+(w.room?' · '+w.room:'');
+    row.append(ic,tx,fl); list.appendChild(row);
+  }
+}
+function toggleWarnPanel(show){
+  const p=$('#warnPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  if(on){
+    renderWarnPanel();
+    // one panel at a time in the bottom-centre spot, like the others
+    for(const id of ['#presetPanel','#templatePanel','#fillPanel','#blueprintPanel','#mirrorPanel','#replacePanel','#cheatPanel'])
+      $(id).classList.remove('on');
+    for(const id of ['#btnPresets','#btnTemplates','#btnBlueprints','#btnMirror','#btnReplace','#btnCheat'])
+      $(id).classList.remove('on');
+  }
+  return on;
 }
 
 /* ================= day / evening / night sun (round 7) ================= */
@@ -1576,6 +1827,147 @@ function snapshot(){
   a.href=renderer.domElement.toDataURL('image/png');
   a.download='minecraft-design.png'; a.click();
   toast('Photo saved');
+}
+
+/* ================= GLB export (round 8) ================= */
+/* The whole build as one .glb file (Blender / Unity / Godot). The
+   instanced meshes are copied into a fresh group — ground, labels,
+   ghosts and tape measures stay out — and the group is scaled so the
+   model is in real metres: 1 block = 6 in = 0.1524 m. Returns a
+   Promise of the file bytes (null when there is nothing to export),
+   so the test suite can check the GLB header without downloading. */
+const FT_IN_M=0.1524;
+function exportGLB(){
+  if(!blocks.size){ toast('Nothing to export yet — place some blocks first'); return Promise.resolve(null); }
+  const group=new THREE.Group();
+  for(const slot of instMeshes){
+    const m=slot.mesh;
+    if(!m || m.count===0) continue;
+    const c=new THREE.InstancedMesh(m.geometry, m.material, m.count);
+    c.instanceMatrix.array.set(m.instanceMatrix.array.subarray(0, m.count*16));
+    c.instanceMatrix.needsUpdate=true;
+    c.count=m.count;
+    group.add(c);
+  }
+  group.scale.setScalar(FT_IN_M);
+  return new Promise((resolve)=>{
+    new GLTFExporter().parse(group,
+      (glb)=>{
+        const blob=new Blob([glb], { type:'model/gltf-binary' });
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=(projectName||'design').replace(/\s+/g,'-').toLowerCase()+'.glb';
+        a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+        toast('3D model exported — '+blocks.size.toLocaleString('en-IN')+' blocks, 1 block = 6 in');
+        resolve(glb);
+      },
+      (err)=>{ toast('3D export failed — '+err); resolve(null); },
+      { binary:true });
+  });
+}
+
+/* ================= top-down plan PNG (round 8) ================= */
+/* A clean 2D plan drawn from the block data — not a screenshot of the
+   3D view. Walls are drawn from a cut plane 4 ft above the floor (the
+   way a real plan is drawn), so door and window openings show as
+   breaks in the walls; low walls (under 4 ft) are drawn from their own
+   height instead, so a garden wall still appears. Floor slabs are
+   light, rooms get their name + area, and the plan carries overall
+   dimensions in ft/in. */
+let lastPlan=null;
+function planIsWall(x,z,B){
+  let maxY=null;
+  for(let y=B+2;y<=B+17;y++) if(getBlock(x,y,z)) maxY=y;
+  if(maxY===null) return false;
+  if(maxY<B+8) return true;                 // low wall: draw it as it stands
+  return !!getBlock(x,B+8,z);               // tall wall: cut plane at 4 ft
+}
+function planBBox(fi){
+  const B=FLOORS[fi].base;
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,n=0;
+  for(const [k] of blocks){
+    const p=parseKey(k);
+    if(p[1]<B+1||p[1]>B+17) continue;
+    if(p[1]===B+1 || planIsWall(p[0],p[2],B)){ n++;
+      if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
+  }
+  return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
+}
+function renderPlan(fi){
+  fi=(fi==null?activeFloor:fi);
+  const B=FLOORS[fi].base;
+  const b=planBBox(fi);
+  if(!b){ toast('Nothing on the '+FLOORS[fi].name+' floor yet'); return null; }
+  const x0=b.x0, x1=b.x1, z0=b.z0, z1=b.z1;
+  const W=b.w, D=b.d;
+  const cell=Math.max(6, Math.min(28, Math.floor(880/Math.max(W,D))));
+  const padL=70, padT=86, padR=26, padB=54;
+  const cw=padL+W*cell+padR, ch=padT+D*cell+padB;
+  const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+  const g=cv.getContext('2d');
+  g.fillStyle='#ffffff'; g.fillRect(0,0,cw,ch);
+  g.fillStyle='#1a1a1a'; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.font='bold 26px "Trebuchet MS", sans-serif';
+  g.fillText(projectName+' — '+FLOORS[fi].name+' floor plan', padL, 34);
+  g.font='16px "Trebuchet MS", sans-serif'; g.fillStyle='#555';
+  g.fillText('1 block = 6 in  ·  drawn from the build, top-down', padL, 58);
+  // light 1-ft grid
+  g.strokeStyle='#e8e8e8'; g.lineWidth=1;
+  for(let x=0;x<=W;x+=2){ g.beginPath(); g.moveTo(padL+x*cell, padT); g.lineTo(padL+x*cell, padT+D*cell); g.stroke(); }
+  for(let z=0;z<=D;z+=2){ g.beginPath(); g.moveTo(padL, padT+z*cell); g.lineTo(padL+W*cell, padT+z*cell); g.stroke(); }
+  // floor slabs (light), then wall columns (dark)
+  for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
+    if(getBlock(x,B+1,z)){ g.fillStyle='#e2e8d8'; g.fillRect(padL+(x-x0)*cell, padT+(z-z0)*cell, cell, cell); }
+  }
+  g.fillStyle='#2b2b2b';
+  for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
+    if(planIsWall(x,z,B)) g.fillRect(padL+(x-x0)*cell, padT+(z-z0)*cell, cell, cell);
+  }
+  // room names + areas at the room centre
+  const rooms=detectRooms().filter(r=>r.fi===fi);
+  g.textAlign='center'; g.textBaseline='middle';
+  for(const r of rooms){
+    const px=padL+(r.cx-x0)*cell, py=padT+(r.cz-z0)*cell;
+    g.font='bold '+Math.max(13, Math.min(20, cell*0.9))+'px "Trebuchet MS", sans-serif';
+    g.lineWidth=4; g.strokeStyle='#ffffff';
+    g.strokeText(r.name, px, py-9); g.fillStyle='#1a1a1a'; g.fillText(r.name, px, py-9);
+    g.font=Math.max(12, Math.min(17, cell*0.75))+'px "Trebuchet MS", sans-serif';
+    g.strokeText(roomAreaText(r.areaSqFt), px, py+9);
+    g.fillStyle='#333'; g.fillText(roomAreaText(r.areaSqFt), px, py+9);
+  }
+  // overall dimensions: width on top, depth on the left
+  g.strokeStyle='#1a1a1a'; g.fillStyle='#1a1a1a'; g.lineWidth=2;
+  g.beginPath(); g.moveTo(padL, padT-28); g.lineTo(padL+W*cell, padT-28); g.stroke();
+  for(const ex of [padL, padL+W*cell]){ g.beginPath(); g.moveTo(ex, padT-34); g.lineTo(ex, padT-22); g.stroke(); }
+  g.font='bold 16px "Trebuchet MS", sans-serif'; g.textAlign='center'; g.textBaseline='bottom';
+  g.fillText(ftin(W*FT), padL+W*cell/2, padT-32);
+  g.beginPath(); g.moveTo(padL-28, padT); g.lineTo(padL-28, padT+D*cell); g.stroke();
+  for(const ez of [padT, padT+D*cell]){ g.beginPath(); g.moveTo(padL-34, ez); g.lineTo(padL-22, ez); g.stroke(); }
+  g.save(); g.translate(padL-38, padT+D*cell/2); g.rotate(-Math.PI/2);
+  g.textAlign='center'; g.textBaseline='bottom'; g.fillText(ftin(D*FT), 0, 0); g.restore();
+  g.font='13px "Trebuchet MS", sans-serif'; g.fillStyle='#777'; g.textAlign='left'; g.textBaseline='alphabetic';
+  g.fillText('Minecraft Home Designer — visualisation only, not a structural drawing.', padL, ch-16);
+  lastPlan={ canvas:cv, cell, x0, z0, padL, padT, fi, rooms:rooms.map(r=>({name:r.name, area:r.areaSqFt})),
+    w:cw, h:ch, dataUrl:cv.toDataURL('image/png') };
+  return lastPlan;
+}
+function downloadPlan(fi){
+  const p=renderPlan(fi);
+  if(!p) return false;
+  p.canvas.toBlob((blob)=>{
+    if(!blob){ toast('Plan could not be saved'); return; }
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(projectName||'design').replace(/\s+/g,'-').toLowerCase()+'-'+FLOORS[p.fi].name.toLowerCase()+'-plan.png';
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+    toast('Plan saved — '+FLOORS[p.fi].name+' floor, '+p.w+' × '+p.h+' px');
+  }, 'image/png');
+  return true;
+}
+function planPixel(px,py){
+  if(!lastPlan) return null;
+  const d=lastPlan.canvas.getContext('2d').getImageData(Math.round(px), Math.round(py), 1, 1).data;
+  return [d[0],d[1],d[2],d[3]];
 }
 
 /* ================= share link: the whole build in the URL hash ================= */
@@ -2885,13 +3277,10 @@ function bindPointer(){
     // a click on a room label renames the room instead of placing a block
     if(e.button===0){
       const rk=roomLabelHit(e);
-      if(rk){
-        const cur=roomLabelSprites.get(rk);
-        const nm=prompt('Name this room:', cur? cur.info.name : 'Room');
-        if(nm!==null) renameRoom(rk, nm);
-        return;
-      }
+      if(rk){ openRenameBox(rk); return; }
     }
+    // a click anywhere else closes the open rename box instead of placing a block
+    if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
     if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
       showCtxMenu(e.clientX, e.clientY);
       return;
@@ -3219,6 +3608,8 @@ function bindKeys(){
     if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName||'')) return;
     const k=e.code;
     if(k==='Escape'){
+      if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
+      if($('#warnPanel').classList.contains('on')){ toggleWarnPanel(false); return; }
       if($('#moreMenu').classList.contains('on')){ toggleMoreMenu(false); return; }
       if($('#sunMenu').classList.contains('on')){ toggleSunMenu(false); return; }
       if(WALK.active){ if(WALK.fp) setWalkFP(false); else walkStop(); }
@@ -3404,7 +3795,17 @@ function init(){
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
     groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
   $('#btnSnap').onclick=snapshot;
+  $('#btnPlan').onclick=()=>{ downloadPlan(); };
+  $('#btnGLB').onclick=()=>{ exportGLB(); };
   $('#btnExport').onclick=exportJSON;
+  $('#roWarn').onclick=()=>toggleWarnPanel();
+  $('#warnClose').onclick=()=>toggleWarnPanel(false);
+  $('#renameSave').onclick=commitRenameBox;
+  $('#renameCancel').onclick=closeRenameBox;
+  $('#renameInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commitRenameBox(); }
+    else if(e.key==='Escape'){ e.preventDefault(); closeRenameBox(); }
+  });
   $('#btnImport').onclick=()=>$('#importFile').click();
   $('#importFile').addEventListener('change', e=>{ if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
   $('#btnNew').onclick=()=>{ if(confirm('Clear everything and start a new empty plot?')){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } };
@@ -3499,6 +3900,28 @@ window.__mc = {
     names(){ const o={}; roomNames.forEach((v,k)=>o[k]=v); return o; },
     visibleCount(){ if(!roomLabelGroup || !roomLabelGroup.visible) return 0;
       return [...roomLabelGroup.children].filter(c=>c.isSprite && c.visible).length; },
+    renameBoxOpen(){ return $('#renameBox').classList.contains('on'); },
+    renameBoxKey(){ return renameTarget; },
+    openRename(key){ return openRenameBox(key); },
+  },
+  clearance:{
+    list(){ return clearanceWarnings.map(w=>({ ...w })); },
+    count(){ return clearanceWarnings.length; },
+    open(){ toggleWarnPanel(true); return true; },
+    close(){ toggleWarnPanel(false); return true; },
+    isOpen(){ return $('#warnPanel').classList.contains('on'); },
+    panelTexts(){ return [...document.querySelectorAll('#warnList .warn-tx')].map(e=>e.textContent); },
+    warnLine(){ return $('#roWarn').textContent; },
+    warnVisible(){ return $('#roWarn').style.display!=='none'; },
+  },
+  glb:{
+    export(){ return exportGLB(); },
+  },
+  plan:{
+    render(fi){ const p=renderPlan(fi);
+      return p? { w:p.w, h:p.h, cell:p.cell, x0:p.x0, z0:p.z0, padL:p.padL, padT:p.padT, rooms:p.rooms, dataUrl:p.dataUrl } : null; },
+    pixel(x,y){ return planPixel(x,y); },
+    download(fi){ return downloadPlan(fi); },
   },
   touch:{
     on(){ return touchMode; },
