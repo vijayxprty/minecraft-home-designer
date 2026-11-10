@@ -23,6 +23,7 @@
   #floorbar button.on,.camrow button.on{background:#ffd83d;color:#4a3200}
   .actions{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
   .actions button{background:#e8e8e8}
+  .actions button.on{background:#ffd83d;color:#4a3200}
   .actions button.warn{background:#ff9d5c}
   .actions .sep{width:2px;background:rgba(255,255,255,.35);margin:3px 2px}
   #btnClearMeasures{display:none}
@@ -75,15 +76,21 @@
   #presetPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
-  /* ---------- templates / blueprints panels (same bottom-centre spot) ---------- */
-  #templatePanel,#blueprintPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
+  /* ---------- templates / blueprints / mirror / replace / shortcuts panels (same bottom-centre spot) ---------- */
+  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
-  #templatePanel.on,#blueprintPanel.on{display:flex}
-  #templatePanel .pp-title,#blueprintPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #templatePanel button,#blueprintPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #templatePanel.on,#blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on{display:flex}
+  #templatePanel .pp-title,#blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #templatePanel button,#blueprintPanel button,#mirrorPanel button,#replacePanel button,#cheatPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
-  #templatePanel .pp-row,#blueprintPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
-  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  #mirrorPanel button.on,#replacePanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #templatePanel .pp-row,#blueprintPanel .pp-row,#mirrorPanel .pp-row,#replacePanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note,#mirrorPanel .pp-row .pp-note,#replacePanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  #mirrorPanel input,#replacePanel select{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;color:#222;background:#fff}
+  #mirrorPanel input{width:56px}
+  #cheatPanel{max-height:62vh;overflow:auto}
+  .cheat-grid{flex-basis:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;color:#fff;font-size:12px;font-weight:700}
+  .cheat-grid b{color:#ffd83d;white-space:nowrap}
   .tpl-item{flex-basis:100%;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
   .tpl-item .tpl-name{font-weight:800;color:#ffd83d;white-space:nowrap}
   .tpl-item .tpl-desc{flex:1;font-weight:700}
@@ -157,6 +164,13 @@
     <button id="btnBlueprints" title="Save a selection as a reusable blueprint">💾 Blueprints</button>
     <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
     <span class="sep"></span>
+    <button id="btnMirror" title="Mirror the build or a selection, live symmetry">🪞 Mirror</button>
+    <button id="btnReplace" title="Replace one material with another">🔄 Replace</button>
+    <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
+    <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
+    <button id="btnLabels" class="on" title="Show / hide the white wall dimension labels (H)">🏷️ Labels ✓</button>
+    <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
+    <span class="sep"></span>
     <button id="btnClear" class="warn" title="Delete every placed block">🧹 Clear all</button>
     <button id="btnNew" class="warn" title="Clear everything">✚ New</button>
   </div>
@@ -177,6 +191,8 @@
       <button data-tool="fill" title="Drag two corners to fill a box — Solid, Hollow, Walls, Outline or Keep (F)">📦 Fill</button>
       <button data-tool="line" title="Click two points for a straight run of blocks (L)">📏 Line</button>
       <button data-tool="tape" title="Click two points to measure between them — the label stays pinned (T)">📐 Tape</button>
+      <button data-tool="dropper" title="Click a block to pick its type (I) — Alt+click in Build does the same">💧 Dropper</button>
+      <button data-tool="flood" title="Click a block to repaint its whole connected run of the same material (U)">🪣 Flood</button>
     </span>
     <span class="lbl" id="activeFloorLbl" style="margin-left:10px"></span>
   </div>
@@ -188,6 +204,7 @@
   <div>🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
   <div style="white-space:nowrap">📐 Built so far: <b id="roFoot">nothing yet</b> · <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
+  <div id="roSym" class="dim" style="display:none"></div>
   <div id="roWall" class="dim" style="display:none"></div>
   <div id="roTool" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
@@ -199,10 +216,11 @@
   <b>Right-click</b> = tool menu<br>
   <b>Drag</b> = look around · <b>Scroll</b> = zoom<br>
   <b>WASD</b> fly · <b>Q / E</b> down / up<br>
-  <b>1–9</b> pick block · <b>B E P S X M F L T</b> tools<br>
-  <b>F</b> fill a box · <b>L</b> line · <b>T</b> tape measure<br>
+  <b>1–9</b> pick block · <b>B E P I S X M F L T U</b> tools<br>
+  <b>I</b> dropper · <b>U</b> flood · <b>Alt+click</b> pick a type<br>
   <b>Ctrl+C / V</b> copy / paste · <b>R</b> rotate<br>
-  <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo
+  <b>Del</b> delete · <b>Ctrl+Z / Y</b> undo / redo<br>
+  <b>?</b> all shortcuts · <b>H</b> labels on / off
 </div>
 
 <div id="presetPanel">
@@ -253,6 +271,67 @@
   <div class="pp-note">Solid and Hollow replace blocks in the box — one Ctrl+Z undoes a whole fill.</div>
 </div>
 
+<div id="mirrorPanel">
+  <div class="pp-title">Mirror — flip the whole build or a selection across a plane · live Symmetry mirrors every Build / Line placement</div>
+  <div class="pp-row"><span>Mirror plane:</span>
+    <button data-maxis="x" class="on">Across X (left ↔ right)</button>
+    <button data-maxis="z">Across Z (front ↔ back)</button>
+    <span>at</span>
+    <input id="mirrorCenter" type="number" min="-30" max="100" value="0" title="Mirror plane position, in blocks"> <span class="pp-note">blocks</span>
+  </div>
+  <div class="pp-row">
+    <button id="btnMirrorWhole">🪞 Mirror whole build</button>
+    <button id="btnMirrorSel">🪞 Mirror selection</button>
+    <span id="mirrorHint" class="pp-note"></span>
+  </div>
+  <div class="pp-row"><span>Live symmetry:</span>
+    <button data-sym="off" class="on">Off</button>
+    <button data-sym="x">X</button>
+    <button data-sym="z">Z</button>
+    <span id="symHint" class="pp-note">Build on one side, the other side builds itself</span>
+  </div>
+  <button id="mirrorClose">✕ Close</button>
+</div>
+
+<div id="replacePanel">
+  <div class="pp-title">Replace material — swap every block of one type for another, in the whole build or just the selection · one Ctrl+Z undoes it</div>
+  <div class="pp-row"><span>From:</span><select id="repFrom"></select>
+    <span>To:</span><select id="repTo"></select>
+    <span>Scope:</span>
+    <button data-scope="all" class="on">Whole build</button>
+    <button data-scope="selection">Selection</button>
+  </div>
+  <div class="pp-row"><span id="repCount" class="pp-note"></span>
+    <button id="btnDoReplace">🔄 Replace</button>
+  </div>
+  <button id="replaceClose">✕ Close</button>
+</div>
+
+<div id="cheatPanel">
+  <div class="pp-title">Keyboard shortcuts — press ? any time to see this</div>
+  <div class="cheat-grid">
+    <b>1 – 9</b><span>Pick a block type</span>
+    <b>B · E · P · I</b><span>Build · Erase · Pick · Dropper (pick a type)</span>
+    <b>S · X · M</b><span>Select · Expand · Move</span>
+    <b>F · L · T · U</b><span>Fill a box · Line · Tape measure · Flood fill</span>
+    <b>Alt + click</b><span>Pick the clicked block's type (in Build)</span>
+    <b>R</b><span>Rotate the selection 90° (or the preset ghost)</span>
+    <b>Ctrl + C / V</b><span>Copy / paste the selection</span>
+    <b>Del</b><span>Delete the selection</span>
+    <b>Ctrl + Z / Y</b><span>Undo / redo (one drag or fill = one step)</span>
+    <b>V</b><span>Walk mode on / off</span>
+    <b>W A S D · Q / E</b><span>Fly · down / up (Shift = faster)</span>
+    <b>Drag · Scroll</b><span>Look around · zoom</span>
+    <b>Right-click</b><span>Tool menu</span>
+    <b>Shift + click</b><span>Add a block to the selection · erase a whole wall</span>
+    <b>10'6" + Enter</b><span>Exact length while filling a box or drawing a line</span>
+    <b>Esc</b><span>Cancel what you're doing / close a panel / exit Walk</span>
+    <b>H</b><span>Show / hide the white wall dimension labels</span>
+    <b>?</b><span>This list</span>
+  </div>
+  <button id="cheatClose">✕ Close</button>
+</div>
+
 <div id="sizeBar">
   <span>Length:</span>
   <input id="sizeInput" placeholder="10'6&quot;" spellcheck="false" autocomplete="off">
@@ -271,6 +350,8 @@
   <button data-tool="fill">📦 Fill</button>
   <button data-tool="line">📏 Line</button>
   <button data-tool="tape">📐 Tape</button>
+  <button data-tool="dropper">💧 Dropper</button>
+  <button data-tool="flood">🪣 Flood</button>
 </div>
 <div id="selBox"></div>
 
@@ -442,6 +523,14 @@ let tapeStart = null;              // [x,y,z] first tape point
 let measures = [];                 // [{a:[x,y,z], b:[x,y,z], ft}]
 let measureGroup = null, fillGhost = null, fillGhostMat = null, startMarker = null;
 
+/* ---- mirror / symmetry / view modes (round 6) ---- */
+let mirrorAxis='x';                  // mirror plane axis: 'x' or 'z'
+let mirrorCenter=0;                  // mirror plane position, in blocks
+let symmetry={ on:false, axis:'x' }; // live symmetry while building
+let viewMode='normal';               // 'normal' | 'isolate' | 'dollhouse'
+const DOLL_CUT=10;                   // dollhouse: blocks up to 10 above a floor's base stay visible (walls cut at eye level)
+let mirrorLine=null;                 // magenta bar on the ground marking the mirror plane
+
 /* ================= three.js scene ================= */
 let renderer, scene, camera, controls;
 const instMeshes = [];             // per type: {mesh, keys[]}
@@ -514,6 +603,12 @@ function initScene(){
 
   // always-on wall dimension labels (dimension line + ft/in tag above each wall)
   wallLabelGroup = new THREE.Group(); scene.add(wallLabelGroup);
+
+  // mirror plane marker: a thin magenta bar on the ground, shown while
+  // live symmetry is on or the Mirror panel is open
+  mirrorLine = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 130),
+    new THREE.MeshBasicMaterial({ color:0xff2fd6, transparent:true, opacity:0.65, depthWrite:false }));
+  mirrorLine.visible=false; scene.add(mirrorLine);
 
   // fill box ghost (translucent box + dark edges), tape/line start marker, tape measures
   fillGhost = new THREE.Group();
@@ -589,7 +684,8 @@ function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
 
 function rebuild(){
   const byType = TYPES.map(()=>[]);
-  for(const [k,v] of blocks){ if(moveHidden.has(k)) continue; byType[v.t].push([k, v]); }
+  for(const [k,v] of blocks){ if(moveHidden.has(k)) continue;
+    const p=parseKey(k); if(!blockRendered(p[0],p[1],p[2])) continue; byType[v.t].push([k, v]); }
   byType.forEach((list, ti)=>{
     const slot = instMeshes[ti];
     if(list.length > slot.mesh.instanceMatrix.array.length/16){
@@ -656,6 +752,7 @@ function setFloor(i, focus=false){
     camera.position.y = f.base + 55;
     controls.update();
   }
+  if(viewMode!=='normal') rebuild();   // isolate shows only this floor now
   updateStats();
   resize();   // the floor label text can re-wrap the toolbar
 }
@@ -697,6 +794,7 @@ function updateStats(){
   const a=b? b.w*b.d*FT*FT : 0;
   $('#roArea').textContent = (Math.round(a*10)/10)+' sq ft';
   updateFloorBand();
+  updateSymmetryReadout();
 }
 
 /* ================= always-on wall dimension labels ================= */
@@ -745,10 +843,11 @@ function findWalls(){
       if(!info || info.axis!==axis) continue;
       if(seen.has(info.key)) continue;
       seen.add(info.key);
-      // only real walls get a label: at least 2 blocks long AND 2 high.
-      // single-layer rows (stair steps, floor slabs) would spam a label
-      // each — their size still shows in the readout panel on hover.
-      if(info.len>=2 && info.height>=2) walls.push(info);
+      // only real walls get a label: at least 2 blocks long AND 4 blocks
+      // (2 ft) high. A 1-ft stub (sill, step, plinth) never gets a tag —
+      // those tiny tags were overlapping the real ones and blocking the view.
+      // The size of a short wall still shows in the readout panel on hover.
+      if(info.len>=2 && info.height>=4) walls.push(info);
     }
   }
   return walls;
@@ -762,7 +861,7 @@ function updateWallLabels(){
       if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); } });
   }
   wallLabelSprites.clear();
-  const walls=findWalls().sort((a,b)=>b.len-a.len).slice(0,100);
+  const walls=findWalls().filter(wallVisible).sort((a,b)=>b.len-a.len).slice(0,100);
   for(const w of walls){
     const yTop=w.y+w.height+0.35;
     const cxp=w.axis==='x'? (w.a0+w.a1+1)/2 : w.fixed+0.5;
@@ -781,9 +880,306 @@ function updateWallLabels(){
     }
     const sp=makeLabelSprite(wallLabelText(w));
     sp.position.set(cxp, yTop+1.75, czp);
+    sp.userData.area=w.len*w.height;   // bigger wall wins when tags overlap
     wallLabelGroup.add(sp);
     wallLabelSprites.set(w.key, { sprite:sp, info:w });
   }
+}
+
+/* per-frame screen-space dedup: two white tags must never cover each
+   other. Every frame each tag's real on-screen size is measured (tags
+   shrink as you zoom out), the biggest wall wins, and any tag whose box
+   would overlap a kept tag is hidden until the camera moves them apart. */
+function updateLabelVisibility(){
+  if(!wallLabelGroup || !wallLabelGroup.visible) return;
+  const sprites=[...wallLabelGroup.children].filter(c=>c.isSprite);
+  if(!sprites.length) return;
+  const halfH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const items=[];
+  for(const sp of sprites){
+    const dist=camera.position.distanceTo(sp.position);
+    if(dist<0.01){ sp.visible=false; continue; }
+    const pxPerUnit=(innerHeight/2)/halfH/dist;
+    const v=new THREE.Vector3().copy(sp.position).project(camera);
+    if(v.z>1){ sp.visible=false; continue; }   // behind the camera
+    items.push({ sp, x:(v.x+1)/2*innerWidth, y:(1-v.y)/2*innerHeight,
+      hw:11*pxPerUnit/2, hh:2.75*pxPerUnit/2, area:sp.userData.area||0 });
+  }
+  items.sort((a,b)=>b.area-a.area);
+  const kept=[];
+  for(const it of items){
+    const clash=kept.some(k=> Math.abs(k.x-it.x)<(k.hw+it.hw)+8 && Math.abs(k.y-it.y)<(k.hh+it.hh)+8);
+    it.sp.visible=!clash;
+    if(!clash) kept.push(it);
+  }
+}
+
+/* ================= labels toggle (round 6 fix) ================= */
+let labelsOn=true;                   // white wall dimension labels visible
+const LABELS_KEY='home-designer-minecraft-labels-v1';
+function setLabels(on){
+  labelsOn=!!on;
+  try{ localStorage.setItem(LABELS_KEY, labelsOn?'on':'off'); }catch(e){}
+  if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
+  const b=$('#btnLabels');
+  if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
+  if(!labelsOn) toast('Wall labels hidden — click Labels to show them again');
+  return labelsOn;
+}
+function loadLabelsPref(){
+  try{ if(localStorage.getItem(LABELS_KEY)==='off') labelsOn=false; }catch(e){}
+  if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
+  const b=$('#btnLabels');
+  if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
+}
+
+/* ================= mirror / symmetry / view modes (round 6) ================= */
+/* Isolate shows only the active floor; Dollhouse shows all floors with
+   every wall cut at eye level (10 blocks above its floor's base); in both
+   modes the hidden blocks are also unclickable, so you edit what you see.
+   The blocks map itself never changes — switching back to normal restores
+   everything, and save/export/share are unaffected. */
+function blockRendered(x,y,z){
+  if(viewMode==='normal') return true;
+  const fi=floorOfY(y);
+  if(viewMode==='isolate') return fi===activeFloor;
+  return y<=FLOORS[fi].base+DOLL_CUT;   // dollhouse
+}
+function wallVisible(w){
+  if(viewMode==='normal') return true;
+  const fi=floorOfY(w.y);
+  if(viewMode==='isolate') return fi===activeFloor;
+  return w.y<=FLOORS[fi].base+DOLL_CUT;
+}
+function setView(m){
+  if(m!=='normal'&&m!=='isolate'&&m!=='dollhouse') return viewMode;
+  viewMode=m;
+  $('#btnIsolate').classList.toggle('on', m==='isolate');
+  $('#btnDollhouse').classList.toggle('on', m==='dollhouse');
+  rebuild(); updateStats();
+  if(m==='isolate') toast('Isolate — only the '+FLOORS[activeFloor].name+' floor is shown · click Isolate again to show all');
+  else if(m==='dollhouse') toast('Dollhouse — all floors stacked, walls cut at eye level · click Dollhouse again to show all');
+  return viewMode;
+}
+/* mirror plane marker follows the live-symmetry axis, or the Mirror
+   panel's axis when the panel is open */
+function updateMirrorLine(){
+  if(!mirrorLine) return;
+  const panelOpen=$('#mirrorPanel') && $('#mirrorPanel').classList.contains('on');
+  const show=symmetry.on || panelOpen;
+  mirrorLine.visible=show;
+  if(!show) return;
+  const axis=symmetry.on? symmetry.axis : mirrorAxis;
+  if(axis==='x'){ mirrorLine.rotation.y=0; mirrorLine.position.set(mirrorCenter+0.5, 1.06, 35); }
+  else { mirrorLine.rotation.y=Math.PI/2; mirrorLine.position.set(11, 1.06, mirrorCenter+0.5); }
+}
+function updateSymmetryReadout(){
+  const el=$('#roSym'); if(!el) return;
+  if(symmetry.on){ el.style.display='block';
+    el.textContent='🔁 Symmetry: '+symmetry.axis.toUpperCase()+' at '+mirrorCenter+' — every Build / Line placement is mirrored'; }
+  else el.style.display='none';
+}
+function setSymmetry(on, axis){
+  symmetry.on=!!on;
+  if(axis==='x'||axis==='z') symmetry.axis=axis;
+  updateMirrorPanel(); updateMirrorLine(); updateSymmetryReadout();
+  if(symmetry.on) toast('Live symmetry on — every Build / Line placement is mirrored across '+symmetry.axis.toUpperCase()+' at '+mirrorCenter);
+  return { on:symmetry.on, axis:symmetry.axis };
+}
+/* mirror one cell across the plane: x' = 2*center - x (axis x) or
+   z' = 2*center - z (axis z) */
+function mirrorCell(c, axis, center){
+  if(axis==='x') return [2*center-c[0], c[1], c[2]];
+  return [c[0], c[1], 2*center-c[2]];
+}
+/* a stair mirrored across a plane flips its ascent direction's component
+   along that axis: X mirror swaps r1 <-> r3, Z mirror swaps r0 <-> r2 */
+function mirrorRot(r, axis){
+  if(!r) return 0;
+  return axis==='x' ? [0,3,2,1][r] : [2,1,0,3][r];
+}
+/* mirrored copies of src cells that are free to place. Never overwrites:
+   a target that is already built (or another source cell, or outside the
+   build area) is counted as blocked, not placed. */
+function mirrorOfCells(src, axis, center){
+  const cells=[]; let blocked=0;
+  const srcKeys=new Set(src.map(c=>key3(c.x,c.y,c.z)));
+  for(const c of src){
+    const m=mirrorCell([c.x,c.y,c.z], axis, center);
+    if(m[0]===c.x&&m[1]===c.y&&m[2]===c.z) continue;   // on the plane: no second block
+    if(!inBounds(m[0],m[1],m[2])){ blocked++; continue; }
+    if(getBlock(m[0],m[1],m[2])){ blocked++; continue; }
+    if(srcKeys.has(key3(m[0],m[1],m[2]))) continue;    // mirror lands on another source cell
+    if(cells.some(o=>o.x===m[0]&&o.y===m[1]&&o.z===m[2])) continue;
+    cells.push({ x:m[0], y:m[1], z:m[2], t:c.t, r:mirrorRot(c.r||0, axis) });
+  }
+  return { cells, blocked };
+}
+function mirrorWhole(axis, center){
+  if(!blocks.size){ toast('Nothing to mirror yet'); return { added:0, skipped:0 }; }
+  const src=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; });
+  const { cells, blocked }=mirrorOfCells(src, axis, center);
+  const n=applyBatch(cells);
+  toast('Mirrored the whole build — +'+n+' block'+(n===1?'':'s')+(blocked?' · '+blocked+' spot'+(blocked>1?'s':'')+' taken':''));
+  return { added:n, skipped:blocked };
+}
+function mirrorSelection(axis, center){
+  const keys=[...selection].filter(k=>blocks.has(k));
+  if(!keys.length){ toast('Select some blocks first, then mirror them'); return { added:0, skipped:0 }; }
+  const src=keys.map(k=>{ const p=parseKey(k); const b=blocks.get(k); return { x:p[0], y:p[1], z:p[2], t:b.t, r:b.r||0 }; });
+  const { cells, blocked }=mirrorOfCells(src, axis, center);
+  const n=applyBatch(cells);
+  toast('Mirrored the selection — +'+n+' block'+(n===1?'':'s')+(blocked?' · '+blocked+' spot'+(blocked>1?'s':'')+' taken':''));
+  return { added:n, skipped:blocked };
+}
+function updateMirrorPanel(){
+  $$('#mirrorPanel button[data-maxis]').forEach(b=>b.classList.toggle('on', b.dataset.maxis===mirrorAxis));
+  const ci=$('#mirrorCenter'); if(ci && document.activeElement!==ci) ci.value=mirrorCenter;
+  $$('#mirrorPanel button[data-sym]').forEach(b=>b.classList.toggle('on',
+    symmetry.on? b.dataset.sym===symmetry.axis : b.dataset.sym==='off'));
+  const h=$('#mirrorHint');
+  if(h) h.textContent = selection.size? selection.size+' block'+(selection.size>1?'s':'')+' selected — Mirror selection flips them' : 'Mirror selection needs a selection first';
+  const sh=$('#symHint');
+  if(sh) sh.textContent = symmetry.on? 'On — mirroring across '+symmetry.axis.toUpperCase()+' at '+mirrorCenter : 'Build on one side, the other side builds itself';
+}
+function toggleMirrorPanel(show){
+  const p=$('#mirrorPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnMirror').classList.toggle('on',on);
+  if(on){ updateMirrorPanel();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnBlueprints').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    if(presetMode) setPresetMode(null);
+  }
+  updateMirrorLine();
+}
+/* one Build click, live symmetry included: the block and its mirror land
+   as a single undo step; a taken mirror spot places one side only */
+function placeBuildBlock(cx,cy,cz,t=selType,r=0){
+  if(getBlock(cx,cy,cz)) return 0;
+  if(!inBounds(cx,cy,cz)){ toast('Outside the build area'); return 0; }
+  const cells=[{ x:cx, y:cy, z:cz, t, r }];
+  if(symmetry.on){
+    const m=mirrorOfCells(cells, symmetry.axis, mirrorCenter);
+    cells.push(...m.cells);
+    if(m.blocked) toast('Mirrored spot is taken — placed one side only');
+  }
+  return applyBatch(cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z)));
+}
+
+/* ================= eyedropper + replace material (round 6) ================= */
+function pickBlockAt(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return false;
+  selectType(b.t); toast('Picked '+TYPES[b.t].name); return true;
+}
+function replaceCount(from,to,scope){
+  if(from===to) return 0;
+  const keys = scope==='selection' ? [...selection].filter(k=>blocks.has(k)) : [...blocks.keys()];
+  let n=0;
+  for(const k of keys) if(blocks.get(k).t===from) n++;
+  return n;
+}
+function replaceMaterial(from,to,scope){
+  if(from===to){ toast('Pick two different materials'); return 0; }
+  const keys = scope==='selection' ? [...selection].filter(k=>blocks.has(k)) : [...blocks.keys()];
+  const cells=[];
+  for(const k of keys){ const b=blocks.get(k); if(b.t!==from) continue;
+    const [x,y,z]=parseKey(k); cells.push({ x,y,z, t:to, r:b.r||0 }); }
+  const n=applyBatch(cells);
+  if(n) toast('Replaced '+n+' '+TYPES[from].name+' → '+TYPES[to].name);
+  return n;
+}
+let replaceScope='all';
+function buildReplaceSelects(){
+  const from=$('#repFrom'), to=$('#repTo');
+  TYPES.forEach((ty,ti)=>{
+    const o1=document.createElement('option'); o1.value=ti; o1.textContent=ty.name; from.appendChild(o1);
+    const o2=document.createElement('option'); o2.value=ti; o2.textContent=ty.name; to.appendChild(o2);
+  });
+  from.value=4; to.value=2;   // Brick -> Wood Planks, the most common swap
+}
+function updateReplaceCount(){
+  const from=+$('#repFrom').value, to=+$('#repTo').value;
+  const el=$('#repCount');
+  if(from===to){ el.textContent='Pick two different materials.'; return; }
+  if(replaceScope==='selection' && !selection.size){ el.textContent='Select blocks first — nothing in the selection to replace.'; return; }
+  const n=replaceCount(from,to,replaceScope);
+  el.textContent=n+' block'+(n===1?'':'s')+' of '+TYPES[from].name+' will become '+TYPES[to].name+(replaceScope==='selection'?' (in the selection)':' (whole build)');
+}
+function toggleReplacePanel(show){
+  const p=$('#replacePanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnReplace').classList.toggle('on',on);
+  if(on){ updateReplaceCount();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    if(presetMode) setPresetMode(null);
+  }
+  updateMirrorLine();
+}
+
+/* ================= flood fill (round 6) ================= */
+/* the whole connected run of one material (6-neighbour, 3D), repainted
+   with the currently picked material — one undo step, capped at 8,192 */
+const FLOOD_MAX=8192;
+function floodRegion(x,y,z){
+  const b=getBlock(x,y,z); if(!b) return null;
+  const type=b.t;
+  const seen=new Set([key3(x,y,z)]);
+  const q=[[x,y,z]];
+  while(q.length){
+    const [cx,cy,cz]=q.pop();
+    for(const [dx,dy,dz] of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){
+      const nx=cx+dx, ny=cy+dy, nz=cz+dz;
+      const k=key3(nx,ny,nz);
+      if(seen.has(k)) continue;
+      const nb=getBlock(nx,ny,nz);
+      if(nb && nb.t===type){ seen.add(k); q.push([nx,ny,nz]); }
+    }
+  }
+  return { type, keys:[...seen] };
+}
+function floodFillAt(x,y,z){
+  const reg=floodRegion(x,y,z);
+  if(!reg){ toast('Click a block to flood-fill it'); return 0; }
+  if(reg.type===selType){ toast('Already '+TYPES[selType].name); return 0; }
+  if(reg.keys.length>FLOOD_MAX){ toast('That region is too big — '+reg.keys.length.toLocaleString('en-IN')+' blocks (max '+FLOOD_MAX.toLocaleString('en-IN')+')'); return 0; }
+  const cells=reg.keys.map(k=>{ const [px,py,pz]=parseKey(k); const b=blocks.get(k); return { x:px, y:py, z:pz, t:selType, r:b.r||0 }; });
+  const n=applyBatch(cells);
+  if(n) toast('Flood-filled '+n+' blocks → '+TYPES[selType].name);
+  return n;
+}
+/* hover readout for the Flood tool: recompute only when the hovered block changes */
+let floodHoverKey=null, floodHoverReg=null;
+function floodHoverInfo(x,y,z){
+  const k=key3(x,y,z);
+  if(k!==floodHoverKey){ floodHoverKey=k; floodHoverReg=floodRegion(x,y,z); }
+  return floodHoverReg;
+}
+
+/* ================= keyboard shortcut cheat sheet (round 6) ================= */
+function toggleCheatPanel(show){
+  const p=$('#cheatPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnCheat').classList.toggle('on',on);
+  if(on){
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on');
+    if(presetMode) setPresetMode(null);
+  }
+  updateMirrorLine();
 }
 
 /* ================= save / load / export / import ================= */
@@ -1111,6 +1507,32 @@ function updateHover(e){
     $('#roHover').innerHTML= tapeStart ? 'Tape — click the second point' : 'Tape — click two points to measure between them';
     return;
   }
+  // Dropper / Flood work on the block itself, not the empty cell beside it
+  if(tool==='dropper' || tool==='flood'){
+    const tag=$('#hoverTag');
+    tag.style.display='block';
+    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
+    if(!hit.block){
+      ghost.visible=false;
+      tag.innerHTML='<b>'+(tool==='dropper'?'Dropper':'Flood')+'</b> · click a block';
+      $('#roHover').innerHTML=(tool==='dropper'?'Dropper':'Flood')+' — click a block';
+      return;
+    }
+    const [bx,by,bz]=hit.block;
+    ghost.visible=true;
+    ghost.position.set(bx+0.5, by+0.5, bz+0.5);
+    ghost.material.color.set(0xffd83d);
+    const b=getBlock(bx,by,bz);
+    if(tool==='dropper'){
+      tag.innerHTML='<b>Dropper</b> · click to pick '+(b?TYPES[b.t].name:'');
+      $('#roHover').innerHTML='Dropper — click a block to make it the active material · Alt+click in Build does the same';
+    } else {
+      const reg=b?floodHoverInfo(bx,by,bz):null;
+      tag.innerHTML='<b>Flood</b> · '+(reg? reg.keys.length+' '+TYPES[reg.type].name+' blocks → '+TYPES[selType].name : '');
+      $('#roHover').innerHTML= reg? 'Flood — click to repaint '+reg.keys.length+' connected '+TYPES[reg.type].name+' blocks as '+TYPES[selType].name : 'Flood — click a block';
+    }
+    return;
+  }
   const occupied=getBlock(cx,cy,cz)!==null;
   const valid=!occupied&&inBounds(cx,cy,cz);
   hover.valid=valid;
@@ -1292,7 +1714,10 @@ function togglePresetPanel(show){
   $('#btnPresets').classList.toggle('on', on);
   $('#fillPanel').classList.toggle('on', !on && tool==='fill');
   if(on){ $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
-    $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on'); }
+    $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
+    $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    updateMirrorLine(); }
   if(!on) setPresetMode(null);
 }
 
@@ -1406,7 +1831,10 @@ function toggleTemplatePanel(show){
   $('#btnTemplates').classList.toggle('on',on);
   if(on){ renderTemplatePanel();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnBlueprints').classList.remove('on'); }
+    $('#btnPresets').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
+    $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    updateMirrorLine(); }
 }
 
 /* ================= blueprints: save a selection, place it again ================= */
@@ -1472,7 +1900,10 @@ function toggleBlueprintPanel(show){
   $('#btnBlueprints').classList.toggle('on',on);
   if(on){ renderBlueprintPanel();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on'); $('#templatePanel').classList.remove('on');
-    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on'); }
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
+    $('#btnMirror').classList.remove('on'); $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    updateMirrorLine(); }
 }
 
 /* ================= expand tool ================= */
@@ -1798,9 +2229,12 @@ function lineCells(a,b){
 function lineCommit(a,b){
   const cells=lineCells(a,b).filter(c=>inBounds(c[0],c[1],c[2]));
   const skipped=cells.filter(c=>getBlock(c[0],c[1],c[2])).length;
-  const n=applyBatch(cells.filter(c=>!getBlock(c[0],c[1],c[2]))
-    .map(c=>({ x:c[0], y:c[1], z:c[2], t:selType, r:0 })));
-  if(n) toast('Line placed — '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+(skipped?' · '+skipped+' skipped (already built)':''));
+  const todo=cells.filter(c=>!getBlock(c[0],c[1],c[2]))
+    .map(c=>({ x:c[0], y:c[1], z:c[2], t:selType, r:0 }));
+  let mirrorBlocked=0;
+  if(symmetry.on){ const m=mirrorOfCells(todo, symmetry.axis, mirrorCenter); todo.push(...m.cells); mirrorBlocked=m.blocked; }
+  const n=applyBatch(todo.filter(c=>!getBlock(c.x,c.y,c.z)));
+  if(n) toast('Line placed — '+n+' block'+(n>1?'s':'')+' · '+ftin(n*FT)+(skipped?' · '+skipped+' skipped (already built)':'')+(mirrorBlocked?' · '+mirrorBlocked+' mirrored spot'+(mirrorBlocked>1?'s':'')+' taken':''));
   return n;
 }
 function computeLineEnd(){
@@ -2128,6 +2562,15 @@ function bindPointer(){
         if(b){ selectType(b.t); toast('Picked '+TYPES[b.t].name); } }
       return;
     }
+    if(tool==='dropper'){
+      if(hit&&hit.block) pickBlockAt(hit.block[0],hit.block[1],hit.block[2]);
+      return;
+    }
+    if(tool==='flood'){
+      if(hit&&hit.block) floodFillAt(hit.block[0],hit.block[1],hit.block[2]);
+      else toast('Click a block to flood-fill it');
+      return;
+    }
     if(tool==='erase'){
       if(hit&&hit.block){
         if(e.shiftKey) eraseRun(hit.block[0],hit.block[1],hit.block[2]);
@@ -2135,6 +2578,8 @@ function bindPointer(){
       }
       return;
     }
+    // Alt+click in Build picks the block's type instead of placing one
+    if(e.altKey && hit && hit.block){ pickBlockAt(hit.block[0],hit.block[1],hit.block[2]); return; }
     // build
     if(!hit) return;
     const [cx,cy,cz]=hit.cell;
@@ -2149,7 +2594,7 @@ function bindPointer(){
       const ax=Math.abs(dir.x)>Math.abs(dir.z)?'x':'z';
       if(ax==='x') r = dir.x>0 ? 3 : 1; else r = dir.z>0 ? 0 : 2;
     }
-    setBlock(cx,cy,cz,selType,r);
+    placeBuildBlock(cx,cy,cz,selType,r);
   });
   // a fill drag released outside the canvas still has to finish, or the
   // controls stay disabled and the ghost stays on screen
@@ -2200,6 +2645,7 @@ function setTool(t){
   // the fill panel and the stair panel share the same bottom-centre spot —
   // never show both at once
   $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
+  if(t==='fill'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); }
   $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
   $('#btnTemplates').classList.remove('on'); $('#btnBlueprints').classList.remove('on');
   if(t!=='fill' && t!=='line') hideSizeBar();
@@ -2242,6 +2688,7 @@ function buildWalker(){
 function walkStart(){
   if(WALK.active) return;
   cancelMove();
+  if(viewMode!=='normal') setView('normal');   // walking needs the whole build visible
   WALK.active=true;
   if(wallLabelGroup) wallLabelGroup.visible=false;
   savedCam={ pos:camera.position.clone(), tgt:controls.target.clone() };
@@ -2260,7 +2707,7 @@ function walkStop(){
   if(!WALK.active) return;
   WALK.active=false;
   walker.visible=false;
-  if(wallLabelGroup) wallLabelGroup.visible=true;
+  if(wallLabelGroup) wallLabelGroup.visible=labelsOn;   // restore the labels preference, don't force them on
   controls.enabled=true;
   if(savedCam){ camera.position.copy(savedCam.pos); controls.target.copy(savedCam.tgt); controls.update(); }
   $('#walkHint').style.display='none';
@@ -2385,6 +2832,9 @@ function bindKeys(){
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
       else if($('#templatePanel').classList.contains('on')){ toggleTemplatePanel(false); }
       else if($('#blueprintPanel').classList.contains('on')){ toggleBlueprintPanel(false); }
+      else if($('#mirrorPanel').classList.contains('on')){ toggleMirrorPanel(false); }
+      else if($('#replacePanel').classList.contains('on')){ toggleReplacePanel(false); }
+      else if($('#cheatPanel').classList.contains('on')){ toggleCheatPanel(false); }
       else if(pasteMode){ setPasteMode(false); }
       else if(lineStart){ cancelLine(); }
       else if(tapeStart){ tapeStart=null; startMarker.visible=false; $('#roTool').style.display='none'; }
@@ -2400,10 +2850,14 @@ function bindKeys(){
       return; }
     if((k==='Delete'||k==='Backspace') && !WALK.active && selection.size){ e.preventDefault(); deleteSelection(); return; }
     if(k==='KeyV'){ WALK.active?walkStop():walkStart(); return; }
+    if(e.key==='?'){ toggleCheatPanel(); return; }
+    if(k==='KeyH'){ setLabels(!labelsOn); return; }
     if(!WALK.active){
       if(k==='KeyB') setTool('build');
       if(k==='KeyE') setTool('erase');
       if(k==='KeyP') setTool('pick');
+      if(k==='KeyI') setTool('dropper');
+      if(k==='KeyU') setTool('flood');
       // S is also fly-backward: a tap switches to Select, holding it still flies
       if(k==='KeyS' && !e.repeat){ setTool('select'); return; }
       if(k==='KeyX') setTool('expand');
@@ -2449,6 +2903,7 @@ function tick(dt){
   if(WALK.active) return;
   // keep the floor band under the active floor
   floorBand.position.y = FLOORS[activeFloor].base + 1.03;
+  updateLabelVisibility();   // two white tags must never cover each other
 }
 
 /* ================= init ================= */
@@ -2473,6 +2928,27 @@ function init(){
   $('#btnTemplates').onclick=()=>toggleTemplatePanel();
   $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
   $('#btnShare').onclick=()=>shareBuild();
+  $('#btnMirror').onclick=()=>toggleMirrorPanel();
+  $('#btnReplace').onclick=()=>toggleReplacePanel();
+  $('#btnIsolate').onclick=()=>setView(viewMode==='isolate'?'normal':'isolate');
+  $('#btnDollhouse').onclick=()=>setView(viewMode==='dollhouse'?'normal':'dollhouse');
+  $('#btnLabels').onclick=()=>setLabels(!labelsOn);
+  $('#btnCheat').onclick=()=>toggleCheatPanel();
+  $('#mirrorClose').onclick=()=>toggleMirrorPanel(false);
+  $('#replaceClose').onclick=()=>toggleReplacePanel(false);
+  $('#cheatClose').onclick=()=>toggleCheatPanel(false);
+  $$('#mirrorPanel button[data-maxis]').forEach(b=>b.onclick=()=>{ mirrorAxis=b.dataset.maxis; updateMirrorPanel(); updateMirrorLine(); });
+  $('#mirrorCenter').onchange=()=>{ mirrorCenter=clamp(parseInt($('#mirrorCenter').value)||0,-30,100);
+    $('#mirrorCenter').value=mirrorCenter; updateMirrorPanel(); updateMirrorLine(); updateSymmetryReadout(); };
+  $('#btnMirrorWhole').onclick=()=>mirrorWhole(mirrorAxis, mirrorCenter);
+  $('#btnMirrorSel').onclick=()=>mirrorSelection(mirrorAxis, mirrorCenter);
+  $$('#mirrorPanel button[data-sym]').forEach(b=>b.onclick=()=>{ if(b.dataset.sym==='off') setSymmetry(false); else setSymmetry(true, b.dataset.sym); });
+  buildReplaceSelects();
+  $('#repFrom').onchange=updateReplaceCount;
+  $('#repTo').onchange=updateReplaceCount;
+  $$('#replacePanel button[data-scope]').forEach(b=>b.onclick=()=>{ replaceScope=b.dataset.scope;
+    $$('#replacePanel button[data-scope]').forEach(x=>x.classList.toggle('on', x===b)); updateReplaceCount(); });
+  $('#btnDoReplace').onclick=()=>{ replaceMaterial(+$('#repFrom').value, +$('#repTo').value, replaceScope); updateReplaceCount(); };
   $('#templateClose').onclick=()=>toggleTemplatePanel(false);
   $('#blueprintClose').onclick=()=>toggleBlueprintPanel(false);
   $('#btnSaveBlueprint').onclick=()=>{
@@ -2520,6 +2996,7 @@ function init(){
     updateStats();
   }
   loadSharedFromHash();   // a #s= link replaces whatever was loaded above
+  loadLabelsPref();   // wall labels: on by default, remembered choice wins
   updateUndoBtns();
   resize();   // position the help panel + size bar under the finished toolbar
   window.__ready=true;
@@ -2542,6 +3019,45 @@ window.__mc = {
   tool(){ return tool; },
   setTool(t){ setTool(t); },
   typeIndex(id){ return TYPES.findIndex(t=>t.id===id); },
+  selType(){ return selType; },
+  buildPlace(x,y,z){ return placeBuildBlock(x,y,z); },
+  pickAt(x,y,z){ return pickBlockAt(x,y,z); },
+  mirror:{
+    setAxis(a){ if(a!=='x'&&a!=='z') return false; mirrorAxis=a; updateMirrorPanel(); updateMirrorLine(); return true; },
+    axis(){ return mirrorAxis; },
+    setCenter(c){ mirrorCenter=clamp(Math.round(+c)||0,-30,100); updateMirrorPanel(); updateMirrorLine(); return mirrorCenter; },
+    center(){ return mirrorCenter; },
+    whole(axis,center){ return mirrorWhole(axis||mirrorAxis, center==null?mirrorCenter:center); },
+    selection(axis,center){ return mirrorSelection(axis||mirrorAxis, center==null?mirrorCenter:center); },
+    setSymmetry(on,axis){ return setSymmetry(on,axis); },
+    symmetry(){ return { on:symmetry.on, axis:symmetry.axis, center:mirrorCenter }; },
+    lineVisible(){ return mirrorLine? mirrorLine.visible : false; },
+  },
+  replace:{
+    count(from,to,scope){ return replaceCount(from,to,scope||'all'); },
+    apply(from,to,scope){ return replaceMaterial(from,to,scope||'all'); },
+  },
+  flood:{
+    region(x,y,z){ const r=floodRegion(x,y,z); return r? { type:r.type, n:r.keys.length } : null; },
+    fill(x,y,z){ return floodFillAt(x,y,z); },
+  },
+  view:{
+    set(m){ return setView(m); },
+    mode(){ return viewMode; },
+    rendered(){ let n=0; for(const s of instMeshes) n+=s.mesh.count; return n; },
+  },
+  cheat:{
+    open(){ toggleCheatPanel(true); return true; },
+    close(){ toggleCheatPanel(false); return true; },
+    isOpen(){ return $('#cheatPanel').classList.contains('on'); },
+  },
+  labels:{
+    on(){ return labelsOn; },
+    set(on){ return setLabels(on); },
+    total(){ return wallLabelGroup? [...wallLabelGroup.children].filter(c=>c.isSprite).length : 0; },
+    visible(){ if(!wallLabelGroup || !wallLabelGroup.visible) return 0;
+      return [...wallLabelGroup.children].filter(c=>c.isSprite && c.visible).length; },
+  },
   selection(){ return [...selection]; },
   select(x,y,z,add){ selectBlockKey(key3(x,y,z), !!add); },
   clearSel(){ clearSelection(); },
