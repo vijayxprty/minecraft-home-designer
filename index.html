@@ -105,17 +105,19 @@
   #presetPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
   #presetPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px}
   #presetPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
-  /* ---------- templates / blueprints / mirror / replace / shortcuts panels (same bottom-centre spot) ---------- */
-  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
+  /* ---------- templates / blueprints / mirror / replace / shortcuts / materials / build-a-room panels (same bottom-centre spot) ---------- */
+  #templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,#buildRoomPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
-  #templatePanel.on,#blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on{display:flex}
-  #templatePanel .pp-title,#blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #templatePanel button,#blueprintPanel button,#mirrorPanel button,#replacePanel button,#cheatPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #templatePanel.on,#blueprintPanel.on,#mirrorPanel.on,#replacePanel.on,#cheatPanel.on,#materialsPanel.on,#buildRoomPanel.on{display:flex}
+  #templatePanel .pp-title,#blueprintPanel .pp-title,#mirrorPanel .pp-title,#replacePanel .pp-title,#cheatPanel .pp-title,#materialsPanel .pp-title,#buildRoomPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #templatePanel button,#blueprintPanel button,#mirrorPanel button,#replacePanel button,#cheatPanel button,#materialsPanel button,#buildRoomPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
-  #mirrorPanel button.on,#replacePanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
-  #templatePanel .pp-row,#blueprintPanel .pp-row,#mirrorPanel .pp-row,#replacePanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
-  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note,#mirrorPanel .pp-row .pp-note,#replacePanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
-  #mirrorPanel input,#replacePanel select{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;color:#222;background:#fff}
+  #mirrorPanel button.on,#replacePanel button.on,#buildRoomPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #templatePanel .pp-row,#blueprintPanel .pp-row,#mirrorPanel .pp-row,#replacePanel .pp-row,#materialsPanel .pp-row,#buildRoomPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #templatePanel .pp-row .pp-note,#blueprintPanel .pp-row .pp-note,#mirrorPanel .pp-row .pp-note,#replacePanel .pp-row .pp-note,#materialsPanel .pp-row .pp-note,#buildRoomPanel .pp-row .pp-note{color:#ffd83d;font-weight:800}
+  #mirrorPanel input,#replacePanel select,#buildRoomPanel select{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;color:#222;background:#fff}
+  #buildRoomPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px;color:#222;background:#fff}
+  #buildRoomPanel .pp-row b{color:#ffd83d}
   #mirrorPanel input{width:56px}
   #cheatPanel{max-height:62vh;overflow:auto}
   /* ---------- clearance warnings panel + inline room rename (round 8) ---------- */
@@ -140,6 +142,18 @@
   #renameBox button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 12px;color:#222}
   #renameBox button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  /* ---------- inline confirm + blueprint name boxes (round 11): same
+     styling as the room rename box, but z-index 70 so they sit above the
+     start screen too — nothing in the app pops a browser dialog any more */
+  #confirmBox,#bpNameBox{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:70;display:none;
+    background:rgba(0,0,0,.75);border:3px solid #ffd83d;border-radius:8px;padding:10px;gap:8px;flex-wrap:wrap;max-width:420px}
+  #confirmBox.on,#bpNameBox.on{display:flex}
+  #confirmBox .pp-title,#bpNameBox .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #confirmBox #confirmText{flex-basis:100%;color:#fff;font-size:13px;font-weight:700}
+  #bpNameBox input{flex:1;border:2px solid #555;border-radius:4px;padding:7px 9px;font-weight:800;font-size:14px;color:#222;background:#fff;min-width:180px}
+  #confirmBox button,#bpNameBox button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+    padding:7px 12px;color:#222}
+  #confirmBox button.on,#bpNameBox button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
   .cheat-grid{flex-basis:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;color:#fff;font-size:12px;font-weight:700}
   .cheat-grid b{color:#ffd83d;white-space:nowrap}
   .tpl-item{flex-basis:100%;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
@@ -334,6 +348,8 @@
   <button id="btnTemplates" title="Start from a ready-made build">🏠 Templates</button>
   <button id="btnBlueprints" title="Save a selection as a reusable blueprint">💾 Blueprints</button>
   <button id="btnShare" title="Copy a link that holds this whole build">🔗 Share</button>
+  <button id="btnMaterials" title="See what this build is made of — counts per material">🧱 Materials</button>
+  <button id="btnBuildRoom" title="Build a whole room or a wall from its size in feet and inches">🏠 Build a room</button>
   <div class="msep"></div>
   <button id="btnMirror" title="Mirror the build or a selection, live symmetry">🪞 Mirror</button>
   <button id="btnReplace" title="Replace one material with another">🔄 Replace</button>
@@ -383,6 +399,8 @@
   <button id="selCopy">📋 Copy</button>
   <button id="selMove">🚚 Move</button>
   <button id="selRotate">🔄 Rotate</button>
+  <button id="selFlipX">↔ Flip left-right</button>
+  <button id="selFlipZ">↕ Flip front-back</button>
   <button id="selColour">🎨 Change colour</button>
   <button id="selBlueprint">💾 Save as blueprint</button>
   <button id="selDelete">🗑 Delete</button>
@@ -540,6 +558,9 @@
     <b>Shift + click</b><span>Select the whole row (Select tool) · erase a whole wall (Erase tool)</span>
     <b>Double-click</b><span>Select all connected blocks of the same material</span>
     <b>Shift + drag</b><span>Draw a straight line of blocks (Build tool)</span>
+    <b>↔ Flip</b><span>Flip the selection left-right or front-back — buttons when blocks are selected</span>
+    <b>🧱 Materials</b><span>What the build is made of — counts per material (More menu)</span>
+    <b>🏠 Build a room</b><span>Type a size in feet and inches, build a room or a wall (More menu)</span>
     <b>10'6" + Enter</b><span>Exact length while filling a box or drawing a line</span>
     <b>Esc</b><span>Cancel what you're doing / close a panel / exit Walk</span>
     <b>H</b><span>Show / hide the white wall dimension labels</span>
@@ -560,6 +581,57 @@
   <input id="renameInput" maxlength="24" spellcheck="false" autocomplete="off">
   <button id="renameSave" class="on">Save</button>
   <button id="renameCancel">Cancel</button>
+</div>
+
+<div id="materialsPanel">
+  <div class="pp-title">Materials — what this build is made of · counts update as you build</div>
+  <div id="matList" style="flex-basis:100%;display:flex;flex-direction:column;gap:4px"></div>
+  <div class="pp-row"><span id="matTotal" class="pp-note"></span></div>
+  <button id="btnCopyMaterials">📋 Copy list</button>
+  <button id="matClose">✕ Close</button>
+</div>
+
+<div id="buildRoomPanel">
+  <div class="pp-title">Build a room or a wall — type the size in feet and inches, one click builds it</div>
+  <div class="pp-row"><span>Wall material:</span><select id="brMat"></select></div>
+  <div class="pp-row"><span>Room — width:</span>
+    <input id="brWft" type="number" min="2" max="30" value="10"> ft
+    <input id="brWin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span>depth:</span>
+    <input id="brDft" type="number" min="2" max="30" value="12"> ft
+    <input id="brDin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span>height:</span>
+    <input id="brHft" type="number" min="4" max="20" value="8"> ft
+    <input id="brHin" type="number" min="0" max="11.5" step="0.5" value="0"> in</div>
+  <div class="pp-row"><span id="brRoomNote" class="pp-note"></span></div>
+  <button id="btnBuildRoomGo">🧱 Build room</button>
+  <div class="pp-row"><span>Wall — length:</span>
+    <input id="brLft" type="number" min="1" max="100" value="10"> ft
+    <input id="brLin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span>height:</span>
+    <input id="brWHft" type="number" min="2" max="20" value="8"> ft
+    <input id="brWHin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+    <span>gap:</span>
+    <button data-bgap="none" class="on">No gap</button>
+    <button data-bgap="door" title="A 3-ft wide, 7-ft tall opening at floor level">🚪 Door</button>
+    <button data-bgap="window" title="A 4-ft wide, 3-ft tall opening with its sill 3 ft up">🪟 Window</button></div>
+  <div class="pp-row"><span id="brWallNote" class="pp-note"></span></div>
+  <button id="btnBuildWallGo">🧱 Build wall</button>
+  <button id="buildRoomClose">✕ Close</button>
+</div>
+
+<div id="confirmBox">
+  <div class="pp-title">Are you sure?</div>
+  <div id="confirmText"></div>
+  <button id="confirmYes" class="on">Yes, do it</button>
+  <button id="confirmNo">Cancel</button>
+</div>
+
+<div id="bpNameBox">
+  <div class="pp-title">Name this blueprint</div>
+  <input id="bpNameInput" maxlength="24" spellcheck="false" autocomplete="off">
+  <button id="bpNameSave" class="on">Save</button>
+  <button id="bpNameCancel">Cancel</button>
 </div>
 
 <div id="sizeBar">
@@ -594,6 +666,9 @@
   <div style="height:2px;background:rgba(255,255,255,.2);margin:4px 6px"></div>
   <button id="ctxRow" title="Select the whole row of this block">↔ Select row</button>
   <button id="ctxConnected" title="Select every connected block of this material">🔗 Select all connected</button>
+  <div style="height:2px;background:rgba(255,255,255,.2);margin:4px 6px"></div>
+  <button id="ctxFlipX" title="Flip the selection left-right">↔ Flip left-right</button>
+  <button id="ctxFlipZ" title="Flip the selection front-back">↕ Flip front-back</button>
 </div>
 <div id="selBox"></div>
 
@@ -1303,6 +1378,70 @@ function updateStats(){
   updateFloorBand();
   updateSymmetryReadout();
   guideCheck();   // the 3-step first build ticks itself off as you build (round 10)
+  if($('#materialsPanel') && $('#materialsPanel').classList.contains('on')) updateMaterialsPanel();
+}
+
+/* ================= materials estimate panel (round 11) ================ */
+/* A live count per material, the total block count and the total built
+   area in sq ft — the materials list for the build. "Copy list" puts the
+   same list on the clipboard as plain text. */
+function materialCounts(){
+  const counts=new Map();
+  for(const [,v] of blocks) counts.set(v.t,(counts.get(v.t)||0)+1);
+  return [...counts.entries()].map(([ti,n])=>({ ti, name:TYPES[ti].name, n }))
+    .sort((a,b)=>b.n-a.n || a.name.localeCompare(b.name));
+}
+function buildAreaSqFt(){
+  const b=buildBBox();
+  return b? Math.round(b.w*b.d*FT*FT*10)/10 : 0;
+}
+function materialText(){
+  const cs=materialCounts();
+  const lines=cs.map(c=>c.name+' × '+c.n);
+  lines.push('Total: '+blocks.size+' blocks · '+buildAreaSqFt()+' sq ft');
+  return lines.join('\n');
+}
+function updateMaterialsPanel(){
+  const list=$('#matList'); if(!list) return;
+  list.innerHTML='';
+  const cs=materialCounts();
+  if(!cs.length){
+    const d=document.createElement('div'); d.className='tpl-empty';
+    d.textContent='Nothing built yet — place some blocks and the list appears.';
+    list.appendChild(d);
+  }
+  for(const c of cs){
+    const row=document.createElement('div'); row.className='tpl-item';
+    const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=c.name;
+    const ct=document.createElement('span'); ct.className='tpl-desc'; ct.textContent='× '+c.n.toLocaleString('en-IN');
+    row.append(nm,ct); list.appendChild(row);
+  }
+  $('#matTotal').textContent = blocks.size
+    ? 'Total: '+blocks.size.toLocaleString('en-IN')+' blocks · '+buildAreaSqFt()+' sq ft'
+    : '';
+}
+function toggleMaterialsPanel(show){
+  const p=$('#materialsPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnMaterials').classList.toggle('on',on);
+  if(on){ updateMaterialsPanel();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
+    $('#cheatPanel').classList.remove('on'); $('#buildRoomPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on');
+    $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    $('#btnBuildRoom').classList.remove('on');
+  }
+}
+function copyMaterialsList(){
+  const text=materialText();
+  const done=()=>toast('Materials list copied');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, ()=>fallbackCopy(text,done));
+  else fallbackCopy(text,done);
+  return text;
 }
 
 /* ================= always-on wall dimension labels ================= */
@@ -1574,6 +1713,42 @@ function commitRenameBox(){
   const ok=renameRoom(renameTarget, $('#renameInput').value);
   closeRenameBox();
   return ok;
+}
+/* ================= inline confirm + blueprint name boxes (round 11) == */
+/* The last native browser dialogs are gone — every "are you sure?" and
+   every name prompt is now a small box in the app, styled like the room
+   rename box. The confirm box sits above the start screen too (z 70),
+   because loading a template from the start screen can ask first. */
+let confirmCb=null;
+function askConfirm(msg, cb){
+  $('#confirmText').textContent=msg;
+  confirmCb=cb||null;
+  $('#confirmBox').classList.add('on');
+  return true;
+}
+function closeConfirmBox(answer){
+  $('#confirmBox').classList.remove('on');
+  const cb=confirmCb; confirmCb=null;
+  if(cb) cb(!!answer);
+  return true;
+}
+function openBpNameBox(){
+  if(!selection.size){ toast('Select some blocks first — then save a blueprint'); return false; }
+  $('#bpNameInput').value='Blueprint '+(loadBlueprints().length+1);
+  $('#bpNameBox').classList.add('on');
+  const inp=$('#bpNameInput');
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 0);
+  return true;
+}
+function closeBpNameBox(){
+  $('#bpNameBox').classList.remove('on');
+  return true;
+}
+function commitBpNameBox(){
+  const name=$('#bpNameInput').value;
+  closeBpNameBox();
+  if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
+  return true;
 }
 /* click on a room label (raycast the sprites) — null when nothing hit */
 function roomLabelHit(e){
@@ -2321,6 +2496,50 @@ function planBBox(fi){
   }
   return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
 }
+/* door / window openings in the plan (round 11): a break in a wall line
+   is a door when it is open at floor level with a lintel above it, and a
+   window when it has a sill below the opening. Stair steps are neither a
+   sill nor a lintel. Contiguous cells of the same kind form one opening. */
+function planOpenings(fi){
+  const B=FLOORS[fi].base, b=planBBox(fi);
+  if(!b) return [];
+  const isWallCol=(x,z)=>{ for(let y=B+2;y<=B+17;y++){ const bl=getBlock(x,y,z); if(bl&&bl.t!==6) return true; } return false; };
+  const hasLintel=(x,z)=>{ for(let y=B+8;y<=B+17;y++){ const bl=getBlock(x,y,z); if(bl&&bl.t!==6) return true; } return false; };
+  const hasSill=(x,z)=>{ for(let y=B+2;y<=B+7;y++){ const bl=getBlock(x,y,z); if(bl&&bl.t!==6) return true; } return false; };
+  const cand=[];
+  for(let x=b.x0;x<=b.x1;x++) for(let z=b.z0;z<=b.z1;z++){
+    if(planIsWall(x,z,B)) continue;
+    const alongX=isWallCol(x-1,z)&&isWallCol(x+1,z);
+    const alongZ=isWallCol(x,z-1)&&isWallCol(x,z+1);
+    if(!alongX&&!alongZ) continue;
+    const axis=alongX?'x':'z';
+    let kind=null;
+    if(!hasSill(x,z) && hasLintel(x,z)) kind='door';
+    else if(hasSill(x,z)) kind='window';
+    if(kind) cand.push({ x, z, axis, kind });
+  }
+  const used=new Set(), out=[];
+  for(const c of cand){
+    const k=c.x+','+c.z; if(used.has(k)) continue;
+    const run=[c]; used.add(k);
+    const step=c.axis==='x'? [1,0] : [0,1];
+    for(const dir of [1,-1]){
+      let nx=c.x+step[0]*dir, nz=c.z+step[1]*dir;
+      while(true){
+        const n=cand.find(o=>o.x===nx&&o.z===nz&&o.axis===c.axis&&o.kind===c.kind);
+        if(!n) break;
+        run.push(n); used.add(nx+','+nz);
+        nx+=step[0]*dir; nz+=step[1]*dir;
+      }
+    }
+    run.sort((a,b2)=> a.x-b2.x || a.z-b2.z);
+    const xs=run.map(o=>o.x), zs=run.map(o=>o.z);
+    out.push({ axis:c.axis, kind:c.kind, cells:run,
+      x0:Math.min(...xs), x1:Math.max(...xs), z0:Math.min(...zs), z1:Math.max(...zs),
+      len:run.length });
+  }
+  return out;
+}
 function renderPlan(fi){
   fi=(fi==null?activeFloor:fi);
   const B=FLOORS[fi].base;
@@ -2338,7 +2557,7 @@ function renderPlan(fi){
   g.font='bold 26px "Trebuchet MS", sans-serif';
   g.fillText(projectName+' — '+FLOORS[fi].name+' floor plan', padL, 34);
   g.font='16px "Trebuchet MS", sans-serif'; g.fillStyle='#555';
-  g.fillText('1 block = 6 in  ·  drawn from the build, top-down', padL, 58);
+  g.fillText('1 block = 6 in  ·  drawn from the build, top-down', padL, 78);
   // light 1-ft grid
   g.strokeStyle='#e8e8e8'; g.lineWidth=1;
   for(let x=0;x<=W;x+=2){ g.beginPath(); g.moveTo(padL+x*cell, padT); g.lineTo(padL+x*cell, padT+D*cell); g.stroke(); }
@@ -2350,6 +2569,41 @@ function renderPlan(fi){
   g.fillStyle='#2b2b2b';
   for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
     if(planIsWall(x,z,B)) g.fillRect(padL+(x-x0)*cell, padT+(z-z0)*cell, cell, cell);
+  }
+  // door + window markers (round 11): doors get a swing arc + leaf hinged
+  // at one end, swinging into the room (toward the middle of the plan);
+  // windows get a double line along the wall. The legend says which is which.
+  const openings=planOpenings(fi);
+  const ccx=(x0+x1)/2, ccz=(z0+z1)/2;
+  g.strokeStyle='#1a1a1a'; g.fillStyle='#1a1a1a'; g.lineWidth=2;
+  for(const op of openings){
+    const px0=padL+(op.x0-x0)*cell, px1=padL+(op.x1+1-x0)*cell;
+    const pz0=padT+(op.z0-z0)*cell, pz1=padT+(op.z1+1-z0)*cell;
+    if(op.kind==='window'){
+      const off=cell*0.18;
+      if(op.axis==='x'){
+        for(const yy of [(pz0+pz1)/2-off, (pz0+pz1)/2+off]){
+          g.beginPath(); g.moveTo(px0, yy); g.lineTo(px1, yy); g.stroke();
+        }
+      } else {
+        for(const xx of [(px0+px1)/2-off, (px0+px1)/2+off]){
+          g.beginPath(); g.moveTo(xx, pz0); g.lineTo(xx, pz1); g.stroke();
+        }
+      }
+    } else {
+      const r=Math.max(px1-px0, pz1-pz0);
+      if(op.axis==='x'){
+        const hx=px0, hy=(pz0+pz1)/2;
+        const s=(ccz>(op.z0+op.z1)/2)? 1 : -1;
+        g.beginPath(); g.arc(hx, hy, r, s>0? 0 : -Math.PI/2, s>0? Math.PI/2 : 0); g.stroke();
+        g.beginPath(); g.moveTo(hx, hy); g.lineTo(hx, hy+s*r); g.stroke();
+      } else {
+        const hx=(px0+px1)/2, hy=pz0;
+        const s=(ccx>(op.x0+op.x1)/2)? 1 : -1;
+        g.beginPath(); g.arc(hx, hy, r, s>0? 0 : Math.PI/2, Math.PI/2); g.stroke();
+        g.beginPath(); g.moveTo(hx, hy); g.lineTo(hx+s*r, hy); g.stroke();
+      }
+    }
   }
   // room names + areas at the room centre
   const rooms=detectRooms().filter(r=>r.fi===fi);
@@ -2373,9 +2627,20 @@ function renderPlan(fi){
   for(const ez of [padT, padT+D*cell]){ g.beginPath(); g.moveTo(padL-34, ez); g.lineTo(padL-22, ez); g.stroke(); }
   g.save(); g.translate(padL-38, padT+D*cell/2); g.rotate(-Math.PI/2);
   g.textAlign='center'; g.textBaseline='bottom'; g.fillText(ftin(D*FT), 0, 0); g.restore();
+  // legend: door arc + window double line, in the bottom margin
+  const lgY=ch-36;
+  g.strokeStyle='#1a1a1a'; g.fillStyle='#1a1a1a'; g.lineWidth=2;
+  g.beginPath(); g.arc(padL+12, lgY, 9, 0, Math.PI/2); g.stroke();
+  g.beginPath(); g.moveTo(padL+12, lgY); g.lineTo(padL+12, lgY+9); g.stroke();
+  g.font='13px "Trebuchet MS", sans-serif'; g.textAlign='left'; g.textBaseline='middle';
+  g.fillText('door', padL+28, lgY);
+  const wx=padL+78;
+  for(const yy of [lgY-3, lgY+3]){ g.beginPath(); g.moveTo(wx, yy); g.lineTo(wx+22, yy); g.stroke(); }
+  g.fillText('window', wx+28, lgY);
   g.font='13px "Trebuchet MS", sans-serif'; g.fillStyle='#777'; g.textAlign='left'; g.textBaseline='alphabetic';
   g.fillText('Minecraft Home Designer — visualisation only, not a structural drawing.', padL, ch-16);
   lastPlan={ canvas:cv, cell, x0, z0, padL, padT, fi, rooms:rooms.map(r=>({name:r.name, area:r.areaSqFt})),
+    openings:openings.map(o=>({ kind:o.kind, axis:o.axis, len:o.len, x0:o.x0, x1:o.x1, z0:o.z0, z1:o.z1 })),
     w:cw, h:ch, dataUrl:cv.toDataURL('image/png') };
   return lastPlan;
 }
@@ -2540,7 +2805,15 @@ function loadSharedFromHash(){
   if(!m) return false;
   const data=decodeShare(m[1]);
   if(!data){ toast('That share link could not be read'); return false; }
-  if(blocks.size && !confirm('Open the shared build "'+data.name+'"? Your current build will be replaced.')) return false;
+  if(blocks.size){
+    askConfirm('Open the shared build "'+data.name+'"? Your current build will be replaced.', ok=>{
+      if(!ok) return;
+      applyShared(data);
+      try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
+      toast('Shared build loaded — '+data.cells.length.toLocaleString('en-IN')+' blocks');
+    });
+    return false;
+  }
   applyShared(data);
   // strip the hash once the build is loaded: the build is now autosaved,
   // so a later reload must load the saved build, not the shared snapshot
@@ -3040,9 +3313,12 @@ function templateInfo(t){
   }
   return { cells, n, wFt:(x1-x0+1)*FT, dFt:(z1-z0+1)*FT };
 }
-function loadTemplate(id){
+function loadTemplate(id, force){
   const t=TEMPLATES.find(t=>t.id===id); if(!t) return 0;
-  if(blocks.size && !confirm('Load "'+t.name+'"? Your current build will be replaced.')) return 0;
+  if(blocks.size && !force){
+    askConfirm('Load "'+t.name+'"? Your current build will be replaced.', ok=>{ if(ok) loadTemplate(id, true); });
+    return 0;
+  }
   const info=templateInfo(t);
   clearBlocks();
   const n=applyBatch(info.cells);
@@ -3130,7 +3406,7 @@ function renderBlueprintPanel(){
     place.onclick=()=>{ placeBlueprint(bp.name); toggleBlueprintPanel(false); };
     const del=document.createElement('button'); del.textContent='✕';
     del.title='Delete this blueprint';
-    del.onclick=()=>{ if(confirm('Delete blueprint "'+bp.name+'"?')) deleteBlueprint(bp.name); };
+    del.onclick=()=>{ askConfirm('Delete blueprint "'+bp.name+'"?', ok=>{ if(ok) deleteBlueprint(bp.name); }); };
     row.append(nm,ds,sz,place,del); list.appendChild(row);
   }
 }
@@ -3550,14 +3826,15 @@ function wallInfo2(){
    gap 'door': 6 blocks (3 ft) wide, 14 tall (7 ft) from the floor.
    gap 'window': 8 blocks (4 ft) wide, 6 tall (3 ft), sill 6 blocks (3 ft) up.
    gapFt is the gap's distance from the wall start in ft; null = centred. */
-function wallCells(a,b,height,gap,gapFt){
+function wallCells(a,b,height,gap,gapFt,type){
+  const t=(type==null? selType : type);
   const axis=wallAxis(a,b);
   const ai=axis==='x'?0:2;
   const a0=Math.min(a[ai],b[ai]), a1=Math.max(a[ai],b[ai]);
   const fixed=axis==='x'? a[2] : a[0];
   const y0=a[1];
   const len=a1-a0+1;
-  const cellAt=(i,y)=> axis==='x'? { x:i, y, z:fixed, t:selType, r:0 } : { x:fixed, y, z:i, t:selType, r:0 };
+  const cellAt=(i,y)=> axis==='x'? { x:i, y, z:fixed, t, r:0 } : { x:fixed, y, z:i, t, r:0 };
   let gapStart=null, gapEnd=null, gapY0=null, gapH=0;
   if(gap==='door'){
     if(height<14) return { cells:null, error:'Wall is too short for a 7-ft door — make it at least 7 ft high' };
@@ -3683,6 +3960,114 @@ function cancelWallDrag(){
   $('#hoverTag').style.display='none';
   $('#roTool').style.display='none';
   $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in';
+}
+
+/* ================= parametric presets: build a room / build a wall (round 11) == */
+/* Type a size in feet and inches, one click builds it as ordinary editable
+   blocks — the parametric version of the drag-a-wall tool. The room is a
+   hollow box: wood floor, four walls in the picked material, and a 3-ft
+   door gap centred on the front wall. The wall reuses wallCells, so its
+   door/window gaps are the same ones the Wall tool cuts. Both build at the
+   origin of the active floor; blocks that are already built are skipped,
+   never overwritten. Each is one undo step. */
+let brGap='none';
+function ftInInputsToBlocks(ftEl, inEl, minB, maxB){
+  const ft=parseFloat($(ftEl).value)||0, inch=parseFloat($(inEl).value)||0;
+  return clamp(Math.round(ft*2+inch/6), minB, maxB);
+}
+function roomCells(wBlocks, dBlocks, hBlocks, mat){
+  const B=FLOORS[activeFloor].base;
+  const cells=[];
+  for(let x=0;x<wBlocks;x++) for(let z=0;z<dBlocks;z++) cells.push({ x, y:B+1, z, t:2, r:0 });
+  const doorW=6, doorH=Math.min(14, hBlocks);
+  const d0=Math.floor((wBlocks-doorW)/2);
+  for(let y=B+2;y<=B+1+hBlocks;y++){
+    for(let i=0;i<wBlocks;i++){
+      cells.push({ x:i, y, z:0, t:mat, r:0 });
+      if(!(y>=B+2 && y<B+2+doorH && i>=d0 && i<d0+doorW)) cells.push({ x:i, y, z:dBlocks-1, t:mat, r:0 });
+    }
+    for(let j=1;j<dBlocks-1;j++){
+      cells.push({ x:0, y, z:j, t:mat, r:0 });
+      cells.push({ x:wBlocks-1, y, z:j, t:mat, r:0 });
+    }
+  }
+  return cells;
+}
+function buildRoomPreset(wFt, wIn, dFt, dIn, hFt, hIn, mat){
+  const w=clamp(Math.round(((wFt||0)+(wIn||0)/12)*2), 4, 60);
+  const d=clamp(Math.round(((dFt||0)+(dIn||0)/12)*2), 4, 60);
+  const h=clamp(Math.round(((hFt||0)+(hIn||0)/12)*2), 8, 40);
+  const m=mat==null? 4 : clamp(Math.round(mat), 0, TYPES.length-1);
+  const cells=roomCells(w, d, h, m);
+  const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(fresh);
+  if(n) toast('Room built — '+n+' blocks · '+ftin(w*FT)+' × '+ftin(d*FT)+' × '+ftin(h*FT)+' · door gap 3 ft'
+    +(cells.length-n?' · '+(cells.length-n)+' skipped (already built)':''));
+  else toast('Room is already built there — nothing new to place');
+  return n;
+}
+function buildWallPreset(lenFt, lenIn, hFt, hIn, gap, mat){
+  const len=clamp(Math.round(((lenFt||0)+(lenIn||0)/12)*2), 2, 200);
+  const h=clamp(Math.round(((hFt||0)+(hIn||0)/12)*2), 4, 40);
+  const m=mat==null? 4 : clamp(Math.round(mat), 0, TYPES.length-1);
+  const g=['none','door','window'].includes(gap)? gap : 'none';
+  const B=FLOORS[activeFloor].base;
+  const res=wallCells([0,B+1,0],[len-1,B+1,0],h,g,null,m);
+  if(!res.cells){ toast(res.error); return 0; }
+  const fresh=res.cells.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(fresh);
+  const gapTxt=g==='none'?'': g==='door'?' · door gap 3 ft wide':' · window gap 4 ft wide, sill 3 ft';
+  if(n) toast('Wall built — '+n+' blocks · '+ftin(len*FT)+' long × '+ftin(h*FT)+' high'+gapTxt
+    +(res.cells.length-n?' · '+(res.cells.length-n)+' skipped (already built)':''));
+  else toast('Wall is already built there — nothing new to place');
+  return n;
+}
+function buildRoomFromPanel(){
+  return buildRoomPreset(
+    parseFloat($('#brWft').value)||0, parseFloat($('#brWin').value)||0,
+    parseFloat($('#brDft').value)||0, parseFloat($('#brDin').value)||0,
+    parseFloat($('#brHft').value)||0, parseFloat($('#brHin').value)||0,
+    +$('#brMat').value);
+}
+function buildWallFromPanel(){
+  return buildWallPreset(
+    parseFloat($('#brLft').value)||0, parseFloat($('#brLin').value)||0,
+    parseFloat($('#brWHft').value)||0, parseFloat($('#brWHin').value)||0,
+    brGap, +$('#brMat').value);
+}
+function updateBuildRoomPanel(){
+  const w=ftInInputsToBlocks('#brWft','#brWin',4,60), d=ftInInputsToBlocks('#brDft','#brDin',4,60),
+        h=ftInInputsToBlocks('#brHft','#brHin',8,40);
+  const doorH=Math.min(14,h);
+  $('#brRoomNote').textContent='Room: '+ftin(w*FT)+' × '+ftin(d*FT)+' × '+ftin(h*FT)
+    +' · wood floor · door gap 3 ft × '+ftin(doorH*FT)+' on the front wall';
+  const len=ftInInputsToBlocks('#brLft','#brLin',2,200), wh=ftInInputsToBlocks('#brWHft','#brWHin',4,40);
+  const gapTxt=brGap==='none'?'no gap': brGap==='door'?'door gap 3 ft × 7 ft':'window gap 4 ft × 3 ft, sill 3 ft';
+  $('#brWallNote').textContent='Wall: '+ftin(len*FT)+' long × '+ftin(wh*FT)+' high · '+gapTxt;
+  $$('#buildRoomPanel button[data-bgap]').forEach(b=>b.classList.toggle('on', b.dataset.bgap===brGap));
+}
+function toggleBuildRoomPanel(show){
+  const p=$('#buildRoomPanel');
+  const on=show!==undefined?show:!p.classList.contains('on');
+  p.classList.toggle('on',on);
+  $('#btnBuildRoom').classList.toggle('on',on);
+  if(on){ updateBuildRoomPanel();
+    $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
+    $('#templatePanel').classList.remove('on'); $('#blueprintPanel').classList.remove('on');
+    $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
+    $('#cheatPanel').classList.remove('on'); $('#materialsPanel').classList.remove('on');
+    $('#btnPresets').classList.remove('on'); $('#btnTemplates').classList.remove('on');
+    $('#btnBlueprints').classList.remove('on'); $('#btnMirror').classList.remove('on');
+    $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
+    $('#btnMaterials').classList.remove('on');
+  }
+}
+function buildRoomMatSelect(){
+  const sel=$('#brMat');
+  TYPES.forEach((ty,ti)=>{
+    const o=document.createElement('option'); o.value=ti; o.textContent=ty.name; sel.appendChild(o);
+  });
+  sel.value=4;   // Brick, the usual wall material
 }
 
 /* ================= tape measure ================= */
@@ -3848,6 +4233,33 @@ function rotateSelection(){
   const n=applyBatch([...erases, ...sets]);
   selection=newKeys; updateSelectionHighlight();
   if(n) toast('Rotated 90°');
+  return n>0;
+}
+
+/* ================= flip selection (round 11) ================= */
+/* Mirror the current selection across its own centre plane — left ↔ right
+   (X) or front ↔ back (Z). Same shape as rotateSelection: one undo step,
+   blocked targets stay put, stair steps turn around with the flip. */
+function flipSelection(axis){
+  if(selection.size<2){ toast('Select 2 or more blocks to flip them'); return false; }
+  const bb=selectionBBox();
+  const items=[...selection].map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k); return b? { x,y,z, t:b.t, r:b.r||0 } : null; }).filter(Boolean);
+  if(items.length<2){ toast('Select 2 or more blocks to flip them'); return false; }
+  const occupied=new Set([...blocks.keys()].filter(k=>!selection.has(k)));
+  const erases=[], sets=[], newKeys=new Set();
+  for(const it of items){
+    const nx=axis==='x'? bb.x0+bb.x1-it.x : it.x;
+    const nz=axis==='z'? bb.z0+bb.z1-it.z : it.z;
+    const nk=key3(nx,it.y,nz);
+    if(occupied.has(nk)){ newKeys.add(key3(it.x,it.y,it.z)); continue; } // blocked: stays put
+    let r=it.r; if(TYPES[it.t].stair) r=mirrorRot(it.r, axis);
+    erases.push({ x:it.x, y:it.y, z:it.z, t:null });
+    sets.push({ x:nx, y:it.y, z:nz, t:it.t, r });
+    newKeys.add(nk);
+  }
+  const n=applyBatch([...erases, ...sets]);
+  selection=newKeys; updateSelectionHighlight();
+  if(n) toast('Flipped '+(axis==='x'?'left ↔ right':'front ↔ back'));
   return n>0;
 }
 
@@ -4213,8 +4625,10 @@ function bindPointer(){
       const rk=roomLabelHit(e);
       if(rk){ openRenameBox(rk); return; }
     }
-    // a click anywhere else closes the open rename box instead of placing a block
+    // a click anywhere else closes the open rename / name / confirm box instead of placing a block
     if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
+    if($('#bpNameBox').classList.contains('on')){ closeBpNameBox(); return; }
+    if($('#confirmBox').classList.contains('on')){ closeConfirmBox(false); return; }
     if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
       ctxTarget=(hit&&hit.block)? [...hit.block] : null;
       showCtxMenu(e.clientX, e.clientY);
@@ -4417,7 +4831,7 @@ function togglePalette(show){
    a selection, in plain words. Clicking empty space clears the selection
    and the panel goes away with it. It steps aside while a settings panel
    is open, and the material strip rides above it when both show. */
-const PANEL_IDS=['presetPanel','templatePanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel'];
+const PANEL_IDS=['presetPanel','templatePanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel','materialsPanel','buildRoomPanel','confirmBox','bpNameBox'];
 function anyPanelOpen(){ return PANEL_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('on'); }); }
 function updateSelPanel(){
   const p=$('#selPanel'); if(!p) return;
@@ -4753,6 +5167,10 @@ function bindKeys(){
     const k=e.code;
     if(k==='Escape'){
       if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
+      if($('#confirmBox').classList.contains('on')){ closeConfirmBox(false); return; }
+      if($('#bpNameBox').classList.contains('on')){ closeBpNameBox(); return; }
+      if($('#materialsPanel').classList.contains('on')){ toggleMaterialsPanel(false); return; }
+      if($('#buildRoomPanel').classList.contains('on')){ toggleBuildRoomPanel(false); return; }
       if($('#warnPanel').classList.contains('on')){ toggleWarnPanel(false); return; }
       if($('#moreMenu').classList.contains('on')){ toggleMoreMenu(false); return; }
       if($('#sunMenu').classList.contains('on')){ toggleSunMenu(false); return; }
@@ -4873,11 +5291,7 @@ function init(){
   $('#selColour').onclick=()=>{ replaceScope='selection';
     $$('#replacePanel button[data-scope]').forEach(x=>x.classList.toggle('on', x.dataset.scope==='selection'));
     updateReplaceCount(); toggleReplacePanel(true); };
-  $('#selBlueprint').onclick=()=>{
-    const name=prompt('Name this blueprint:', '');
-    if(name===null) return;
-    if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
-  };
+  $('#selBlueprint').onclick=()=>{ openBpNameBox(); };
   $('#selDelete').onclick=()=>deleteSelection();
   // start screen + guided first build (round 10)
   $('#ssEmpty').onclick=()=>startEmpty();
@@ -4917,11 +5331,7 @@ function init(){
   $('#btnDoReplace').onclick=()=>{ replaceMaterial(+$('#repFrom').value, +$('#repTo').value, replaceScope); updateReplaceCount(); };
   $('#templateClose').onclick=()=>toggleTemplatePanel(false);
   $('#blueprintClose').onclick=()=>toggleBlueprintPanel(false);
-  $('#btnSaveBlueprint').onclick=()=>{
-    const name=prompt('Name this blueprint:', '');
-    if(name===null) return;
-    if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
-  };
+  $('#btnSaveBlueprint').onclick=()=>{ openBpNameBox(); };
   $('#presetClose').onclick=()=>togglePresetPanel(false);
   $$('#presetPanel button[data-preset]').forEach(b=>b.onclick=()=>setPresetMode(b.dataset.preset));
   $$('#presetPanel button[data-shape]').forEach(b=>b.onclick=()=>{ stairShape=b.dataset.shape;
@@ -4949,7 +5359,7 @@ function init(){
     e.stopPropagation();
   });
   updateFillPanel();
-  $('#btnClear').onclick=()=>{ if(confirm('Delete every placed block? This cannot be undone.')){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } };
+  $('#btnClear').onclick=()=>{ askConfirm('Delete every placed block? This cannot be undone.', ok=>{ if(ok){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } }); };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
   $('#btnTour').onclick=()=>TOUR.active?tourStop():tourStart();
   $('#btnTourStop').onclick=tourStop;
@@ -5002,9 +5412,34 @@ function init(){
     if(e.key==='Enter'){ e.preventDefault(); commitRenameBox(); }
     else if(e.key==='Escape'){ e.preventDefault(); closeRenameBox(); }
   });
+  // materials panel + parametric room/wall presets + inline confirm/name
+  // boxes + flip selection (round 11)
+  $('#btnMaterials').onclick=()=>toggleMaterialsPanel();
+  $('#btnCopyMaterials').onclick=()=>copyMaterialsList();
+  $('#matClose').onclick=()=>toggleMaterialsPanel(false);
+  $('#btnBuildRoom').onclick=()=>toggleBuildRoomPanel();
+  $('#buildRoomClose').onclick=()=>toggleBuildRoomPanel(false);
+  $('#btnBuildRoomGo').onclick=()=>buildRoomFromPanel();
+  $('#btnBuildWallGo').onclick=()=>buildWallFromPanel();
+  $$('#buildRoomPanel button[data-bgap]').forEach(b=>b.onclick=()=>{ brGap=b.dataset.bgap; updateBuildRoomPanel(); });
+  ['#brWft','#brWin','#brDft','#brDin','#brHft','#brHin','#brLft','#brLin','#brWHft','#brWHin'].forEach(s=>$(s).addEventListener('change', updateBuildRoomPanel));
+  $('#brMat').addEventListener('change', updateBuildRoomPanel);
+  buildRoomMatSelect();
+  $('#confirmYes').onclick=()=>closeConfirmBox(true);
+  $('#confirmNo').onclick=()=>closeConfirmBox(false);
+  $('#bpNameSave').onclick=commitBpNameBox;
+  $('#bpNameCancel').onclick=closeBpNameBox;
+  $('#bpNameInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commitBpNameBox(); }
+    else if(e.key==='Escape'){ e.preventDefault(); closeBpNameBox(); }
+  });
+  $('#selFlipX').onclick=()=>flipSelection('x');
+  $('#selFlipZ').onclick=()=>flipSelection('z');
+  $('#ctxFlipX').onclick=()=>{ hideCtxMenu(); if(!selection.size){ toast('Select some blocks first — then flip them'); return; } flipSelection('x'); };
+  $('#ctxFlipZ').onclick=()=>{ hideCtxMenu(); if(!selection.size){ toast('Select some blocks first — then flip them'); return; } flipSelection('z'); };
   $('#btnImport').onclick=()=>$('#importFile').click();
   $('#importFile').addEventListener('change', e=>{ if(e.target.files[0]) importJSON(e.target.files[0]); e.target.value=''; });
-  $('#btnNew').onclick=()=>{ if(confirm('Clear everything and start a new empty plot?')){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } };
+  $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
   const hadSave=loadLocal();
@@ -5123,9 +5558,10 @@ window.__mc = {
   },
   plan:{
     render(fi){ const p=renderPlan(fi);
-      return p? { w:p.w, h:p.h, cell:p.cell, x0:p.x0, z0:p.z0, padL:p.padL, padT:p.padT, rooms:p.rooms, dataUrl:p.dataUrl } : null; },
+      return p? { w:p.w, h:p.h, cell:p.cell, x0:p.x0, z0:p.z0, padL:p.padL, padT:p.padT, rooms:p.rooms, openings:p.openings, dataUrl:p.dataUrl } : null; },
     pixel(x,y){ return planPixel(x,y); },
     download(fi){ return downloadPlan(fi); },
+    openings(fi){ return planOpenings(fi==null?activeFloor:fi).map(o=>({ kind:o.kind, axis:o.axis, len:o.len, x0:o.x0, x1:o.x1, z0:o.z0, z1:o.z1 })); },
   },
   touch:{
     on(){ return touchMode; },
@@ -5223,7 +5659,42 @@ window.__mc = {
   },
   eraseWall(x,y,z){ return eraseRun(x,y,z); },
   rotateSel(){ return rotateSelection(); },
+  flipSel(axis){ return flipSelection(axis||'x'); },
   deleteSel(){ return deleteSelection(); },
+  materials:{
+    counts(){ return materialCounts(); },
+    total(){ return { blocks:blocks.size, areaSqFt:buildAreaSqFt() }; },
+    text(){ return materialText(); },
+    copy(){ return copyMaterialsList(); },
+    open(){ toggleMaterialsPanel(true); return true; },
+    close(){ toggleMaterialsPanel(false); return true; },
+    isOpen(){ return $('#materialsPanel').classList.contains('on'); },
+    listText(){ return $('#matList').textContent; },
+    totalText(){ return $('#matTotal').textContent; },
+  },
+  presets:{
+    room(wFt,wIn,dFt,dIn,hFt,hIn,mat){ return buildRoomPreset(wFt,wIn,dFt,dIn,hFt,hIn,mat); },
+    wall(lenFt,lenIn,hFt,hIn,gap,mat){ return buildWallPreset(lenFt,lenIn,hFt,hIn,gap,mat); },
+    open(){ toggleBuildRoomPanel(true); return true; },
+    close(){ toggleBuildRoomPanel(false); return true; },
+    isOpen(){ return $('#buildRoomPanel').classList.contains('on'); },
+    roomNote(){ return $('#brRoomNote').textContent; },
+    wallNote(){ return $('#brWallNote').textContent; },
+  },
+  confirmBox:{
+    open(msg,cb){ askConfirm(msg, cb||null); return true; },
+    close(yes){ return closeConfirmBox(!!yes); },
+    isOpen(){ return $('#confirmBox').classList.contains('on'); },
+    text(){ return $('#confirmText').textContent; },
+  },
+  bpNameBox:{
+    open(){ return openBpNameBox(); },
+    close(){ return closeBpNameBox(); },
+    commit(){ return commitBpNameBox(); },
+    isOpen(){ return $('#bpNameBox').classList.contains('on'); },
+    value(){ return $('#bpNameInput').value; },
+    set(v){ $('#bpNameInput').value=v; return true; },
+  },
   expandAt(x,y,z,mode,dir,len){ const info=wallInfo(x,y,z); if(!info) return 0;
     const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
     return expandCommit(run,mode,dir,len,info.height); },
@@ -5284,7 +5755,7 @@ window.__mc = {
   applySize(s){ return applyExactSize(s); },
   templates:{
     list(){ return TEMPLATES.map(t=>{ const info=templateInfo(t); return { id:t.id, name:t.name, n:info.n, wFt:info.wFt, dFt:info.dFt }; }); },
-    load(id){ return loadTemplate(id); },
+    load(id){ return loadTemplate(id, true); },
     cells(id){ const t=TEMPLATES.find(t=>t.id===id); return t? templateInfo(t).cells : null; },
   },
   blueprints:{
