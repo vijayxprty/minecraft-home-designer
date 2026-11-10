@@ -286,6 +286,176 @@
     .ss-homes{flex-direction:column}
   }
 </style>
+<!-- ================= ROUND 13 — Canva-clean shell =================
+     White / light panels, soft corners, explicit dark text everywhere.
+     The 3D canvas keeps its sky; the chrome around it goes Canva-clean.
+     --shell-left is the width the shell takes from the canvas (rail 64 +
+     panel 300); panels that centre on the visible canvas use it. -->
+<style>
+:root{ --shell-left:364px; }
+body.panel-closed{ --shell-left:64px; }
+/* ---------- slim one-row top bar ---------- */
+#topbar{ flex-wrap:nowrap; background:#fff; border-bottom:1px solid #e0e0e0; color:#1a1a1a;
+  padding:0 10px; height:48px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+#topbar .brand{ font-size:15px; color:#1a1a1a; text-shadow:none; }
+#topbar .proj-name{ background:none; border:0; font-weight:800; font-size:14px; color:#1a1a1a;
+  padding:6px 8px; border-radius:6px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#topbar .proj-name:hover{ background:#f0f4f0; }
+#projNameInput{ border:2px solid #2e7d32; border-radius:6px; padding:5px 8px; font-weight:800; font-size:14px; color:#1a1a1a; width:180px; }
+#topbar .actions{ display:flex; gap:6px; align-items:center; margin-left:auto; }
+#topbar .actions button{ background:#fff; color:#1a1a1a; border:1px solid #d8d8d8; border-radius:6px;
+  box-shadow:none; font-weight:700; font-size:13px; padding:6px 10px; }
+#topbar .actions button:hover{ background:#f0f4f0; }
+#topbar .actions button.on{ background:#e8f5e9; color:#1b5e20; border-color:#2e7d32; }
+#savePill{ position:static; background:#e8f5e9; color:#1b5e20; font-size:12px; padding:5px 10px; border-radius:20px; white-space:nowrap; }
+/* ---------- left icon rail (Canva) ---------- */
+#rail{ position:fixed; left:0; top:48px; bottom:0; width:64px; z-index:12; background:#fff;
+  border-right:1px solid #e0e0e0; display:flex; flex-direction:column; padding:6px 4px; gap:2px; }
+.rail-btn{ display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:0;
+  border-radius:8px; padding:8px 2px; font-size:17px; color:#1a1a1a; }
+.rail-btn span{ font-size:10px; font-weight:700; color:#444; }
+.rail-btn:hover{ background:#f0f4f0; }
+.rail-btn.on{ background:#e8f5e9; }
+.rail-btn.on span{ color:#1b5e20; }
+/* ---------- left panel ---------- */
+#sidePanel{ position:fixed; left:64px; top:48px; bottom:0; width:300px; z-index:12; background:#fff;
+  border-right:1px solid #e0e0e0; display:flex; flex-direction:column; color:#1a1a1a; }
+body.panel-closed #sidePanel{ display:none; }
+.sp-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px 6px;
+  font-weight:800; font-size:16px; color:#1a1a1a; }
+.sp-head button{ background:none; border:0; font-size:16px; color:#555; padding:4px 8px; border-radius:6px; }
+.sp-head button:hover{ background:#f0f4f0; }
+.sp-tab{ display:none; flex:1; overflow-y:auto; padding:0 14px 16px; }
+.sp-tab.on{ display:block; }
+.sp-sec{ font-size:11px; font-weight:800; color:#666; text-transform:uppercase; letter-spacing:.4px; margin:14px 0 8px; }
+.sp-note{ font-size:12px; color:#666; line-height:1.5; margin-top:12px; }
+.sp-primary{ width:100%; background:#2e7d32; color:#fff; border:0; border-radius:8px; font-weight:800; font-size:14px; padding:10px; }
+.sp-primary:hover{ background:#276a2b; }
+.sp-warn{ background:#fff3e0; color:#7a3a00; border:1px solid #ffb74d; border-radius:8px; padding:8px 10px; font-size:12px; font-weight:700; margin-top:8px; }
+.sp-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+.sp-row button{ background:#fff; color:#1a1a1a; border:1px solid #d8d8d8; border-radius:6px; font-weight:700; font-size:12px; padding:7px 9px; }
+.sp-row button:hover{ background:#f0f4f0; }
+.sp-row button.on{ background:#e8f5e9; color:#1b5e20; border-color:#2e7d32; }
+#elSearch{ width:100%; border:1px solid #d8d8d8; border-radius:8px; padding:9px 10px; font-size:14px; color:#1a1a1a; margin:4px 0 2px; }
+/* ---------- visual element cards (draggable) ---------- */
+.card-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.el-card{ display:flex; flex-direction:column; align-items:center; gap:4px; background:#fff;
+  border:1px solid #d8d8d8; border-radius:10px; padding:10px 4px 8px; color:#1a1a1a;
+  cursor:grab; touch-action:none; user-select:none; }
+.el-card:hover{ border-color:#2e7d32; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+.el-card.on{ border-color:#2e7d32; background:#e8f5e9; box-shadow:0 0 0 2px #2e7d32; }
+.el-card.dragging{ opacity:.6; cursor:grabbing; }
+.el-card canvas{ width:48px; height:48px; image-rendering:pixelated; border:1px solid #ccc; border-radius:6px; background:#999; }
+.el-card .el-ico{ font-size:40px; line-height:48px; }
+.el-card .el-name{ font-size:12px; font-weight:800; color:#1a1a1a; text-align:center; }
+.el-card .el-sub{ font-size:10px; color:#666; text-align:center; }
+.el-card .k{ font-size:9px; color:#999; }
+#dragChip{ position:fixed; z-index:80; pointer-events:none; background:#fff; border:2px solid #2e7d32;
+  border-radius:10px; padding:6px 10px; font-weight:800; font-size:13px; color:#1a1a1a;
+  box-shadow:0 6px 18px rgba(0,0,0,.3); display:none; }
+/* ---------- template cards / project rows / layer rows ---------- */
+.tpl-card{ background:#fff; border:1px solid #d8d8d8; border-radius:10px; padding:12px; margin-bottom:8px; cursor:pointer; color:#1a1a1a; }
+.tpl-card:hover{ border-color:#2e7d32; box-shadow:0 2px 8px rgba(0,0,0,.12); }
+.tpl-card .tpl-ico{ font-size:36px; }
+.tpl-card h3{ font-size:15px; color:#1a1a1a; margin:4px 0 2px; }
+.tpl-card p{ font-size:12px; color:#555; line-height:1.45; }
+.tpl-card .tpl-size{ font-weight:800; color:#1b5e20; font-size:12px; margin-top:6px; }
+.proj-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
+  border-radius:10px; padding:10px; margin-bottom:8px; cursor:pointer; color:#1a1a1a; }
+.proj-row:hover{ border-color:#2e7d32; }
+.proj-row.current{ border-color:#2e7d32; background:#e8f5e9; }
+.proj-row .pr-info{ flex:1; min-width:0; }
+.proj-row .pr-name{ font-weight:800; font-size:14px; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.proj-row .pr-meta{ font-size:11px; color:#666; margin-top:2px; }
+.proj-row .pr-btns{ display:flex; gap:2px; flex:none; }
+.proj-row .pr-btns button{ background:none; border:0; font-size:15px; padding:5px 6px; border-radius:6px; color:#444; }
+.proj-row .pr-btns button:hover{ background:#e0e0e0; }
+.proj-row input.pr-rename{ width:100%; border:2px solid #2e7d32; border-radius:6px; padding:5px 7px; font-weight:800; font-size:14px; color:#1a1a1a; }
+.layer-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
+  border-radius:8px; padding:9px 10px; margin-bottom:6px; cursor:pointer; color:#1a1a1a; }
+.layer-row:hover{ border-color:#2e7d32; }
+.layer-row.on{ border-color:#2e7d32; background:#e8f5e9; }
+.layer-row .ly-eye{ background:none; border:0; font-size:16px; padding:2px 4px; }
+.layer-row .ly-name{ flex:1; font-weight:800; font-size:13px; color:#1a1a1a; }
+.layer-row .ly-count{ font-size:11px; color:#666; font-weight:700; }
+.layer-row.hidden .ly-name{ color:#999; }
+/* ---------- tools tab ---------- */
+#toolsList{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+#toolsList button{ display:flex; align-items:center; gap:6px; background:#fff; color:#1a1a1a;
+  border:1px solid #d8d8d8; border-radius:8px; font-weight:700; font-size:12px; padding:9px 8px; text-align:left; }
+#toolsList button:hover{ background:#f0f4f0; }
+#toolsList button.on{ background:#e8f5e9; color:#1b5e20; border-color:#2e7d32; }
+.help-lines{ font-size:13px; color:#1a1a1a; line-height:1.7; }
+.help-lines b{ color:#1b5e20; }
+/* ---------- guided first build, now a card inside the Elements panel ---------- */
+#guideCard{ position:static; width:auto; box-shadow:none; border:2px solid #2e7d32; border-radius:10px;
+  padding:10px 12px; margin:8px 0 4px; display:none; background:#fffbe6; }
+#guideCard.on{ display:block; }
+/* ---------- status pill (was the bottom-left readout) ---------- */
+#readout{ left:calc(var(--shell-left) + 10px); bottom:10px; background:#fff; color:#1a1a1a;
+  border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.12);
+  font-size:12px; line-height:1.5; padding:8px 12px; max-width:300px; }
+#readout b{ color:#1b5e20; }
+#readout .dim{ color:#2e7d32; }
+#roWarn{ color:#b45309 !important; }
+/* ---------- zoom bar (Canva, bottom-right) + note above it ---------- */
+#note{ right:10px; bottom:66px; background:rgba(255,255,255,.92); color:#555; font-size:10px; max-width:230px; }
+#zoomBar{ position:fixed; right:10px; bottom:10px; z-index:11; display:flex; align-items:center; gap:6px;
+  background:#fff; border:1px solid #e0e0e0; border-radius:20px; padding:5px 8px;
+  box-shadow:0 2px 10px rgba(0,0,0,.12); color:#1a1a1a; }
+#zoomBar button{ background:none; border:0; font-size:18px; font-weight:800; color:#1a1a1a; padding:2px 8px; border-radius:12px; }
+#zoomBar button:hover{ background:#f0f4f0; }
+#zoomBar input[type=range]{ width:110px; accent-color:#2e7d32; }
+#zoomPct{ font-size:12px; font-weight:800; color:#1a1a1a; min-width:42px; text-align:center; }
+/* ---------- Figma-style right Properties panel (was the bottom selection bar) ---------- */
+#selPanel{ left:auto; right:10px; top:190px; bottom:auto; transform:none; max-width:280px; width:280px;
+  background:#fff; color:#1a1a1a; border:1px solid #e0e0e0; border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15); padding:12px; max-height:calc(100vh - 260px); overflow-y:auto; }
+#selPanel .sp-title{ color:#1a1a1a; font-size:14px; }
+#selProps{ flex-basis:100%; font-size:12px; color:#444; line-height:1.6; font-weight:700; }
+#selProps b{ color:#1b5e20; }
+#selPanel button{ background:#f5f5f5; color:#1a1a1a; border:1px solid #d8d8d8; }
+#selPanel button:hover{ background:#e8f5e9; }
+#selPanel input{ background:#fff; color:#1a1a1a; }
+/* ---------- floating tool panels centre on the visible canvas, not the window ---------- */
+#presetPanel,#templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
+#buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
+  bottom:14px; left:calc(50% + var(--shell-left)/2); }
+#sizeBar{ left:calc(var(--shell-left) + 10px); }
+#toast{ left:calc(50% + var(--shell-left)/2); }
+/* ---------- home screen: projects list + template section ---------- */
+.ss-primary{ width:100%; background:#2e7d32; color:#fff; border:0; border-radius:8px; font-weight:800; font-size:15px; padding:12px; margin-bottom:12px; cursor:pointer; }
+.ss-primary:hover{ background:#276a2b; }
+.ss-sec{ font-size:12px; font-weight:800; color:#666; text-transform:uppercase; letter-spacing:.4px; margin:12px 0 8px; text-align:left; }
+#ssProjects{ display:flex; flex-direction:column; gap:8px; text-align:left; }
+/* ---------- touch mode: bigger shell targets ---------- */
+body.touch #topbar button{ font-size:14px; padding:6px 9px; }
+body.touch .el-card{ padding:14px 6px; }
+body.touch .rail-btn{ padding:10px 2px; }
+body.touch #zoomBar button{ padding:6px 12px; }
+/* ---------- mobile: rail becomes a bottom tab bar, panel a bottom sheet ---------- */
+@media (max-width:820px){
+  :root{ --shell-left:64px; }
+  #topbar .brand{ display:none; }
+  #savePill{ display:none; }
+  #topbar .proj-name{ max-width:120px; }
+  #rail{ left:0; right:0; top:auto; bottom:0; width:100%; height:58px; flex-direction:row;
+    border-right:0; border-top:1px solid #e0e0e0; padding:4px; justify-content:space-around; }
+  .rail-btn{ flex:1; padding:4px 2px; }
+  #sidePanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-height:62vh;
+    border-right:0; border-top:1px solid #e0e0e0; border-radius:14px 14px 0 0; box-shadow:0 -6px 24px rgba(0,0,0,.2); }
+  #readout{ left:10px; bottom:68px; max-width:calc(100vw - 20px); }
+  #note{ display:none; }
+  #zoomBar{ bottom:68px; }
+  #selPanel{ left:0; right:0; top:auto; bottom:58px; width:100%; max-width:none; max-height:45vh; border-radius:14px 14px 0 0; }
+  #gizmo{ display:none; }
+  #sizeBar{ left:10px; }
+  #presetPanel,#templatePanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
+  #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
+    left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0; }
+  .ss-homes{ flex-direction:column; }
+}
+</style>
 <script type="importmap">
 {"imports":{
   "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
@@ -298,26 +468,73 @@
 
 <div id="topbar">
   <div class="brand">⛏️ Minecraft Home Designer</div>
-  <div id="floorbar"></div>
+  <button id="btnProjName" class="proj-name" title="Tap to rename this build"><span id="projName">My Build</span> ✎</button>
+  <input id="projNameInput" maxlength="24" spellcheck="false" autocomplete="off" style="display:none">
   <div class="actions">
     <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
     <button id="btnRedo" title="Ctrl+Y">↪ Redo</button>
-    <button id="btnCopy" title="Copy the selection (Ctrl+C)">⧉ Copy</button>
-    <button id="btnPaste" title="Paste what you copied (Ctrl+V)">📋 Paste</button>
-    <button id="btnRotate" title="Rotate the selection or the preset ghost 90° (R)">🔄 Rotate</button>
-    <span class="sep"></span>
-    <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
-    <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
-    <button id="btnTour" title="Fly a slow cinematic tour around the build — Esc stops">🎥 Tour</button>
-    <span class="sep"></span>
+    <span id="savePill">✓ Saved on this device</span>
     <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
-  <div class="camrow">
-    <button data-cam="iso" class="on">🏠 Home</button>
-    <button data-cam="top">Top</button>
-    <button data-cam="front">Front</button>
-    <button data-cam="eye">Eye 5'6"</button>
-    <span id="toolSeg">
+</div>
+
+<!-- Canva-style left rail + panel (round 13): the rail holds the
+     sections, the panel holds the content, the canvas is the big area
+     to the right. Tap the active rail tab again to close the panel. -->
+<div id="rail">
+  <button class="rail-btn on" data-tab="elements" title="Elements — blocks and pieces to drag onto the canvas">🧱<span>Elements</span></button>
+  <button class="rail-btn" data-tab="templates" title="Templates — starter homes">🏠<span>Templates</span></button>
+  <button class="rail-btn" data-tab="builds" title="My builds — your saved projects">📁<span>My builds</span></button>
+  <button class="rail-btn" data-tab="layers" title="Layers — the 5 floors, show or hide each one">🗂️<span>Layers</span></button>
+  <button class="rail-btn" data-tab="tools" title="Tools — build, erase, measure, camera and more">🛠️<span>Tools</span></button>
+  <button class="rail-btn" data-tab="help" title="Help — how to build, and keyboard shortcuts">❓<span>Help</span></button>
+</div>
+<div id="sidePanel">
+  <div class="sp-head"><span id="spTitle">Elements</span><button id="spClose" title="Close this panel">✕</button></div>
+  <div class="sp-tab on" id="tab-elements">
+    <div id="guideCard">
+      <button class="g-x" id="guideClose" title="Hide this">✕</button>
+      <h3>🏠 Build your first house</h3>
+      <div class="g-sub">3 quick steps — do them in the real editor.</div>
+      <div class="g-step" data-step="0"><span class="g-box"></span><span><b>1. Add a floor</b> — pick <b>Floor</b> below, then click the grass</span></div>
+      <div class="g-step" data-step="1"><span class="g-box"></span><span><b>2. Add walls</b> — pick <b>Wall</b>, click along the edge</span></div>
+      <div class="g-step" data-step="2"><span class="g-box"></span><span><b>3. Add a door</b> — pick <b>Door</b>, click a wall</span></div>
+      <div class="g-celebrate">🎉 You built a house!</div>
+      <div class="g-btns"><button id="guideKeep">Keep building</button><button id="guideStarter">Try a starter house</button></div>
+    </div>
+    <input id="elSearch" placeholder="Search elements…" spellcheck="false" autocomplete="off">
+    <div class="sp-sec">Elements — drag one onto the grass</div>
+    <div id="elGrid" class="card-grid"></div>
+    <div class="sp-sec">Blocks</div>
+    <div id="matGrid" class="card-grid"></div>
+    <div class="sp-note">Drag a card onto the grass to place it — or tap it to pick it up, then click the grass.</div>
+  </div>
+  <div class="sp-tab" id="tab-templates">
+    <div class="sp-sec">Starter homes — tap one to open it</div>
+    <div id="tplCards"></div>
+    <div class="sp-note">Loading a home replaces the current build — it asks first.</div>
+  </div>
+  <div class="sp-tab" id="tab-builds">
+    <button id="btnNewBuild2" class="sp-primary">＋ New build</button>
+    <div id="projQuotaNote" class="sp-warn" style="display:none"></div>
+    <div class="sp-sec">Your builds — saved on this device</div>
+    <div id="projList"></div>
+    <div class="sp-note">Builds live in this browser only — a build saved on this phone does not appear on another device. Export a copy to keep one safe.</div>
+  </div>
+  <div class="sp-tab" id="tab-layers">
+    <div class="sp-sec">Floors — tap a floor to build on it, tap the eye to hide it</div>
+    <div id="layersList"></div>
+    <div class="sp-sec">View</div>
+    <div class="sp-row">
+      <button id="btnViewNormal" class="on">All floors</button>
+      <button id="btnViewIsolate">Isolate</button>
+      <button id="btnViewDoll">Dollhouse</button>
+    </div>
+    <div class="sp-note">Hidden floors are still saved — they just don't show, and you can't click them.</div>
+  </div>
+  <div class="sp-tab" id="tab-tools">
+    <div class="sp-sec">Tools</div>
+    <div id="toolsList">
       <button data-tool="build" class="on" title="Click a face to place a block — Shift+drag draws a straight line (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
@@ -330,19 +547,50 @@
       <button data-tool="dropper" title="Click a block to pick its type (I) — Alt+click in Build does the same">💧 Dropper</button>
       <button data-tool="flood" title="Click a block to repaint its whole connected run of the same material (U)">🪣 Flood</button>
       <button data-tool="wall" title="Drag a straight wall line, set its height, cut a door or window gap (W)">🏗️ Wall</button>
-    </span>
-    <button id="btnGrid" class="on" title="Show / hide the 1-ft grid on the grass (major lines every 1 ft)">▦ Grid</button>
-    <button id="btnSnap" title="Snap Fill / Line / Wall drags to whole feet (1 ft)">🧲 Snap</button>
-    <button id="btnSun" title="Day / evening / night lighting">☀️ Day</button>
-    <button id="btnTouch" title="Touch mode — bigger buttons, tap to build, long-press a block to erase">📱 Touch</button>
-    <span class="lbl" style="margin-left:auto">· <span id="projName">My Build</span></span>
+    </div>
+    <div class="sp-sec">Add or remove</div>
+    <div class="sp-row">
+      <button id="btnModeAdd" class="on" title="Click to add blocks">➕ Add blocks</button>
+      <button id="btnModeRemove" title="Click to remove blocks">🧽 Remove blocks</button>
+    </div>
+    <div class="sp-sec">Camera</div>
+    <div id="toolsView" class="sp-row">
+      <button data-cam="iso" class="on">🏠 Home</button>
+      <button data-cam="top">Top</button>
+      <button data-cam="front">Front</button>
+      <button data-cam="eye">Eye 5'6"</button>
+    </div>
+    <div class="sp-row">
+      <button id="btnGrid" class="on" title="Show / hide the 1-ft grid on the grass (major lines every 1 ft)">▦ Grid</button>
+      <button id="btnSnap" title="Snap Fill / Line / Wall drags to whole feet (1 ft)">🧲 Snap</button>
+      <button id="btnSun" title="Day / evening / night lighting">☀️ Day</button>
+      <button id="btnTouch" title="Touch mode — bigger buttons, tap to build, long-press a block to erase">📱 Touch</button>
+    </div>
+    <div class="sp-sec">Edit</div>
+    <div class="sp-row">
+      <button id="btnCopy" title="Copy the selection (Ctrl+C)">⧉ Copy</button>
+      <button id="btnPaste" title="Paste what you copied (Ctrl+V)">📋 Paste</button>
+      <button id="btnRotate" title="Rotate the selection or the preset ghost 90° (R)">🔄 Rotate</button>
+    </div>
+    <div class="sp-row">
+      <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
+      <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
+      <button id="btnTour" title="Fly a slow cinematic tour around the build — Esc stops">🎥 Tour</button>
+    </div>
+  </div>
+  <div class="sp-tab" id="tab-help">
+    <div class="sp-sec">How to build</div>
+    <div class="help-lines">
+      <b>Click Add blocks</b>, pick a block in Elements, then click where it goes.<br>
+      <b>Drag</b> to look around · <b>Scroll</b> to zoom<br>
+      <b>Hold Space</b> and drag to move the view<br>
+      <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row<br>
+      Stuck? Click <b>🏠 Home</b> in Tools to reset the view.
+    </div>
+    <div style="height:12px"></div>
+    <button id="btnHelpShortcuts" class="sp-primary">❓ Keyboard shortcuts</button>
   </div>
 </div>
-
-<!-- the save pill floats at the top-right of the canvas, left of the camera
-     gizmo: the top bar is exactly full at 1280px, so the pill cannot live
-     in it without pushing the toolbar to a third row (round 10) -->
-<span id="savePill">✓ Saved on this device</span>
 
 <div id="moreMenu">
   <div class="mm-title">More tools &amp; views</div>
@@ -385,19 +633,9 @@
   <div class="sm-row"><input id="sunSlider" type="range" min="0" max="24" step="0.5" value="12"> <span class="sm-time" id="sunTime">12:00</span></div>
 </div>
 
-<div id="palette"></div>
-
-<div id="hotbar">
-  <div class="hb-mode">
-    <button id="btnModeAdd" class="on" title="Click to add blocks">➕ Add blocks</button>
-    <button id="btnModeRemove" title="Click to remove blocks">🧽 Remove blocks</button>
-  </div>
-  <div id="hbSlots"></div>
-  <button id="btnAllBlocks" title="Every block material — tap to show or hide">🧱 All blocks ▾</button>
-</div>
-
 <div id="selPanel">
   <div class="sp-title" id="selPanelTitle">Selected: 0 blocks</div>
+  <div id="selProps"></div>
   <button id="selCopy">📋 Copy</button>
   <button id="selCut">✂️ Cut</button>
   <button id="selDuplicate">⧉ Duplicate</button>
@@ -424,14 +662,6 @@
   <div id="roSaved" class="dim"></div>
   <div id="roFps" class="dim"></div>
   <div id="roBig" class="dim" style="display:none"></div>
-</div>
-
-<div id="help">
-  <b>Click Add blocks</b>, pick a block below, then click where it goes.<br>
-  <b>Drag</b> to look around · <b>Scroll</b> to zoom<br>
-  <b>Hold Space</b> and drag to move the view<br>
-  <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row<br>
-  Stuck? Click <b>🏠 Home</b> up top to reset the view.
 </div>
 
 <div id="presetPanel">
@@ -692,26 +922,25 @@
 <div id="hoverTag"></div>
 <div id="toast"></div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
+<div id="zoomBar" title="Zoom the view">
+  <button id="zoomOut" title="Zoom out">−</button>
+  <input id="zoomSlider" type="range" min="0" max="100" value="50" step="1" title="Zoom">
+  <button id="zoomIn" title="Zoom in">＋</button>
+  <span id="zoomPct">100%</span>
+</div>
+<div id="dragChip"></div>
 <div id="startScreen">
   <div class="ss-wrap">
   <div class="ss-card">
-    <h1>⛏️ Pick a house to make your own</h1>
-    <div class="ss-sub">Tap a house to open it and start changing it. No sign-up — your house is saved on this device.</div>
+    <h1>⛏️ Your builds</h1>
+    <div class="ss-sub">Pick a build to continue, or start something new. No sign-up — builds are saved on this device.</div>
+    <button id="ssNewBuild" class="ss-primary">＋ New build</button>
+    <div id="ssProjects"></div>
+    <div class="ss-sec">Start from a template</div>
     <div class="ss-homes" id="ssHomes"></div>
   </div>
   <button class="ss-empty" id="ssEmpty">Start with an empty plot →</button>
   </div>
-</div>
-
-<div id="guideCard">
-  <button class="g-x" id="guideClose" title="Hide this">✕</button>
-  <h3>🏠 Build your first house</h3>
-  <div class="g-sub">3 quick steps — do them in the real editor.</div>
-  <div class="g-step" data-step="0"><span class="g-box"></span><span><b>1. Add a floor</b> — pick <b>Floor</b> below, then click the grass</span></div>
-  <div class="g-step" data-step="1"><span class="g-box"></span><span><b>2. Add walls</b> — pick <b>Wall</b>, click along the edge</span></div>
-  <div class="g-step" data-step="2"><span class="g-box"></span><span><b>3. Add a door</b> — pick <b>Door</b>, click a wall</span></div>
-  <div class="g-celebrate">🎉 You built a house!</div>
-  <div class="g-btns"><button id="guideKeep">Keep building</button><button id="guideStarter">Try a starter house</button></div>
 </div>
 
 <input type="file" id="importFile" accept=".json,application/json" style="display:none">
@@ -1043,14 +1272,11 @@ function clockDelta(){ const now=performance.now(); const dt=Math.min((now-_last
 function resize(){
   const w=innerWidth, h=innerHeight;
   renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
-  // the help panel and the size bar sit just under the top bar, however
-  // tall the toolbar wraps to at this width
+  // the size bar sits just under the slim top bar; the gizmo hangs under it too
   const tb=document.querySelector('#topbar');
   if(tb){ const top=(tb.offsetHeight+10)+'px';
     const gz=$('#gizmo'); if(gz) gz.style.top=top;
-    const gc=$('#guideCard'); if(gc) gc.style.top=top;   // the first-build card hangs under the bar too (round 10)
-    const pill=$('#savePill'); if(pill) pill.style.top=top;   // the save pill floats left of the gizmo (round 10)
-    $('#help').style.top=(tb.offsetHeight+138)+'px'; $('#sizeBar').style.top=top; }
+    $('#sizeBar').style.top=top; }
 }
 function buildGroundScenery(){
   // one plain grass base to build on — no plot, no hole, no road.
@@ -1327,7 +1553,7 @@ function buildEmpty(){ clearBlocks(); roomNames.clear(); rebuild(); updateStats(
 function setFloor(i, focus=false){
   activeFloor = clamp(i,0,FLOORS.length-1);
   const f=FLOORS[activeFloor];
-  $$('#floorbar button').forEach((b,bi)=>b.classList.toggle('on', bi===activeFloor));
+  updateLayersPanel();   // the Layers tab highlights the active floor (round 13)
   const fl=$('#activeFloorLbl');   // removed in the round-7 toolbar regroup; the readout panel shows the floor now
   if(fl) fl.textContent = 'Building on: '+f.name+'  ·  floor top '+ftin((f.base+1)*FT)+' — 1 block = 6 in';
   if(focus){
@@ -1393,6 +1619,7 @@ function updateStats(){
   }
   updateFloorBand();
   updateSymmetryReadout();
+  updateLayersPanel();   // floor block counts in the Layers tab (round 13)
   guideCheck();   // the 3-step first build ticks itself off as you build (round 10)
   if($('#materialsPanel') && $('#materialsPanel').classList.contains('on')) updateMaterialsPanel();
 }
@@ -1683,6 +1910,7 @@ function updateRoomLabels(){
   const rooms=detectRooms();
   for(const r of rooms){
     if(viewMode==='isolate' && r.fi!==activeFloor) continue;
+    if(!layerVisible[r.fi]) continue;   // hidden layer: no room tag either (round 13)
     const sp=makeLabelSprite(r.name+' · '+roomAreaText(r.areaSqFt));
     // float just above the room's tallest block (above the roof, so the
     // tag is visible from the normal camera); in Dollhouse sit just
@@ -2120,14 +2348,15 @@ function longPressAt(x,y,z){
    The blocks map itself never changes — switching back to normal restores
    everything, and save/export/share are unaffected. */
 function blockRendered(x,y,z){
-  if(viewMode==='normal') return true;
   const fi=floorOfY(y);
+  if(!layerVisible[fi]) return false;   // hidden layer (round 13)
   if(viewMode==='isolate') return fi===activeFloor;
-  return y<=FLOORS[fi].base+DOLL_CUT;   // dollhouse
+  if(viewMode==='dollhouse') return y<=FLOORS[fi].base+DOLL_CUT;
+  return true;
 }
 function wallVisible(w){
-  if(viewMode==='normal') return true;
   const fi=floorOfY(w.y);
+  if(!layerVisible[fi]) return false;   // hidden layer (round 13)
   if(viewMode==='isolate') return fi===activeFloor;
   return w.y<=FLOORS[fi].base+DOLL_CUT;
 }
@@ -2136,7 +2365,7 @@ function setView(m){
   viewMode=m;
   $('#btnIsolate').classList.toggle('on', m==='isolate');
   $('#btnDollhouse').classList.toggle('on', m==='dollhouse');
-  rebuild(); updateStats();
+  rebuild(); updateStats(); updateLayersPanel();
   if(m==='isolate') toast('Isolate — only the '+FLOORS[activeFloor].name+' floor is shown · click Isolate again to show all');
   else if(m==='dollhouse') toast('Dollhouse — all floors stacked, walls cut at eye level · click Dollhouse again to show all');
   return viewMode;
@@ -2405,21 +2634,36 @@ function scheduleSave(){
   clearTimeout(saveTimer); saveTimer=setTimeout(saveLocal, 600);
 }
 function saveLocal(){
+  // round 13: autosave writes into the currently open project in the
+  // projects store (see the round-13 section). The old single key is
+  // only read once, at migration.
   try{
-    localStorage.setItem(LSKEY, JSON.stringify(projectData()));
+    const data=projectData();
+    const list=loadProjects();
+    let cur=list.find(p=>p.id===currentProjectId);
+    if(!cur){
+      cur=newProject(projectName, data);
+      list.push(cur); currentProjectId=cur.id; setCurrentId(cur.id);
+    }
+    cur.data=data; cur.name=projectName; cur.updatedAt=Date.now();
+    saveProjects(list);
+    saveQuotaFull=false;
     const el=$('#roSaved'); if(el) el.textContent='💾 Saved ✓ '+saveTimeStr();
     const pill=$('#savePill'); if(pill) pill.textContent='✓ Saved on this device';
-  }catch(e){}
+    renderProjectsUI(); renderHomeProjects();
+  }catch(e){
+    saveQuotaFull=true;
+    const el=$('#roSaved'); if(el) el.textContent='💾 Could not save — out of space';
+    const pill=$('#savePill'); if(pill) pill.textContent='⚠ Could not save';
+    toast('Could not save — this device is out of space. Export a copy or delete an old build.');
+    renderProjectsUI();
+  }
 }
 function loadLocal(){
-  try{
-    const raw=localStorage.getItem(LSKEY); if(!raw) return false;
-    const p=JSON.parse(raw);
-    if(!p||!Array.isArray(p.blocks)) return false;
-    loadProjectData(p);
-    saveLocal();   // re-save in the current shape, so an old v1 save upgrades
-    return true;
-  }catch(e){ return false; }
+  // round 13: sessions — migrate the old single autosave into a project
+  // called "My Build", then load the currently open project.
+  try{ initSessions(); }catch(e){ /* a corrupt save starts empty */ }
+  return blocks.size>0;
 }
 function exportJSON(){
   const blob=new Blob([JSON.stringify(projectData(),null,1)], { type:'application/json' });
@@ -4646,6 +4890,14 @@ let downPos=null, downTime=0, downBtn=0, walkDrag=null, menuJustClosed=false;
 function bindPointer(){
   const el=renderer.domElement;
   el.addEventListener('contextmenu', e=>e.preventDefault());
+  // HTML5 drag-and-drop from an element card (desktop mouse): the card's
+  // dragstart carries its id, the canvas accepts the drop. Touch uses the
+  // pointer-based drag in bindCardDrag instead — a touch never starts a
+  // native drag, so the two paths never fight.
+  el.addEventListener('dragover', e=>{ e.preventDefault(); if(e.dataTransfer) e.dataTransfer.dropEffect='copy'; });
+  el.addEventListener('drop', e=>{ e.preventDefault();
+    const id=e.dataTransfer? e.dataTransfer.getData('text/plain') : '';
+    if(id) dropElementAt(id, e.clientX, e.clientY); });
   el.addEventListener('pointermove', e=>{
     if(lpTimer && lpPos && Math.hypot(e.clientX-lpPos[0], e.clientY-lpPos[1])>10){ clearTimeout(lpTimer); lpTimer=null; }
     if(WALK.active){
@@ -4835,43 +5087,35 @@ function bindPointer(){
 
 /* ================= palette + floor bar + tools UI ================= */
 function buildPalette(){
-  const pal=$('#palette');
+  // the 10 materials are visual cards in the Elements panel now (round 13)
+  const grid=$('#matGrid'); if(!grid) return;
   TYPES.forEach((ty,ti)=>{
     const b=document.createElement('button');
-    b.dataset.type=ti;
+    b.className='el-card'; b.dataset.type=ti; b.dataset.el=String(ti); b.dataset.name=ty.name;
+    b.draggable=true;
     const cv=document.createElement('canvas'); cv.width=cv.height=64;
     const g=cv.getContext('2d');
     const tex=ty.mats[2];   // top texture as the swatch
     g.drawImage(tex.image,0,0);
     if(ty.glass){ g.fillStyle='rgba(180,220,255,0.5)'; g.fillRect(0,0,64,64); g.drawImage(tex.image,0,0); }
     b.appendChild(cv);
-    const nm=document.createElement('span'); nm.textContent=ty.name; b.appendChild(nm);
-    b.onclick=()=>selectType(ti);
-    pal.appendChild(b);
+    const nm=document.createElement('span'); nm.className='el-name'; nm.textContent=ty.name; b.appendChild(nm);
+    b.onclick=()=>{ if(cardDragged){ cardDragged=false; return; } selectType(ti); setBuildMode('add'); };
+    bindCardDrag(b, String(ti));
+    grid.appendChild(b);
   });
   selectType(selType);
 }
 function selectType(ti){
   selType=ti;
-  $$('#palette button').forEach(b=>b.classList.toggle('on', +b.dataset.type===ti));
-  updateHotbar();   // a picked material lights up its hotbar slot too (round 10)
-}
-function buildFloorBar(){
-  const bar=$('#floorbar');
-  FLOORS.forEach((f,i)=>{
-    const b=document.createElement('button');
-    b.textContent=f.name;
-    b.onclick=()=>setFloor(i,true);
-    bar.appendChild(b);
-  });
+  $$('#matGrid .el-card').forEach(b=>b.classList.toggle('on', +b.dataset.type===ti));
+  updateHotbar();   // a picked material lights up its element card too (round 13)
 }
 
-/* ================= Canva-style UI (round 10) ================= */
-/* Level 1 is what a first-time user sees: a hotbar of 8 big NAMED blocks
-   by function, two plain Add / Remove mode buttons, big Undo / Redo and a
-   "Saved on this device" pill. Everything else (the full 10-material
-   palette, the 12 tools, templates, mirror…) stays one click away in
-   Level 2 — nothing is removed, only moved behind a clear label. */
+/* ================= Round 13 shell: element cards replace the hotbar ================= */
+/* The 8 named slots live on as Element cards in the left panel (same ids,
+   same order, same keys 1-8) — the cards are built by buildElementCards()
+   in the round-13 section below. */
 const HOTBAR_SLOTS=[
   { id:'floor',  name:'Floor',  type:2 },   // wood planks, like every template floor
   { id:'wall',   name:'Wall',   type:4 },
@@ -4883,25 +5127,6 @@ const HOTBAR_SLOTS=[
   { id:'eraser', name:'Eraser', tool:'erase' },
 ];
 let buildMode='add';   // 'add' | 'remove' — the plain-language face of the Build / Erase tools
-function buildHotbar(){
-  const wrap=$('#hbSlots');
-  HOTBAR_SLOTS.forEach((s,i)=>{
-    const b=document.createElement('button');
-    b.className='hb-slot'; b.dataset.slot=s.id;
-    if(s.tool==='erase'){
-      const ic=document.createElement('span'); ic.className='hb-ico'; ic.textContent='🧽'; b.appendChild(ic);
-    } else {
-      const cv=document.createElement('canvas'); cv.width=cv.height=64;
-      cv.getContext('2d').drawImage(TYPES[s.type].mats[2].image,0,0);
-      b.appendChild(cv);
-    }
-    const nm=document.createElement('span'); nm.textContent=s.name; b.appendChild(nm);
-    const k=document.createElement('span'); k.className='k'; k.textContent='key '+(i+1); b.appendChild(k);
-    b.onclick=()=>selectHotbarSlot(i);
-    wrap.appendChild(b);
-  });
-  updateHotbar();
-}
 function selectHotbarSlot(i){
   const s=HOTBAR_SLOTS[i]; if(!s) return false;
   if(s.tool==='erase'){ setBuildMode('remove'); return true; }
@@ -4910,11 +5135,12 @@ function selectHotbarSlot(i){
   return true;
 }
 function updateHotbar(){
-  const wrap=$('#hbSlots'); if(!wrap) return;
-  $$('#hotbar .hb-slot').forEach((b,i)=>{
+  $$('#elGrid .el-card').forEach((b,i)=>{
     const s=HOTBAR_SLOTS[i];
     b.classList.toggle('on', !!s && (s.tool==='erase' ? tool==='erase' : (tool==='build' && selType===s.type)));
   });
+  const sh=$('#elGrid .el-card[data-el="shutter"]');
+  if(sh) sh.classList.toggle('on', presetMode==='shutter');
   updateModeUI();
 }
 function updateModeUI(){
@@ -4927,14 +5153,6 @@ function setBuildMode(m){
   buildMode=(m==='remove')?'remove':'add';
   setTool(buildMode==='remove'?'erase':'build');
   updateModeUI();
-}
-/* the full material strip is Level 2: hidden until "All blocks" is tapped */
-function togglePalette(show){
-  const p=$('#palette');
-  const on=show!==undefined?show:!p.classList.contains('on');
-  p.classList.toggle('on',on);
-  const b=$('#btnAllBlocks'); if(b) b.classList.toggle('on',on);
-  return on;
 }
 /* ================= contextual selection panel (round 10) ================= */
 /* Only when something is selected — the panel shows the actions that fit
@@ -4951,14 +5169,14 @@ function updateSelPanel(){
     const bb=selectionBBox();
     const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT;
     $('#selPanelTitle').textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d);
+    updateSelProps();   // Figma-style properties: size, material, floor (round 13)
   }
-  const pal=$('#palette');
-  if(pal) pal.style.bottom = on ? (120 + p.offsetHeight + 10)+'px' : '';
 }
 /* ================= start screen: pick a house, never an empty grid (round 10) ================= */
 const START_IDS=['cottage','flat','house'];
 const START_ICONS={ cottage:'🏠', flat:'🏡', house:'🏘️' };
 function renderStartScreen(){
+  renderHomeProjects();   // Figma-style: your saved builds first (round 13)
   const wrap=$('#ssHomes'); wrap.innerHTML='';
   for(const id of START_IDS){
     const t=TEMPLATES.find(t=>t.id===id); if(!t) continue;
@@ -4983,6 +5201,7 @@ function startPick(id){
 }
 function startEmpty(){
   hideStartScreen();
+  if(blocks.size){ createNewProject(); }   // keep the current build safe — start a fresh empty project
   if(!guideDone()) showGuide();
 }
 /* ================= guided first build (round 10) ================= */
@@ -5045,7 +5264,7 @@ function setTool(t){
   if(t==='build') buildMode='add';
   else if(t==='erase') buildMode='remove';
   updateHotbar();
-  $$('#toolSeg button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+  $$('#toolsList button[data-tool]').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   // the fill panel and the stair panel share the same bottom-centre spot —
   // never show both at once
@@ -5380,22 +5599,20 @@ function tick(dt){
 function init(){
   initScene();
   buildWalker();
-  buildPalette();
-  buildHotbar();   // the 8 big named blocks + Add / Remove modes (round 10)
-  buildFloorBar();
+  buildElementCards();   // element + material cards in the left panel (round 13)
+  buildLayersPanel();   // floor layers as a list (round 13)
   bindPointer();
   bindKeys();
   $$('#floorbar button').forEach((b,i)=>b.classList.toggle('on', i===activeFloor));
   setFloor(1);
-  $$('#toolSeg button').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-  $$('.camrow [data-cam]').forEach(b=>b.onclick=()=>{
-    $$('.camrow [data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
+  $$('#toolsList button[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+  $$('#toolsView button[data-cam]').forEach(b=>b.onclick=()=>{
+    $$('#toolsView button[data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
   $('#btnUndo').onclick=doUndo;
   $('#btnRedo').onclick=doRedo;
   // Add / Remove modes + the full material strip (round 10)
   $('#btnModeAdd').onclick=()=>setBuildMode('add');
   $('#btnModeRemove').onclick=()=>setBuildMode('remove');
-  $('#btnAllBlocks').onclick=()=>togglePalette();
   // the contextual selection panel (round 10)
   $('#selCopy').onclick=()=>copySelection();
   $('#selCut').onclick=()=>cutSelection();
@@ -5421,7 +5638,7 @@ function init(){
   $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
   $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
   $('#btnPresets').onclick=()=>togglePresetPanel();
-  $('#btnTemplates').onclick=()=>toggleTemplatePanel();
+  $('#btnTemplates').onclick=()=>setRailTab('templates');
   $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
   $('#btnShare').onclick=()=>shareBuild();
   $('#btnMirror').onclick=()=>toggleMirrorPanel();
@@ -5497,6 +5714,28 @@ function init(){
   $('#btnExitWalk').onclick=walkStop;
   $('#btnWalkFP').onclick=()=>setWalkFP(!WALK.fp);
   $('#btnMore').onclick=()=>toggleMoreMenu();
+  // round 13: rail tabs, zoom bar, project rename, home-screen actions
+  $$('.rail-btn').forEach(b=>b.onclick=()=>setRailTab(b.dataset.tab));
+  $('#spClose').onclick=()=>setRailTab(null);
+  $('#elSearch').addEventListener('input', filterElementCards);
+  $('#btnNewBuild2').onclick=()=>createNewProject();
+  $('#ssNewBuild').onclick=()=>createNewProject();
+  $('#btnHelpShortcuts').onclick=()=>toggleCheatPanel(true);
+  $('#btnProjName').onclick=()=>startProjRename();
+  $('#projNameInput').addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commitProjRename(); }
+    else if(e.key==='Escape'){ e.preventDefault(); cancelProjRename(); }
+  });
+  $('#projNameInput').addEventListener('blur', ()=>{ if($('#projNameInput').style.display!=='none') commitProjRename(); });
+  $('#zoomOut').onclick=()=>zoomStep(-1);
+  $('#zoomIn').onclick=()=>zoomStep(1);
+  $('#zoomSlider').addEventListener('input', e=>{ const v=+e.target.value;
+    const d=320*Math.pow(8/320, v/100); const cd=camDist();
+    if(cd>0.01){ camera.position.sub(controls.target).multiplyScalar(d/cd).add(controls.target); controls.update(); }
+    updateZoomUI(); });
+  $('#btnViewNormal').onclick=()=>{ setView('normal'); updateLayersPanel(); };
+  $('#btnViewIsolate').onclick=()=>{ setView('isolate'); updateLayersPanel(); };
+  $('#btnViewDoll').onclick=()=>{ setView('dollhouse'); updateLayersPanel(); };
   $('#btnSun').onclick=()=>toggleSunMenu();
   $('#btnTouch').onclick=()=>setTouch(!touchMode);
   $$('#sunMenu button[data-sun]').forEach(b=>b.onclick=()=>{ setSunPreset(b.dataset.sun); });
@@ -5564,16 +5803,11 @@ function init(){
   $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ buildEmpty(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
-  const hadSave=loadLocal();
-  if(!hadSave){
-    // fresh start: empty grass base, nothing built yet
-    projectName='My Build'; $('#projName').textContent=projectName;
-    updateStats();
-  }
+  const hadSave=loadLocal();   // sessions: migrates the old single save into "My Build" and loads the open project
   const shared=loadSharedFromHash();   // a #s= link replaces whatever was loaded above
-  // first load with no save and no shared link: pick a house first —
-  // never an empty grid by default (round 10)
-  if(!hadSave && !shared && blocks.size===0) showStartScreen();
+  // Figma-style home: every fresh open lands on "Your builds" — continue a
+  // saved build or start new — unless a share link just opened a build
+  if(!shared) showStartScreen();
   const pill=$('#savePill');
   if(pill) pill.textContent = hadSave ? '✓ Saved on this device' : 'Saves on this device as you build';
   loadLabelsPref();   // wall labels: on by default, remembered choice wins
@@ -5582,9 +5816,540 @@ function init(){
   loadGridPref();     // 1-ft grid: on by default, remembered choice wins
   loadSnapPref();     // whole-foot snap: off by default, remembered choice wins
   updateUndoBtns();
-  resize();   // position the help panel + size bar under the finished toolbar
+  resize();   // position the size bar under the finished top bar
+  if(matchMedia('(max-width:820px)').matches) setRailTab(null);   // phones start with the panel closed (round 13)
+  if(controls) controls.addEventListener('change', ()=>updateZoomUI());
+  updateZoomUI();
   window.__ready=true;
 }
+
+/* ================= ROUND 13 — Canva layout + Figma-style sessions ================= */
+/* Borrowed, where each fits cleanly, from the tools Vijay named:
+   - Canva: left icon rail + wide panel with visual element cards + big
+     clean canvas + zoom bar bottom-right (this section's base layout).
+   - Figma: the "Your builds" home list, zoom-to-cursor + Space hand
+     (already built in round 9), and the right-side Properties panel
+     (the selection panel, restyled) — visible only with a selection.
+   - Layers panel: the 5 floors as layers with show/hide
+     (eye) per floor, active floor highlighted, Rooftop on top.
+   - Blender: viewport navigation, the axis gizmo, keyboard-first
+     workflow and the right-click context menu — all already built in
+     rounds 3-9 and kept working here, not rebuilt.
+   Honest limit, in code only: saves live on this device/browser (no
+   login, so no sync across devices). */
+
+/* ---- Figma-style saved sessions: multiple named projects in localStorage ---- */
+const PROJECTS_KEY='home-designer-minecraft-projects-v1';
+const CURRENT_KEY='home-designer-minecraft-current-v1';
+const MIGRATED_KEY='home-designer-minecraft-migrated-v1';
+let currentProjectId=null;
+let saveQuotaFull=false;
+function loadProjects(){
+  try{ const a=JSON.parse(localStorage.getItem(PROJECTS_KEY)); return Array.isArray(a)? a : []; }
+  catch(e){ return []; }
+}
+function saveProjects(list){
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+}
+function currentId(){ try{ return localStorage.getItem(CURRENT_KEY); }catch(e){ return null; } }
+function setCurrentId(id){ try{ localStorage.setItem(CURRENT_KEY, id); }catch(e){} }
+function newProject(name, data){
+  return { id:'p-'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36),
+    name: name||'Untitled plot', createdAt: Date.now(), updatedAt: Date.now(), data: data||null };
+}
+function migrateLegacy(){
+  // one-time: the old single autosave becomes a project called "My Build".
+  // It must never wipe anyone's current build — the old key is only
+  // removed after the project is safely stored.
+  try{
+    if(localStorage.getItem(MIGRATED_KEY)==='1') return;
+    const raw=localStorage.getItem(LSKEY);
+    if(raw){
+      const p=JSON.parse(raw);
+      if(p && Array.isArray(p.blocks)){
+        const list=loadProjects();
+        if(!list.length){
+          const proj=newProject(p.name||'My Build', p);
+          list.push(proj); saveProjects(list); setCurrentId(proj.id);
+        }
+      }
+    }
+    localStorage.setItem(MIGRATED_KEY,'1');
+    if(raw) localStorage.removeItem(LSKEY);
+  }catch(e){}
+}
+function initSessions(){
+  migrateLegacy();
+  let list=loadProjects();
+  if(!list.length){
+    const p=newProject('My Build', null);
+    list=[p]; saveProjects(list); setCurrentId(p.id);
+  }
+  let cur=list.find(p=>p.id===currentId())
+    || list.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+  setCurrentId(cur.id);
+  currentProjectId=cur.id;
+  if(cur.data){ loadProjectData(cur.data); }
+  else { projectName=cur.name; const pn=$('#projName'); if(pn) pn.textContent=projectName; }
+  return cur;
+}
+function projectAreaSqFt(data){
+  if(!data || !Array.isArray(data.blocks) || !data.blocks.length) return 0;
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+  for(const b of data.blocks){ if(!Array.isArray(b)||b.length<3) continue;
+    if(b[0]<x0)x0=b[0]; if(b[0]>x1)x1=b[0]; if(b[2]<z0)z0=b[2]; if(b[2]>z1)z1=b[2]; }
+  return Math.round((x1-x0+1)*(z1-z0+1)*FT*FT*10)/10;
+}
+function projectMeta(p){
+  const n=p.data&&Array.isArray(p.data.blocks)? p.data.blocks.length : 0;
+  const d=new Date(p.updatedAt||p.createdAt||Date.now());
+  const when=d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '
+    +String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const area=projectAreaSqFt(p.data);
+  return 'Edited '+when+' · '+n.toLocaleString('en-IN')+' block'+(n===1?'':'s')
+    +(area?' · '+area+' sq ft':'');
+}
+function openProject(id){
+  saveLocal();   // flush the project being left first
+  const list=loadProjects();
+  const p=list.find(x=>x.id===id); if(!p) return false;
+  currentProjectId=p.id; setCurrentId(p.id);
+  if(p.data){ try{ loadProjectData(p.data); }catch(e){ buildEmpty(); } }
+  else { buildEmpty(); projectName=p.name; const pn=$('#projName'); if(pn) pn.textContent=projectName; }
+  hideStartScreen();
+  renderProjectsUI(); renderHomeProjects();
+  toast('Opened "'+p.name+'"');
+  return true;
+}
+function createNewProject(name){
+  saveLocal();   // flush the current project first
+  const list=loadProjects();
+  const p=newProject(name||'Untitled plot', null);
+  list.push(p); saveProjects(list);
+  currentProjectId=p.id; setCurrentId(p.id);
+  buildEmpty(); projectName=p.name; const pn=$('#projName'); if(pn) pn.textContent=projectName;
+  hideStartScreen();
+  renderProjectsUI(); renderHomeProjects();
+  toast('New empty plot — build something');
+  return p;
+}
+function renameProject(id, newName){
+  newName=(newName||'').trim();
+  if(!newName){ toast('Give the build a name first'); return false; }
+  const list=loadProjects();
+  const p=list.find(x=>x.id===id); if(!p) return false;
+  p.name=newName; if(p.data) p.data.name=newName;
+  if(id===currentProjectId){ projectName=newName; const pn=$('#projName'); if(pn) pn.textContent=newName; }
+  saveProjects(list);
+  renderProjectsUI(); renderHomeProjects();
+  return true;
+}
+function duplicateProject(id){
+  const list=loadProjects();
+  const p=list.find(x=>x.id===id); if(!p) return null;
+  const copy=newProject(p.name+' copy', p.data? JSON.parse(JSON.stringify(p.data)) : null);
+  list.push(copy); saveProjects(list);
+  renderProjectsUI(); renderHomeProjects();
+  toast('Copied "'+p.name+'"');
+  return copy;
+}
+function deleteProject(id){
+  const list=loadProjects();
+  const p=list.find(x=>x.id===id); if(!p) return false;
+  if(list.length<=1){
+    // never leave the user with no project: empty the only one instead
+    askConfirm('Delete "'+p.name+'" and start empty? This cannot be undone.', ok=>{
+      if(!ok) return;
+      buildEmpty(); projectName='My Build'; const pn=$('#projName'); if(pn) pn.textContent=projectName;
+      scheduleSave(); renderProjectsUI(); renderHomeProjects();
+      toast('Build deleted — empty plot again');
+    });
+    return true;
+  }
+  askConfirm('Delete "'+p.name+'"? This cannot be undone.', ok=>{
+    if(!ok) return;
+    const rest=loadProjects().filter(x=>x.id!==id);
+    saveProjects(rest);
+    if(id===currentProjectId){
+      const next=rest.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+      currentProjectId=next.id; setCurrentId(next.id);
+      if(next.data){ try{ loadProjectData(next.data); }catch(e){ buildEmpty(); } }
+      else { buildEmpty(); projectName=next.name; const pn=$('#projName'); if(pn) pn.textContent=projectName; }
+    }
+    renderProjectsUI(); renderHomeProjects();
+    toast('Build deleted');
+  });
+  return true;
+}
+function renderProjectsUI(){
+  const listEl=$('#projList'); if(!listEl) return;
+  const list=loadProjects().slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  listEl.innerHTML='';
+  for(const p of list){
+    const row=document.createElement('div');
+    row.className='proj-row'+(p.id===currentProjectId?' current':'');
+    const info=document.createElement('div'); info.className='pr-info';
+    const nm=document.createElement('div'); nm.className='pr-name'; nm.textContent=p.name;
+    const meta=document.createElement('div'); meta.className='pr-meta'; meta.textContent=projectMeta(p);
+    info.append(nm,meta);
+    const btns=document.createElement('div'); btns.className='pr-btns';
+    const mk=(txt,title,fn)=>{ const b=document.createElement('button'); b.textContent=txt; b.title=title;
+      b.onclick=e=>{ e.stopPropagation(); fn(); }; btns.appendChild(b); return b; };
+    mk('✎','Rename', ()=>startRowRename(row, p));
+    mk('⧉','Duplicate', ()=>duplicateProject(p.id));
+    mk('🗑','Delete', ()=>deleteProject(p.id));
+    row.append(info,btns);
+    row.onclick=()=>openProject(p.id);
+    listEl.appendChild(row);
+  }
+  const qn=$('#projQuotaNote');
+  if(qn){ qn.style.display=saveQuotaFull?'block':'none';
+    if(saveQuotaFull) qn.textContent='This device is out of space — export a copy or delete an old build, then keep building.'; }
+}
+function startRowRename(row, p){
+  const nm=row.querySelector('.pr-name'); if(!nm) return;
+  const inp=document.createElement('input');
+  inp.className='pr-rename'; inp.maxLength=24; inp.value=p.name;
+  nm.replaceWith(inp); inp.focus(); inp.select();
+  let done=false;
+  const commit=()=>{ if(done) return; done=true;
+    const v=inp.value.trim();
+    if(v && v!==p.name) renameProject(p.id, v); else renderProjectsUI(); };
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commit(); }
+    else if(e.key==='Escape'){ e.preventDefault(); done=true; renderProjectsUI(); }
+    e.stopPropagation();
+  });
+  inp.addEventListener('blur', commit);
+}
+function renderHomeProjects(){
+  const wrap=$('#ssProjects'); if(!wrap) return;
+  const list=loadProjects().slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  wrap.innerHTML='';
+  for(const p of list){
+    const row=document.createElement('div'); row.className='proj-row'+(p.id===currentProjectId?' current':'');
+    const info=document.createElement('div'); info.className='pr-info';
+    const nm=document.createElement('div'); nm.className='pr-name'; nm.textContent=p.name;
+    const meta=document.createElement('div'); meta.className='pr-meta'; meta.textContent=projectMeta(p);
+    info.append(nm,meta);
+    const b=document.createElement('button'); b.className='sp-primary'; b.style.width='auto';
+    b.style.padding='8px 14px'; b.textContent='Continue';
+    b.onclick=()=>openProject(p.id);
+    row.append(info,b);
+    row.onclick=()=>openProject(p.id);
+    wrap.appendChild(row);
+  }
+}
+/* rename the open project from the top bar (tap the name) */
+function startProjRename(){
+  const span=$('#projName'), inp=$('#projNameInput'); if(!span||!inp) return;
+  inp.value=projectName; span.style.display='none'; inp.style.display='inline-block';
+  inp.focus(); inp.select();
+}
+function commitProjRename(){
+  const span=$('#projName'), inp=$('#projNameInput'); if(!span||!inp) return;
+  const name=inp.value.trim();
+  inp.style.display='none'; span.style.display='';
+  if(name && name!==projectName){ renameProject(currentProjectId, name); scheduleSave(); }
+  inp.blur();
+}
+function cancelProjRename(){
+  const span=$('#projName'), inp=$('#projNameInput'); if(!span||!inp) return;
+  inp.style.display='none'; span.style.display=''; inp.blur();
+}
+
+/* ---- left rail + panel (Canva) ---- */
+const RAIL_TABS={ elements:'Elements', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', help:'Help' };
+let railTab='elements';
+function setRailTab(tab){
+  if(tab && tab===railTab) tab=null;   // tap the active tab again = close the panel
+  railTab=tab;
+  $$('.rail-btn').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
+  $$('#sidePanel .sp-tab').forEach(t=>t.classList.toggle('on', !!tab && t.id==='tab-'+tab));
+  const st=$('#spTitle'); if(st) st.textContent=tab? RAIL_TABS[tab] : '';
+  document.body.classList.toggle('panel-closed', !tab);
+  if(tab==='templates') renderTplCards();
+  if(tab==='builds') renderProjectsUI();
+  if(tab==='layers') updateLayersPanel();
+  return railTab;
+}
+function renderTplCards(){
+  const wrap=$('#tplCards'); if(!wrap) return;
+  wrap.innerHTML='';
+  for(const t of TEMPLATES){
+    const info=templateInfo(t);
+    const card=document.createElement('div'); card.className='tpl-card';
+    const ic=document.createElement('div'); ic.className='tpl-ico'; ic.textContent=START_ICONS[t.id]||'🏠';
+    const nm=document.createElement('h3'); nm.textContent=t.name;
+    const ds=document.createElement('p'); ds.textContent=t.desc;
+    const sz=document.createElement('div'); sz.className='tpl-size';
+    sz.textContent=ftin(info.wFt)+' × '+ftin(info.dFt)+' · '+info.n+' blocks';
+    card.append(ic,nm,ds,sz);
+    card.onclick=()=>loadTemplate(t.id);   // asks first when the current build is non-empty
+    wrap.appendChild(card);
+  }
+}
+
+/* ---- floor layers ---- */
+let layerVisible=[true,true,true,true,true];
+const LAYER_KEY='home-designer-minecraft-layers-v1';
+function loadLayerPref(){
+  try{ const a=JSON.parse(localStorage.getItem(LAYER_KEY));
+    if(Array.isArray(a)&&a.length===5) layerVisible=a.map(Boolean); }catch(e){}
+}
+function saveLayerPref(){ try{ localStorage.setItem(LAYER_KEY, JSON.stringify(layerVisible)); }catch(e){} }
+function buildLayersPanel(){
+  loadLayerPref();
+  const list=$('#layersList'); if(!list) return;
+  list.innerHTML='';
+  for(let i=FLOORS.length-1;i>=0;i--){   // Rooftop on top, like a layers list
+    const row=document.createElement('div'); row.className='layer-row'; row.dataset.floor=i;
+    const eye=document.createElement('button'); eye.className='ly-eye'; eye.title='Show / hide this floor';
+    eye.onclick=e=>{ e.stopPropagation(); toggleLayer(i); };
+    const nm=document.createElement('span'); nm.className='ly-name'; nm.textContent=FLOORS[i].name;
+    const ct=document.createElement('span'); ct.className='ly-count'; ct.textContent='empty';
+    row.append(eye,nm,ct);
+    row.onclick=()=>setFloor(i,true);
+    list.appendChild(row);
+  }
+  updateLayersPanel();
+}
+function updateLayersPanel(){
+  const counts=[0,0,0,0,0];
+  for(const [k] of blocks){ const y=parseKey(k)[1]; counts[floorOfY(y)]++; }
+  $$('#layersList .layer-row').forEach(row=>{
+    const i=+row.dataset.floor;
+    row.classList.toggle('on', i===activeFloor);
+    row.classList.toggle('hidden', !layerVisible[i]);
+    const eye=row.querySelector('.ly-eye'); if(eye) eye.textContent=layerVisible[i]?'👁':'🚫';
+    const ct=row.querySelector('.ly-count');
+    if(ct) ct.textContent=counts[i]? counts[i].toLocaleString('en-IN')+' block'+(counts[i]>1?'s':'') : 'empty';
+  });
+  const vn=$('#btnViewNormal'), vi=$('#btnViewIsolate'), vd=$('#btnViewDoll');
+  if(vn){ vn.classList.toggle('on', viewMode==='normal');
+    vi.classList.toggle('on', viewMode==='isolate');
+    vd.classList.toggle('on', viewMode==='dollhouse'); }
+}
+function toggleLayer(i){
+  layerVisible[i]=!layerVisible[i];
+  saveLayerPref(); rebuild(); updateLayersPanel(); updateStats();
+  toast(FLOORS[i].name+' floor '+(layerVisible[i]?'shown':'hidden'));
+  return layerVisible[i];
+}
+function setLayerVisible(i,on){
+  layerVisible[i]=!!on;
+  saveLayerPref(); rebuild(); updateLayersPanel(); updateStats();
+  return layerVisible[i];
+}
+
+/* ---- element cards: click selects, drag drops (Canva) ---- */
+const ELEMENT_DEFS=[
+  { id:'floor',   name:'Floor',   sub:'Wood planks',      type:2, key:1 },
+  { id:'wall',    name:'Wall',    sub:"10' × 8' brick",   type:4, key:2 },
+  { id:'window',  name:'Window',  sub:"4' × 3' glass",    type:5, key:3 },
+  { id:'door',    name:'Door',    sub:"Shutter 6' × 7'",  type:8, key:4 },
+  { id:'roof',    name:'Roof',    sub:'Roof slab',        type:7, key:5 },
+  { id:'stairs',  name:'Stairs',  sub:'10 steps',         type:6, key:6 },
+  { id:'tree',    name:'Tree',    sub:'Trunk + leaves',   type:9, key:7 },
+  { id:'shutter', name:'Shutter door', sub:"6' × 7' rolling", preset:'shutter' },
+];
+let cardDragged=false;   // a drag that just ended must not also fire the card's click
+function buildElementCards(){
+  const grid=$('#elGrid'); if(!grid) return;
+  ELEMENT_DEFS.forEach((def,i)=>{
+    const b=document.createElement('button');
+    b.className='el-card'; b.dataset.el=def.id; b.dataset.name=def.name;
+    if(i<7) b.dataset.slot=HOTBAR_SLOTS[i].id;
+    b.draggable=true;
+    if(def.preset==='shutter'){
+      const ic=document.createElement('span'); ic.className='el-ico'; ic.textContent='🚪'; b.appendChild(ic);
+    } else {
+      const cv=document.createElement('canvas'); cv.width=cv.height=64;
+      cv.getContext('2d').drawImage(TYPES[def.type].mats[2].image,0,0);
+      b.appendChild(cv);
+    }
+    const nm=document.createElement('span'); nm.className='el-name'; nm.textContent=def.name; b.appendChild(nm);
+    const sb=document.createElement('span'); sb.className='el-sub'; sb.textContent=def.sub; b.appendChild(sb);
+    if(def.key){ const k=document.createElement('span'); k.className='k'; k.textContent='key '+def.key; b.appendChild(k); }
+    b.onclick=()=>{ if(cardDragged){ cardDragged=false; return; } selectElementCard(def.id); };
+    bindCardDrag(b, def.id);
+    grid.appendChild(b);
+  });
+  buildPalette();   // the 10 material cards in the same panel
+  updateHotbar();
+}
+function selectElementCard(id){
+  const def=ELEMENT_DEFS.find(d=>d.id===id); if(!def) return false;
+  if(def.preset==='shutter'){ setPresetMode('shutter'); togglePresetPanel(true); return true; }
+  const i=ELEMENT_DEFS.indexOf(def);
+  return selectHotbarSlot(i);
+}
+function filterElementCards(){
+  const q=($('#elSearch').value||'').trim().toLowerCase();
+  $$('#elGrid .el-card, #matGrid .el-card').forEach(c=>{
+    c.style.display=(!q || (c.dataset.name||'').toLowerCase().includes(q))? '' : 'none';
+  });
+}
+/* HTML5 drag (desktop mouse) + pointer-based drag (touch and mouse):
+   a drag starts after 10 px of movement, so a tap still clicks and a
+   vertical swipe still scrolls the panel. */
+function bindCardDrag(card, elId){
+  card.addEventListener('dragstart', e=>{
+    e.dataTransfer.setData('text/plain', elId);
+    e.dataTransfer.effectAllowed='copy';
+  });
+  card.addEventListener('dragend', ()=>{ card.classList.remove('dragging'); });
+  card.addEventListener('pointerdown', e=>{
+    if(e.button!==undefined && e.button!==0) return;
+    const startX=e.clientX, startY=e.clientY;
+    let dragging=false;
+    const chip=$('#dragChip');
+    const move=ev=>{
+      if(!dragging && Math.hypot(ev.clientX-startX, ev.clientY-startY)>10){
+        dragging=true; card.classList.add('dragging');
+        chip.textContent=card.dataset.name||elId; chip.style.display='block';
+      }
+      if(dragging){
+        chip.style.left=(ev.clientX+14)+'px'; chip.style.top=(ev.clientY+14)+'px';
+        if(ev.cancelable) ev.preventDefault();
+      }
+    };
+    const up=ev=>{
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      document.removeEventListener('pointercancel', up);
+      chip.style.display='none'; card.classList.remove('dragging');
+      if(dragging){
+        cardDragged=true;
+        setTimeout(()=>{ cardDragged=false; }, 0);
+        const el=document.elementFromPoint(ev.clientX, ev.clientY);
+        if(el && (el===renderer.domElement || (el.closest && el.closest('#gl')))){
+          dropElementAt(elId, ev.clientX, ev.clientY);
+        }
+      }
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+    document.addEventListener('pointercancel', up);
+  });
+}
+/* the ground point under the cursor on the active floor's base plane */
+function dropPoint(sx, sy){
+  const rect=renderer.domElement.getBoundingClientRect();
+  const ndc=new THREE.Vector2(((sx-rect.left)/rect.width)*2-1, -((sy-rect.top)/rect.height)*2+1);
+  const ray=new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  const plane=new THREE.Plane(new THREE.Vector3(0,1,0), -(FLOORS[activeFloor].base+1));
+  const p=new THREE.Vector3();
+  return ray.ray.intersectPlane(plane, p)? p : null;
+}
+function dropElementAt(elId, sx, sy){
+  const p=dropPoint(sx, sy);
+  if(!p){ toast('Drop it on the grass'); return 0; }
+  const x=Math.floor(p.x+1e-4), z=Math.floor(p.z+1e-4), y=FLOORS[activeFloor].base+1;
+  if(!inBounds(x,y,z)){ toast('Outside the build area'); return 0; }
+  const def=ELEMENT_DEFS.find(d=>d.id===elId);
+  if(def && def.preset==='shutter') return placeShutterAt(x,y,z);
+  switch(elId){
+    case 'wall': return placeWallAt(x,y,z);
+    case 'window': return placeWindowAt(x,y,z);
+    case 'door': return placeShutterAt(x,y,z);
+    case 'stairs': return placeStairs('straight', 10, x, y, z, 0);
+    case 'tree': return placeTreeAt(x,y,z);
+    case 'floor': return placeBuildBlock(x,y,z,2);
+    case 'roof': return placeBuildBlock(x,y,z,7);
+    default: {
+      const ti=+elId;   // a material card drops one block of that type
+      if(Number.isInteger(ti)&&ti>=0&&ti<TYPES.length) return placeBuildBlock(x,y,z,ti);
+      return 0;
+    }
+  }
+}
+function placeWallAt(x,y,z){
+  const len=20, h=16;   // 10 ft long x 8 ft high, brick
+  const res=wallCells([x,y,z],[x+len-1,y,z],h,'none',null,4);
+  if(!res.cells){ toast(res.error||'Could not place the wall here'); return 0; }
+  const fresh=res.cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
+  const n=applyBatch(fresh);
+  if(n) toast('Wall placed — '+n+' blocks · 10\' 0" long × 8\' 0" high');
+  else toast('That spot is taken');
+  return n;
+}
+function placeWindowAt(x,y,z){
+  const cells=[];
+  for(let dx=0;dx<8;dx++) for(let dy=7;dy<13;dy++) cells.push({ x:x+dx, y:y+dy, z, t:5, r:0 });
+  const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
+  const n=applyBatch(fresh);
+  if(n) toast('Window placed — 4\' 0" × 3\' 0", sill 3\' 0"');
+  else toast('That spot is taken');
+  return n;
+}
+function placeTreeAt(x,y,z){
+  const cells=[];
+  for(let dy=0;dy<4;dy++) cells.push({ x, y:y+dy, z, t:2, r:0 });   // trunk
+  for(let dy=4;dy<6;dy++) for(let dx=-1;dx<=1;dx++) for(let dz=-1;dz<=1;dz++)
+    cells.push({ x:x+dx, y:y+dy, z:z+dz, t:9, r:0 });   // leafy canopy
+  cells.push({ x, y:y+6, z, t:9, r:0 });
+  const fresh=cells.filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
+  const n=applyBatch(fresh);
+  if(n) toast('Tree placed');
+  else toast('That spot is taken');
+  return n;
+}
+function placeShutterAt(x,y,z){
+  const cells=SHUTTER_CELLS.map(c=>rotOffset(c,0))
+    .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }))
+    .filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells);
+  if(n) toast('Shutter door placed — 6\' 0" × 7\' 0"');
+  else toast('That spot is taken');
+  return n;
+}
+
+/* ---- Figma-style Properties: what the selection is ---- */
+function updateSelProps(){
+  const el=$('#selProps'); if(!el) return;
+  el.innerHTML='';
+  if(!selection.size) return;
+  const bb=selectionBBox();
+  const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT, h=(bb.y1-bb.y0+1)*FT;
+  const counts=new Map();
+  for(const k of selection){ const b=blocks.get(k); if(b) counts.set(b.t,(counts.get(b.t)||0)+1); }
+  const top=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0];
+  const line=(label, val)=>{ const d=document.createElement('div');
+    const b=document.createElement('b'); b.textContent=label+' '; d.appendChild(b);
+    d.appendChild(document.createTextNode(val)); el.appendChild(d); };
+  line('Size:', ftin(w)+' wide × '+ftin(d)+' deep × '+ftin(h)+' high');
+  if(top) line('Material:', TYPES[top[0]].name+(counts.size>1?' · +'+(counts.size-1)+' more':'')
+    +' ('+top[1]+' block'+(top[1]>1?'s':'')+')');
+  line('Floor:', FLOORS[floorOfY(bb.y0)].name);
+}
+
+/* ---- Canva-style zoom bar (bottom-right), wired to the real camera ---- */
+const ZOOM_REF_DIST=96;   // the default view is 100%
+function camDist(){ return camera.position.distanceTo(controls.target); }
+function zoomPct(){ return Math.round(100*ZOOM_REF_DIST/camDist()); }
+function setZoomPct(p){
+  p=clamp(+p||100, 20, 400);
+  const target=clamp(ZOOM_REF_DIST*100/p, 8, 320);
+  const d=camDist(); if(d<0.01) return zoomPct();
+  camera.position.sub(controls.target).multiplyScalar(target/d).add(controls.target);
+  controls.update(); updateZoomUI(); return zoomPct();
+}
+function zoomStep(dir){
+  const d=camDist();
+  const nd=clamp(d*(dir>0?0.8:1.25), 8, 320);
+  camera.position.sub(controls.target).multiplyScalar(nd/d).add(controls.target);
+  controls.update(); updateZoomUI(); return zoomPct();
+}
+function updateZoomUI(){
+  const s=$('#zoomSlider'), pc=$('#zoomPct');
+  if(!s) return;
+  const d=camDist();
+  s.value=Math.round(100*(Math.log(320/d)/Math.log(320/8)));
+  if(pc) pc.textContent=zoomPct()+'%';
+}
+
+
 
 /* ================= test hooks (read-only, used by the Playwright suites) ================= */
 window.__mc = {
@@ -5925,17 +6690,17 @@ window.__mc = {
   hotbar:{
     slots(){ return HOTBAR_SLOTS.map((s,i)=>({ i, id:s.id, name:s.name, type:(s.type??null), tool:s.tool||null })); },
     select(i){ return selectHotbarSlot(i); },
-    active(){ const el=document.querySelector('#hotbar .hb-slot.on'); return el? el.dataset.slot : null; },
+    active(){ const el=document.querySelector('#elGrid .el-card.on'); return el? el.dataset.el : null; },
     mode(){ return buildMode; },
     setMode(m){ setBuildMode(m); return buildMode; },
-    count(){ return document.querySelectorAll('#hotbar .hb-slot').length; },
-    visible(){ const el=document.querySelector('#hotbar'); const r=el.getBoundingClientRect(); return r.width>0 && r.height>0; },
+    count(){ return document.querySelectorAll('#elGrid .el-card').length; },
+    visible(){ const el=document.querySelector('#elGrid'); const r=el.getBoundingClientRect(); return r.width>0 && r.height>0; },
   },
   palette:{
-    open(){ return togglePalette(true); },
-    close(){ return togglePalette(false); },
-    isOpen(){ return $('#palette').classList.contains('on'); },
-    count(){ return document.querySelectorAll('#palette button').length; },
+    open(){ return setRailTab('elements'); },
+    close(){ return setRailTab(null); },
+    isOpen(){ return railTab==='elements'; },
+    count(){ return document.querySelectorAll('#matGrid .el-card').length; },
     select(ti){ selectType(ti); return true; },
   },
   selPanel:{
@@ -5994,6 +6759,62 @@ window.__mc = {
   },
   projectToScreen(x,y,z){ return projectToScreenPoint(x,y,z); },
 };
+
+/* ---- test hooks for the round-13 shell ---- */
+Object.assign(window.__mc, {
+  rail:{
+    tabs(){ return Object.keys(RAIL_TABS); },
+    open(t){ return setRailTab(t); },
+    active(){ return railTab; },
+    panelOpen(){ return !!railTab; },
+    close(){ return setRailTab(null); },
+  },
+  elements:{
+    cards(){ return [...document.querySelectorAll('#elGrid .el-card')].map(c=>c.dataset.el); },
+    materials(){ return [...document.querySelectorAll('#matGrid .el-card')].map(c=>+c.dataset.type); },
+    select(id){ return selectElementCard(id); },
+    dropAt(id,x,y){ return dropElementAt(id,x,y); },
+    search(q){ const s2=$('#elSearch'); s2.value=q; s2.dispatchEvent(new Event('input'));
+      return [...document.querySelectorAll('#elGrid .el-card, #matGrid .el-card')]
+        .filter(c=>c.style.display!=='none').length; },
+  },
+  projects:{
+    list(){ return loadProjects().map(p=>({ id:p.id, name:p.name, updatedAt:p.updatedAt,
+      blocks:p.data&&Array.isArray(p.data.blocks)? p.data.blocks.length : 0 })); },
+    current(){ return currentProjectId; },
+    create(name){ const p=createNewProject(name); return p.id; },
+    open(id){ return openProject(id); },
+    rename(id,n){ return renameProject(id,n); },
+    duplicate(id){ return duplicateProject(id); },
+    delete(id){ return deleteProject(id); },
+    homeVisible(){ return $('#startScreen').classList.contains('on'); },
+    quotaFull(){ return saveQuotaFull; },
+  },
+  layers:{
+    list(){ return FLOORS.map((f,i)=>({ i, name:f.name, visible:layerVisible[i],
+      active:i===activeFloor })); },
+    visible(i){ return layerVisible[i]; },
+    set(i,on){ return setLayerVisible(i,on); },
+    toggle(i){ return toggleLayer(i); },
+  },
+  props:{
+    visible(){ return $('#selPanel').classList.contains('on'); },
+    title(){ return $('#selPanelTitle').textContent; },
+    text(){ return $('#selProps').textContent; },
+  },
+  zoom:{
+    pct(){ return zoomPct(); },
+    set(p){ return setZoomPct(p); },
+    in(){ return zoomStep(1); },
+    out(){ return zoomStep(-1); },
+    dist(){ return camDist(); },
+  },
+  home:{
+    visible(){ return $('#startScreen').classList.contains('on'); },
+    projects(){ return loadProjects().map(p=>p.name); },
+    open(id){ return openProject(id); },
+  },
+});
 
 init();
 </script>
