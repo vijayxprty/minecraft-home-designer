@@ -83,6 +83,11 @@
   #hoverTag{position:fixed;z-index:9;pointer-events:none;background:rgba(0,0,0,.7);color:#fff;font-size:12px;
     padding:3px 7px;border-radius:4px;display:none;white-space:nowrap}
   #hoverTag b{color:#ffd83d}
+  /* round 20: on a very narrow phone the tooltip wraps instead of
+     running off the right edge (nowrap + a long value could overflow) */
+  @media (max-width:480px){
+    #hoverTag{ white-space:normal; max-width:70vw; }
+  }
   /* ---------- walk hint / toast ---------- */
   #walkHint{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:#1e4d16;color:#fff;font-weight:700;font-size:14px;padding:8px 14px;border-radius:8px;border:3px solid #ffd83d}
@@ -233,7 +238,7 @@
   .ss-home h2{font-size:17px;margin:6px 0 4px}
   .ss-home p{font-size:13px;color:#444;line-height:1.45}
   .ss-home .ss-size{font-weight:800;color:#1e6b12;font-size:13px;margin-top:6px}
-  .ss-home button{margin-top:10px;width:100%;background:#ffd83d;border:3px solid #7a5b00;border-radius:6px;font-weight:800;font-size:14px;padding:9px;color:#4a3200;pointer-events:none}
+  .ss-home button{margin-top:10px;width:100%;background:#ffd83d;border:3px solid #7a5b00;border-radius:6px;font-weight:800;font-size:14px;padding:9px;color:#4a3200;cursor:pointer}
   .ss-empty{background:none;border:0;color:#fff;font-weight:800;font-size:15px;text-decoration:underline}
   /* ---------- guided first build card (round 10) ---------- */
   #guideCard{position:fixed;left:10px;top:110px;z-index:11;display:none;background:#fffbe6;border:3px solid #1e4d16;border-radius:10px;
@@ -1526,7 +1531,11 @@ function setQuality(i){
   const prev=qualityIdx;
   qualityIdx=clamp(i,0,QUALITY_LEVELS.length-1);
   if(renderer) renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY_LEVELS[qualityIdx]));
-  if(qualityIdx>prev) toast('Graphics eased to keep it smooth — the build is untouched');
+  // round 20: never clobber a toast that is still showing (e.g. the
+  // "Small cottage loaded" confirmation) — the quality change is also
+  // in the fps readout, so nothing is lost if this one is skipped
+  if(qualityIdx>prev && !$('#toast').classList.contains('on'))
+    toast('Graphics eased to keep it smooth — the build is untouched');
   return qualityIdx;
 }
 
@@ -3388,7 +3397,7 @@ function loadSharedFromHash(){
       if(!ok) return;
       applyShared(data);
       try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
-      toast('Shared build loaded — '+data.cells.length.toLocaleString('en-IN')+' blocks');
+      toast('Shared build loaded — '+blocks.size.toLocaleString('en-IN')+' blocks');
     });
     return false;
   }
@@ -3397,7 +3406,7 @@ function loadSharedFromHash(){
   // so a later reload must load the saved build, not the shared snapshot
   // again (which would wipe anything built since)
   try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
-  toast('Shared build loaded — '+data.cells.length.toLocaleString('en-IN')+' blocks');
+  toast('Shared build loaded — '+blocks.size.toLocaleString('en-IN')+' blocks');
   return true;
 }
 
@@ -3424,6 +3433,39 @@ function positionToast(){
     const ro=$('#readout'); const r=ro.getBoundingClientRect();
     bottom = innerHeight - r.top + 10;     // just above the status pill
   }
+  // round 20: also stay clear of any open panel the toast would cover
+  // (a tall Materials panel, the Properties panel, the guide card, the
+  // side panel) — same "first clear spot" thinking as the tooltip: the
+  // toast rises above the highest panel it horizontally overlaps.
+  const span=t.getBoundingClientRect();
+  const openRects=[];
+  for(const id of PANEL_IDS){
+    const el=document.getElementById(id); if(!el) continue;
+    if(!el.classList.contains('on')) continue;
+    if(getComputedStyle(el).display==='none') continue;
+    const r=el.getBoundingClientRect();
+    if(r.width>0 && r.height>0) openRects.push(r);
+  }
+  for(const sel of ['#selPanel','#guideCard']){
+    const el=document.querySelector(sel); if(!el) continue;
+    if(!el.classList.contains('on')) continue;
+    const r=el.getBoundingClientRect();
+    if(r.width>0 && r.height>0) openRects.push(r);
+  }
+  const spEl=document.querySelector('#sidePanel');
+  if(spEl && getComputedStyle(spEl).display!=='none'
+    && !document.body.classList.contains('panel-closed')){
+    const r=spEl.getBoundingClientRect();
+    if(r.width>0 && r.height>0) openRects.push(r);
+  }
+  for(const r of openRects){
+    if(r.right<=span.left || r.left>=span.right) continue;  // no horizontal overlap
+    const need=innerHeight - r.top + 10;                    // sit just above this panel
+    if(need>bottom) bottom=need;
+  }
+  // never push the toast off the top of the screen (below the top bar)
+  const th=t.offsetHeight||40;
+  bottom=Math.min(bottom, Math.max(10, innerHeight-56-th));
   t.style.bottom = Math.round(bottom)+'px';
 }
 function toast(msg){ const t=$('#toast'); t.textContent=msg;
@@ -4009,11 +4051,15 @@ function loadTemplate(id, force){
   const removals=[...blocks.keys()].filter(k=>!tplKeys.has(k))
     .map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
   clearTransient();
-  const n=applyBatch([...info.cells, ...removals], 'Loaded '+t.name);
+  applyBatch([...info.cells, ...removals], 'Loaded '+t.name);
   projectName=t.name; $('#projName').textContent=projectName;
   scheduleSave();
-  toast(t.name+' loaded — '+n+' blocks, fully editable');
-  return n;
+  // round 20: the toast must show the build that was JUST loaded.
+  // applyBatch returns the number of changed cells (placed + removed),
+  // which is the OLD build's size when replacing — the toast lagged one
+  // load behind. blocks.size is the truth, and the status bar reads it.
+  toast(t.name+' loaded — '+blocks.size.toLocaleString('en-IN')+' blocks, fully editable');
+  return blocks.size;
 }
 
 /* ================= blueprints: save a selection, place it again ================= */
@@ -5770,6 +5816,12 @@ function renderStartScreen(){
     const sz=document.createElement('div'); sz.className='ss-size';
     sz.textContent=ftin(info.wFt)+' × '+ftin(info.dFt)+' · '+info.n+' blocks';
     const b=document.createElement('button'); b.textContent='Make it mine';
+    // round 20: the button is a real button now — it used to carry
+    // pointer-events:none, so a click on it never landed on the button
+    // itself (automated clicks reported it "covered", keyboard users
+    // could not reach it at all). Its own handler stops the click
+    // reaching the card, so the template loads exactly once.
+    b.onclick=(e)=>{ e.stopPropagation(); startPick(id); };
     card.append(ic,nm,ds,sz,b);
     card.onclick=()=>startPick(id);
     wrap.appendChild(card);
@@ -6567,7 +6619,7 @@ function openProject(id){
   else { buildEmpty(); projectName=p.name; const pn=$('#projName'); if(pn) pn.textContent=projectName; }
   hideStartScreen();
   renderProjectsUI(); renderHomeProjects(); renderHistory();
-  toast('Opened "'+p.name+'"');
+  toast('Opened "'+p.name+'" — '+blocks.size.toLocaleString('en-IN')+' blocks');
   return true;
 }
 function createNewProject(name){
@@ -6687,7 +6739,8 @@ function renderHomeProjects(){
     info.append(nm,meta);
     const b=document.createElement('button'); b.className='sp-primary'; b.style.width='auto';
     b.style.padding='8px 14px'; b.textContent='Continue';
-    b.onclick=()=>openProject(p.id);
+    // round 20: stop the click reaching the row, or the project opens twice
+    b.onclick=(e)=>{ e.stopPropagation(); openProject(p.id); };
     const th=document.createElement('div'); th.className='pr-thumb';
     if(p.thumb){ const im=document.createElement('img'); im.src=p.thumb; im.alt=''; th.appendChild(im); }
     else th.textContent='🏠';
