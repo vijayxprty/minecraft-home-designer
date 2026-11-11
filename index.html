@@ -169,6 +169,8 @@
   #matList .tpl-item:hover{background:rgba(255,255,255,.18)}
   #matList .tpl-item.on{background:#ffd83d}
   #matList .tpl-item.on .tpl-name,#matList .tpl-item.on .tpl-desc{color:#4a3200}
+  /* round 21: a bad blueprint import says so in plain words, in the panel */
+  #bpImportErr{ color:#ffb84d; font-weight:800; }
   .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
   #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
@@ -532,7 +534,12 @@ body.touch #zoomBar button{ padding:6px 12px; }
   #sizeBar{ left:10px; }
   #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
   #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
-    left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0; }
+    left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0;
+    /* round 21: on a phone the zoom bar (bottom 68px) sits over the
+       bottom row of these sheets — the Materials panel's Close button
+       was entirely inside the zoom bar's rect and unclickable. The
+       extra bottom padding lifts the last row clear of it. */
+    padding-bottom:64px; }
   .ss-homes{ flex-direction:column; }
 }
 </style>
@@ -812,6 +819,9 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <div class="pp-title">Blueprints — save a selection, place it again anywhere · saved in this browser only</div>
   <div class="pp-row"><button id="btnSaveBlueprint">💾 Save selection as blueprint…</button>
     <span id="bpHint" class="pp-note"></span></div>
+  <div class="pp-row"><button id="btnImportBlueprint" title="Open a .json blueprint file exported from this app">⬆ Import blueprint…</button>
+    <input type="file" id="bpImportFile" accept=".json,application/json" style="display:none">
+    <span id="bpImportErr" class="pp-note" style="display:none"></span></div>
   <div id="blueprintList" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div>
   <button id="blueprintClose">✕ Close</button>
 </div>
@@ -1387,6 +1397,8 @@ function initScene(){
   buildGroundScenery();
   resize();
   window.addEventListener('resize', resize);
+  // round 21: a resize moves the Materials panel and the readout — re-check they never cover each other
+  window.addEventListener('resize', fixReadoutOverlap);
   // the toolbar can grow after load (a button's label changes, a panel
   // button appears) — keep the help panel and size bar under it, always
   if(window.ResizeObserver){
@@ -1945,6 +1957,7 @@ function updateMaterialsPanel(){
   $('#matTotal').textContent = blocks.size
     ? 'Total: '+blocks.size.toLocaleString('en-IN')+' blocks · '+buildAreaSqFt()+' sq ft'
     : '';
+  fixReadoutOverlap();   // the list just changed height — keep the readout clear of the panel
 }
 function toggleMaterialsPanel(show){
   const p=$('#materialsPanel');
@@ -1952,6 +1965,11 @@ function toggleMaterialsPanel(show){
   p.classList.toggle('on',on);
   $('#btnMaterials').classList.toggle('on',on);
   if(on){ updateMaterialsPanel();
+    // round 21: on a phone the side panel is a full-width bottom sheet
+    // (z-index 12) that would paint over this panel (z-index 11) —
+    // the panel would be open but invisible. Close the sheet while
+    // the panel is open; a rail tap brings it back.
+    if(window.innerWidth<=820) setRailTab(null);
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
 $('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
@@ -1961,6 +1979,26 @@ $('#blueprintPanel').classList.remove('on');
     $('#btnReplace').classList.remove('on'); $('#btnCheat').classList.remove('on');
     $('#btnBuildRoom').classList.remove('on');
   }
+  fixReadoutOverlap();
+}
+/* round 21: the open Materials panel used to cover the status readout's
+   right edge — both sit at the bottom of the screen, and the panel is
+   centred on the visible canvas (max-width 640px) so its left edge
+   reaches well past the readout's right edge; on a phone the panel is
+   a full-width bottom sheet sitting directly over the readout. While
+   the panel is open and would cover the readout, the readout lifts to
+   sit just above the panel; otherwise it stays where the CSS puts it.
+   Measured live every time, so panel height, phone width and a
+   collapsed side panel are all handled. */
+function fixReadoutOverlap(){
+  const ro=$('#readout'), mat=$('#materialsPanel');
+  if(!ro||!mat) return;
+  const open=mat.classList.contains('on') && getComputedStyle(mat).display!=='none';
+  if(!open){ if(ro.style.bottom) ro.style.bottom=''; return; }
+  ro.style.bottom='';   // measure the readout where it sits by default
+  const rr=ro.getBoundingClientRect(), mr=mat.getBoundingClientRect();
+  const hit=!(mr.right<=rr.left||mr.left>=rr.right||mr.bottom<=rr.top||mr.top>=rr.bottom);
+  ro.style.bottom = hit ? Math.round(innerHeight-mr.top+10)+'px' : '';
 }
 function copyMaterialsList(){
   const text=materialText();
@@ -4040,10 +4078,20 @@ function templateInfo(t){
 function loadTemplate(id, force){
   const t=TEMPLATES.find(t=>t.id===id); if(!t) return 0;
   if(blocks.size && !force){
-    askConfirm('Load "'+t.name+'"? Your current build will be replaced.', ok=>{ if(ok) loadTemplate(id, true); });
+    // round 21: the confirm names the project it will replace, so the
+    // user knows exactly what is at stake — "Test build A" is not "your
+    // current build". An empty plot has nothing to lose, so it says so.
+    askConfirm('Load "'+t.name+'"? '+(blocks.size? '"'+projectName+'" will be replaced.' : 'Your empty plot will be replaced.'),
+      ok=>{ if(ok) loadTemplate(id, true); });
     return 0;
   }
   const info=templateInfo(t);
+  // round 21: a template replaces the blocks, never the project's name
+  // or identity — loading the cottage over "Test build A" leaves the
+  // project called "Test build A" (it just holds 1,124 blocks now).
+  // Only an empty build takes the template's name: a fresh "My Build"
+  // becomes "Small cottage", which is what "Make it mine" means there.
+  const hadBlocks=blocks.size>0;
   // one undo step that restores the old build AND removes the template:
   // the template cells land, every old block outside the template is
   // removed — jumping back to this step brings the old build back whole
@@ -4052,7 +4100,7 @@ function loadTemplate(id, force){
     .map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
   clearTransient();
   applyBatch([...info.cells, ...removals], 'Loaded '+t.name);
-  projectName=t.name; $('#projName').textContent=projectName;
+  if(!hadBlocks){ projectName=t.name; $('#projName').textContent=projectName; }
   scheduleSave();
   // round 20: the toast must show the build that was JUST loaded.
   // applyBatch returns the number of changed cells (placed + removed),
@@ -4095,6 +4143,93 @@ function deleteBlueprint(name){
   renderBlueprintPanel();
   return true;
 }
+/* ================= round 21: blueprint export / import ================ */
+/* Export downloads the blueprint as a .json file named after it
+   ("My Cottage Wall" -> "my-cottage-wall.json"). The file carries a
+   type marker so Import can tell a blueprint from any other .json —
+   and re-importing it gives back exactly the same blueprint (same
+   name, same cells). Import validates the file first; a bad file says
+   so in plain words inside the panel, never in a popup. */
+function blueprintFileName(name){
+  const s=(name||'blueprint').replace(/[^a-z0-9]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase();
+  return (s||'blueprint')+'.json';
+}
+function exportBlueprint(name){
+  const bp=loadBlueprints().find(b=>b.name===name);
+  if(!bp) return null;
+  const payload={ type:'minecraft-home-designer-blueprint', version:1,
+    name:bp.name, cells:bp.cells, w:bp.w, d:bp.d, h:bp.h };
+  const blob=new Blob([JSON.stringify(payload,null,1)], { type:'application/json' });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=blueprintFileName(bp.name);
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  toast('Exported "'+bp.name+'"');
+  return payload;
+}
+function validateBlueprintData(d){
+  const bad=error=>({ ok:false, error });
+  if(!d||typeof d!=='object'||Array.isArray(d))
+    return bad('That file is not a blueprint — pick a .json file exported from this app.');
+  if(d.type && d.type!=='minecraft-home-designer-blueprint')
+    return bad('That file is not a blueprint from this app.');
+  const name=typeof d.name==='string'? d.name.trim() : '';
+  if(!name) return bad('That blueprint has no name.');
+  if(!Array.isArray(d.cells)||!d.cells.length)
+    return bad('That blueprint has no blocks in it.');
+  if(d.cells.length>8192)
+    return bad('That blueprint is too big — at most 8,192 blocks.');
+  const cells=[];
+  for(const c of d.cells){
+    if(!c||typeof c!=='object') return bad('That blueprint has a broken block in it.');
+    const dx=+c.dx, dy=+c.dy, dz=+c.dz, t=+c.t, r=c.r==null?0:+c.r;
+    if(!Number.isInteger(dx)||!Number.isInteger(dy)||!Number.isInteger(dz)
+      ||!Number.isInteger(t)||!Number.isInteger(r))
+      return bad('That blueprint has a broken block in it.');
+    if(Math.abs(dx)>256||Math.abs(dy)>256||Math.abs(dz)>256)
+      return bad('That blueprint reaches too far from its corner — at most 256 blocks.');
+    if(t<0||t>=TYPES.length) return bad('That blueprint uses a block type this app does not know.');
+    if(r<0||r>3) return bad('That blueprint has a broken block in it.');
+    cells.push({ dx, dy, dz, t, r });
+  }
+  // the size is recomputed from the cells — never trust the file's numbers
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,z0=1e9,z1=-1e9;
+  for(const c of cells){
+    x0=Math.min(x0,c.dx); x1=Math.max(x1,c.dx);
+    y0=Math.min(y0,c.dy); y1=Math.max(y1,c.dy);
+    z0=Math.min(z0,c.dz); z1=Math.max(z1,c.dz);
+  }
+  return { ok:true, bp:{ name, cells, w:x1-x0+1, d:z1-z0+1, h:y1-y0+1 } };
+}
+function showBpImportError(msg){
+  const el=$('#bpImportErr');
+  if(el){ el.textContent=msg; el.style.display=''; }
+  return { ok:false, error:msg };
+}
+function clearBpImportError(){
+  const el=$('#bpImportErr');
+  if(el){ el.textContent=''; el.style.display='none'; }
+}
+function importBlueprintText(text){
+  let d;
+  try{ d=JSON.parse(text); }
+  catch(e){ return showBpImportError('That file is not valid JSON — pick a .json file exported from this app.'); }
+  const v=validateBlueprintData(d);
+  if(!v.ok) return showBpImportError(v.error);
+  // a blueprint with the same name is replaced, not duplicated — the
+  // same rule as saving a selection under an existing name
+  const list=loadBlueprints().filter(b=>b.name!==v.bp.name);
+  list.push(v.bp); saveBlueprints(list); renderBlueprintPanel();
+  clearBpImportError();
+  toast('Imported "'+v.bp.name+'" — '+v.bp.cells.length+' blocks');
+  return { ok:true, bp:v.bp };
+}
+function importBlueprintFile(file){
+  if(!file) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ importBlueprintText(String(rd.result||'')); };
+  rd.onerror=()=>{ showBpImportError('That file could not be read — try again.'); };
+  rd.readAsText(file);
+}
 function renderBlueprintPanel(){
   const list=$('#blueprintList'); list.innerHTML='';
   const bps=loadBlueprints();
@@ -4113,10 +4248,15 @@ function renderBlueprintPanel(){
     sz.textContent=ftin(bp.w*FT)+' × '+ftin(bp.d*FT)+' × '+ftin(bp.h*FT);
     const place=document.createElement('button'); place.textContent='Place';
     place.onclick=()=>{ placeBlueprint(bp.name); toggleBlueprintPanel(false); };
+    // round 21: each blueprint can be downloaded as a .json file, named
+    // after the blueprint — Import (panel header) reads it back
+    const exp=document.createElement('button'); exp.textContent='Export';
+    exp.title='Download this blueprint as a .json file';
+    exp.onclick=()=>exportBlueprint(bp.name);
     const del=document.createElement('button'); del.textContent='✕';
     del.title='Delete this blueprint';
     del.onclick=()=>{ askConfirm('Delete blueprint "'+bp.name+'"?', ok=>{ if(ok) deleteBlueprint(bp.name); }); };
-    row.append(nm,ds,sz,place,del); list.appendChild(row);
+    row.append(nm,ds,sz,place,exp,del); list.appendChild(row);
   }
 }
 function toggleBlueprintPanel(show){
@@ -4124,7 +4264,7 @@ function toggleBlueprintPanel(show){
   const on=show!==undefined?show:!p.classList.contains('on');
   p.classList.toggle('on',on);
   $('#btnBlueprints').classList.toggle('on',on);
-  if(on){ renderBlueprintPanel();
+  if(on){ renderBlueprintPanel(); clearBpImportError();
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
     $('#btnPresets').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on'); $('#cheatPanel').classList.remove('on');
@@ -6341,6 +6481,10 @@ function init(){
   $('#btnDoReplace').onclick=()=>{ replaceMaterial(+$('#repFrom').value, +$('#repTo').value, replaceScope); updateReplaceCount(); };
   $('#blueprintClose').onclick=()=>toggleBlueprintPanel(false);
   $('#btnSaveBlueprint').onclick=()=>{ openBpNameBox(); };
+  // round 21: Import opens a file picker; the picker is reset after
+  // every use so the same file can be picked again after a bad import
+  $('#btnImportBlueprint').onclick=()=>{ const f=$('#bpImportFile'); if(!f) return; f.value=''; f.click(); };
+  $('#bpImportFile').addEventListener('change', e=>{ const f=e.target.files&&e.target.files[0]; if(f) importBlueprintFile(f); e.target.value=''; });
   $('#presetClose').onclick=()=>togglePresetPanel(false);
   $$('#presetPanel button[data-preset]').forEach(b=>b.onclick=()=>setPresetMode(b.dataset.preset));
   $$('#presetPanel button[data-shape]').forEach(b=>b.onclick=()=>{ stairShape=b.dataset.shape;
@@ -6819,6 +6963,7 @@ function setRailTab(tab, force){
   if(tab==='history') renderHistory();
   updateViewOffset();   // the panel opening/closing moves the visible canvas (round 15)
   updateCollapseBtn();
+  fixReadoutOverlap();   // round 21: the canvas moving moves the Materials panel too
   return railTab;
 }
 function renderTplCards(){
@@ -7234,6 +7379,7 @@ function zoomFit(){
 window.__mc = {
   get blocks(){ return blocks; },
   count(){ return blocks.size; },
+  projectName(){ return projectName; },
   footprint(){ let xs=[],zs=[]; for(const [k] of blocks){ const p=parseKey(k); xs.push(p[0]); zs.push(p[2]); }
     return xs.length? { x0:Math.min(...xs), x1:Math.max(...xs), z0:Math.min(...zs), z1:Math.max(...zs), w:Math.max(...xs)-Math.min(...xs)+1, d:Math.max(...zs)-Math.min(...zs)+1 } : null; },
   areaSqFt(fi){ return floorAreaSqFt(fi); },
@@ -7592,6 +7738,7 @@ window.__mc = {
   templates:{
     list(){ return TEMPLATES.map(t=>{ const info=templateInfo(t); return { id:t.id, name:t.name, n:info.n, wFt:info.wFt, dFt:info.dFt }; }); },
     load(id){ return loadTemplate(id, true); },
+    ask(id){ return loadTemplate(id); },   // round 21: the unforced path — asks first when the build is non-empty
     cells(id){ const t=TEMPLATES.find(t=>t.id===id); return t? templateInfo(t).cells : null; },
   },
   blueprints:{
@@ -7600,6 +7747,13 @@ window.__mc = {
     place(name){ return placeBlueprint(name); },
     delete(name){ return deleteBlueprint(name); },
     count(){ return loadBlueprints().length; },
+    exportJson(name){ return exportBlueprint(name); },
+    open(){ toggleBlueprintPanel(true); return true; },
+    close(){ toggleBlueprintPanel(false); return true; },
+    isOpen(){ return $('#blueprintPanel').classList.contains('on'); },
+    importJson(text){ return importBlueprintText(text); },
+    importError(){ const el=document.querySelector('#bpImportErr'); return el? el.textContent : ''; },
+    fileName(name){ return blueprintFileName(name); },
   },
   share:{
     encode(){ return encodeShare(); },
