@@ -542,6 +542,135 @@ body.touch #zoomBar button{ padding:6px 12px; }
     padding-bottom:64px; }
   .ss-homes{ flex-direction:column; }
 }
+<style>
+/* ---------- ROUND 23 — dark theme: the 3D canvas keeps its sky; only the
+   chrome around it changes. Every text element carries an explicit colour
+   in both themes — no white-on-white anywhere. The choice is remembered
+   (home-designer-minecraft-theme-v1) and applied before first paint by
+   the small script right after <body>. ---------- */
+.ss-card{ position:relative; }
+.ss-theme{ position:absolute; top:14px; right:14px; background:#f0f4f0; color:#1a1a1a;
+  border:1px solid #d8d8d8; border-radius:8px; font-weight:800; font-size:12px; padding:7px 10px; }
+.ss-theme:hover{ background:#e0e0e0; }
+@media (max-width:480px){ .ss-theme{ position:static; display:block; margin:0 auto 4px; } }
+body.dark{ color:#e8e8e8; }
+body.dark #topbar{ background:#1f1f1f; border-bottom-color:#333; color:#f0f0f0; }
+body.dark #topbar .brand{ color:#f0f0f0; }
+body.dark #topbar .proj-name{ color:#f0f0f0; }
+body.dark #topbar .proj-name:hover{ background:#2c2c2c; }
+body.dark #projNameInput{ background:#2c2c2c; color:#f0f0f0; border-color:#2e7d32; }
+body.dark #topbar .actions button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #topbar .actions button:hover{ background:#383838; }
+body.dark #topbar .actions button.on{ background:#1b3a1e; color:#9be36d; border-color:#2e7d32; }
+body.dark #topbar .actions button.warn{ background:#7a3a1a; color:#ffb84d; border-color:#5a2a10; }
+body.dark #savePill{ background:#1b3a1e; color:#9be36d; }
+body.dark .ss-theme{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark .ss-theme:hover{ background:#383838; }
+body.dark #rail{ background:#1f1f1f; border-right-color:#333; border-top-color:#333; }
+body.dark .rail-btn{ color:#f0f0f0; }
+body.dark .rail-btn span{ color:#bbb; }
+body.dark .rail-btn:hover{ background:#2c2c2c; }
+body.dark .rail-btn.on{ background:#1b3a1e; }
+body.dark .rail-btn.on span{ color:#9be36d; }
+body.dark #sidePanel{ background:#1f1f1f; border-right-color:#333; border-top-color:#333; color:#f0f0f0; }
+body.dark #panelCollapse{ background:#1f1f1f; color:#9be36d; border-color:#333; }
+body.dark #panelCollapse:hover{ background:#2c2c2c; }
+body.dark .sp-head{ color:#f0f0f0; }
+body.dark .sp-head button{ color:#bbb; }
+body.dark .sp-head button:hover{ background:#2c2c2c; }
+body.dark .sp-sec{ color:#aaa; }
+body.dark .sp-note{ color:#aaa; }
+body.dark .sp-warn{ background:#3a2a12; color:#ffb84d; border-color:#ffb74d; }
+body.dark .sp-row button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark .sp-row button:hover{ background:#383838; }
+body.dark .sp-row button.on{ background:#1b3a1e; color:#9be36d; border-color:#2e7d32; }
+body.dark #elSearch{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #elSearch::placeholder{ color:#999; }
+body.dark .el-card{ background:#2c2c2c; border-color:#444; color:#f0f0f0; }
+body.dark .el-card:hover{ border-color:#2e7d32; }
+body.dark .el-card.on{ background:#1b3a1e; border-color:#2e7d32; }
+body.dark .el-card canvas{ border-color:#555; }
+body.dark .el-card .el-name{ color:#f0f0f0; }
+body.dark .el-card .el-sub{ color:#aaa; }
+body.dark .el-card .k{ color:#888; }
+body.dark .el-handle{ color:#888; }
+body.dark .el-handle:hover{ color:#9be36d; }
+body.dark #dragChip{ background:#2c2c2c; color:#f0f0f0; border-color:#2e7d32; }
+body.dark .tpl-card{ background:#2c2c2c; border-color:#444; color:#f0f0f0; }
+body.dark .tpl-card:hover{ border-color:#2e7d32; }
+body.dark .tpl-card h3{ color:#f0f0f0; }
+body.dark .tpl-card p{ color:#bbb; }
+body.dark .tpl-card .tpl-size{ color:#9be36d; }
+body.dark .preset-card{ background:#3a2f10; border-color:#b8860b; }
+body.dark .preset-card .pc-row{ color:#f0f0f0; }
+body.dark .preset-card .pc-row input, body.dark .preset-card .pc-row select{ background:#2c2c2c; color:#f0f0f0; border-color:#777; }
+body.dark .preset-card .pc-note{ color:#9be36d; }
+body.dark .preset-card .pc-gap button{ background:#2c2c2c; color:#f0f0f0; border-color:#777; }
+body.dark .preset-card .pc-gap button.on{ background:#ffd83d; color:#4a3200; border-color:#7a5b00; }
+body.dark .proj-row{ background:#2c2c2c; border-color:#444; color:#f0f0f0; }
+body.dark .proj-row:hover{ border-color:#2e7d32; }
+body.dark .proj-row.current{ background:#1b3a1e; border-color:#2e7d32; }
+body.dark .proj-row .pr-name{ color:#f0f0f0; }
+body.dark .proj-row .pr-meta{ color:#aaa; }
+body.dark .proj-row .pr-btns button{ color:#bbb; }
+body.dark .proj-row .pr-btns button:hover{ background:#383838; }
+body.dark .proj-row input.pr-rename{ background:#2c2c2c; color:#f0f0f0; border-color:#2e7d32; }
+body.dark .pr-thumb{ background:#1b3a1e; }
+body.dark .hist-row{ background:#2c2c2c; border-color:#444; color:#f0f0f0; }
+body.dark .hist-row:hover{ border-color:#2e7d32; }
+body.dark .hist-row.current{ background:#1b3a1e; border-color:#2e7d32; }
+body.dark .hist-row .hs-label{ color:#f0f0f0; }
+body.dark .hist-row .hs-time{ color:#aaa; }
+body.dark .hist-row .hs-dot{ color:#9be36d; }
+body.dark #sheetHandle .grip{ background:#666; }
+body.dark #sheetHandle .sh-label{ color:#aaa; }
+body.dark .layer-row{ background:#2c2c2c; border-color:#444; color:#f0f0f0; }
+body.dark .layer-row:hover{ border-color:#2e7d32; }
+body.dark .layer-row.on{ background:#1b3a1e; border-color:#2e7d32; }
+body.dark .layer-row .ly-name{ color:#f0f0f0; }
+body.dark .layer-row .ly-count{ color:#aaa; }
+body.dark .layer-row.hidden .ly-name{ color:#777; }
+body.dark #toolsList button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #toolsList button:hover{ background:#383838; }
+body.dark #toolsList button.on{ background:#1b3a1e; color:#9be36d; border-color:#2e7d32; }
+body.dark .help-lines{ color:#f0f0f0; }
+body.dark .help-lines b{ color:#9be36d; }
+body.dark #guideCard{ background:#3a2f10; border-color:#2e7d32; color:#f0f0f0; }
+body.dark #guideCard .g-sub{ color:#bbb; }
+body.dark #guideCard .g-step{ color:#ddd; }
+body.dark #guideCard .g-step .g-box{ background:#2c2c2c; color:#9be36d; }
+body.dark #guideCard .g-step.done{ color:#9be36d; }
+body.dark #guideCard .g-celebrate{ color:#9be36d; }
+body.dark #guideCard .g-btns button{ background:#3a3a3a; color:#f0f0f0; border-color:#777; }
+body.dark #guideCard .g-x{ color:#bbb; }
+body.dark #readout{ background:#1f1f1f; color:#f0f0f0; border-color:#333; }
+body.dark #readout b{ color:#9be36d; }
+body.dark #readout .dim{ color:#7ec850; }
+body.dark #readout #roWarn{ color:#ffb84d !important; }
+body.dark #note{ background:rgba(0,0,0,.7); color:#ddd; }
+body.dark #zoomBar{ background:#1f1f1f; border-color:#333; color:#f0f0f0; }
+body.dark #zoomBar button{ color:#f0f0f0; }
+body.dark #zoomBar button:hover{ background:#2c2c2c; }
+body.dark #zoomPct{ color:#f0f0f0; }
+body.dark #selPanel{ background:#1f1f1f; color:#f0f0f0; border-color:#333; }
+body.dark #selPanel .sp-title{ color:#f0f0f0; }
+body.dark #selProps{ color:#bbb; }
+body.dark #selProps b{ color:#9be36d; }
+body.dark #selPanel button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #selPanel button:hover{ background:#1b3a1e; }
+body.dark #selPanel input{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #sizeBar{ background:#1f1f1f; color:#f0f0f0; }
+body.dark #sizeBar input{ background:#2c2c2c; color:#f0f0f0; }
+body.dark #sizeBar .hint{ color:#aaa; }
+body.dark #sizeBar #sizeNow{ color:#9be36d; }
+body.dark #startScreen{ background:linear-gradient(180deg,#2c4a22 0%,#1d3315 60%,#14230e 100%); }
+body.dark .ss-card{ background:#232323; border-color:#444; color:#f0f0f0; }
+body.dark .ss-card .ss-sub{ color:#bbb; }
+body.dark .ss-home{ background:#2c2c2c; border-color:#555; }
+body.dark .ss-home h2{ color:#f0f0f0; }
+body.dark .ss-home p{ color:#bbb; }
+body.dark .ss-home .ss-size{ color:#9be36d; }
+body.dark .ss-sec{ color:#aaa; }
 </style>
 <script type="importmap">
 {"imports":{
@@ -551,6 +680,8 @@ body.touch #zoomBar button{ padding:6px 12px; }
 </script>
 </head>
 <body>
+<script>/* round 23: apply the saved theme before first paint so a dark user never flashes light chrome */
+try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') document.body.classList.add('dark'); }catch(e){}</script>
 <div id="gl"></div>
 
 <div id="topbar">
@@ -734,6 +865,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
   <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
   <button id="btnLabels" class="on" title="Show / hide the white wall dimension labels (H)">🏷️ Labels ✓</button>
+  <button id="btnTheme" title="Switch between light and dark">🌙 Dark theme</button>
   <div class="msep"></div>
   <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
   <div class="msep"></div>
@@ -770,6 +902,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <input id="selStackN" type="number" min="1" max="10" value="1" title="How many times to copy the selection upward">
   <button id="selMove">🚚 Move</button>
   <button id="selRotate">🔄 Rotate</button>
+  <button id="selZoom">🎯 Zoom to selection</button>
   <button id="selFlipX">↔ Flip left-right</button>
   <button id="selFlipZ">↕ Flip front-back</button>
   <button id="selColour">🎨 Change colour</button>
@@ -1060,6 +1193,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <div class="ss-wrap">
   <div class="ss-card">
     <h1>⛏️ Your builds</h1>
+    <button id="ssTheme" class="ss-theme" title="Switch between light and dark">🌙 Dark theme</button>
     <div class="ss-sub">Pick a build to continue, or start something new. No sign-up — builds are saved on this device.</div>
     <button id="ssNewBuild" class="ss-primary">＋ New build</button>
     <div id="ssProjects"></div>
@@ -2230,6 +2364,30 @@ function loadLabelsPref(){
   if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
   const b=$('#btnLabels');
   if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
+}
+
+/* ================= theme: light / dark chrome (round 23) =================
+   The 3D canvas keeps its sky; only the chrome around it changes. The
+   choice is remembered; the early script right after <body> applies the
+   saved theme before first paint so a dark user never flashes light. */
+const THEME_KEY='home-designer-minecraft-theme-v1';
+let themeDark=false;
+function setTheme(mode){
+  themeDark=(mode==='dark');
+  document.body.classList.toggle('dark', themeDark);
+  try{ localStorage.setItem(THEME_KEY, themeDark?'dark':'light'); }catch(e){}
+  updateThemeBtns();
+  return themeDark?'dark':'light';
+}
+function updateThemeBtns(){
+  const label=themeDark?'☀️ Light theme':'🌙 Dark theme';
+  const b=$('#btnTheme'); if(b){ b.textContent=label; b.classList.toggle('on', themeDark); }
+  const s=$('#ssTheme'); if(s){ s.textContent=label; }
+}
+function loadThemePref(){
+  try{ themeDark=localStorage.getItem(THEME_KEY)==='dark'; }catch(e){}
+  document.body.classList.toggle('dark', themeDark);
+  updateThemeBtns();
 }
 
 /* ================= room area labels (round 7) ================= */
@@ -6537,6 +6695,7 @@ function init(){
   $('#selStackN').addEventListener('change', ()=>{ $('#selStackN').value=stackCount(); });
   $('#selMove').onclick=()=>{ setTool('move'); toast('Click one of the selected blocks to pick the whole lot up'); };
   $('#selRotate').onclick=()=>rotateSelection();
+  $('#selZoom').onclick=()=>zoomToSelection();
   $('#selColour').onclick=()=>{ replaceScope='selection';
     $$('#replacePanel button[data-scope]').forEach(x=>x.classList.toggle('on', x.dataset.scope==='selection'));
     updateReplaceCount(); toggleReplacePanel(true); };
@@ -6544,6 +6703,7 @@ function init(){
   $('#selDelete').onclick=()=>deleteSelection();
   // start screen + guided first build (round 10)
   $('#ssEmpty').onclick=()=>startEmpty();
+  $('#ssTheme').onclick=()=>setTheme(themeDark?'light':'dark');
   $('#guideClose').onclick=()=>dismissGuide();
   $('#guideKeep').onclick=()=>dismissGuide();
   $('#guideStarter').onclick=()=>{ dismissGuide(); showStartScreen(); };
@@ -6557,6 +6717,7 @@ function init(){
   $('#btnTemplates').onclick=()=>setRailTab('templates', true);   // More-menu entry always opens Templates (round 14)
   $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
   $('#btnShare').onclick=()=>shareBuild();
+  $('#btnTheme').onclick=()=>setTheme(themeDark?'light':'dark');
   $('#btnMirror').onclick=()=>toggleMirrorPanel();
   $('#btnReplace').onclick=()=>toggleReplacePanel();
   $('#btnIsolate').onclick=()=>setView(viewMode==='isolate'?'normal':'isolate');
@@ -6750,6 +6911,7 @@ function init(){
   const pill=$('#savePill');
   if(pill) pill.textContent = hadSave ? '✓ Saved on this device' : 'Saves on this device as you build';
   loadLabelsPref();   // wall labels: on by default, remembered choice wins
+  loadThemePref();    // light / dark chrome: light by default, remembered choice wins
   loadSunPref();      // sunlight: Day by default, remembered choice wins
   loadTouchPref();    // touch mode: off by default, remembered choice wins
   loadGridPref();     // 1-ft grid: on by default, remembered choice wins
@@ -7400,18 +7562,11 @@ function visibleCanvasRect(){
   const sl=parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0;
   return { left:sl, top, right:innerWidth, bottom:innerHeight };
 }
-function zoomFit(){
-  let x0,x1,y0,y1,z0,z1;
-  if(blocks.size){
-    x0=1e9;x1=-1e9;y0=1e9;y1=-1e9;z0=1e9;z1=-1e9;
-    for(const [k] of blocks){ const p=parseKey(k);
-      if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0];
-      if(p[1]<y0)y0=p[1]; if(p[1]>y1)y1=p[1];
-      if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
-    x0-=0.5; x1+=1.5; y0-=0.5; y1+=1.5; z0-=0.5; z1+=1.5;
-  } else {
-    x0=-40; x1=62; y0=0; y1=1; z0=-40; z1=110;   // the whole grass plot
-  }
+/* round 23: the framing core — Fit (whole build / empty plot) and Zoom
+   to selection share it, so both frame against the visible canvas the
+   same way and both keep the camera angle unless nothing fits at it. */
+function frameBounds(b, turnedMsg){
+  const {x0,x1,y0,y1,z0,z1}=b;
   const cx=(x0+x1)/2, cy=(y0+y1)/2, cz=(z0+z1)/2;
   const corners=[];
   for(const xx of [x0,x1]) for(const yy of [y0,y1]) for(const zz of [z0,z1]) corners.push([xx,yy,zz]);
@@ -7468,8 +7623,28 @@ function zoomFit(){
   camera.position.copy(ctr).addScaledVector(off, d);
   controls.target.copy(ctr);
   controls.update(); updateZoomUI();
-  if(turned) toast('Fit — turned the view so the whole build fits');
-  return { dist:Math.round(d), center:[cx,cy,cz], empty:!blocks.size, turned };
+  if(turned) toast(turnedMsg);
+  return { dist:Math.round(d), center:[cx,cy,cz], turned };
+}
+function zoomFit(){
+  let b;
+  if(blocks.size){
+    const bb=bboxOfKeys([...blocks.keys()]);
+    b={ x0:bb.x0-0.5, x1:bb.x1+1.5, y0:bb.y0-0.5, y1:bb.y1+1.5, z0:bb.z0-0.5, z1:bb.z1+1.5 };
+  } else {
+    b={ x0:-40, x1:62, y0:0, y1:1, z0:-40, z1:110 };   // the whole grass plot
+  }
+  const r=frameBounds(b, 'Fit — turned the view so the whole build fits');
+  return { dist:r.dist, center:r.center, empty:!blocks.size, turned:r.turned };
+}
+/* round 23: Zoom to selection — frame just the selected blocks, same
+   framing as Fit. The selection and the undo stack are untouched. */
+function zoomToSelection(){
+  const bb=selectionBBox();
+  if(!bb) return null;
+  const r=frameBounds({ x0:bb.x0-0.5, x1:bb.x1+1.5, y0:bb.y0-0.5, y1:bb.y1+1.5, z0:bb.z0-0.5, z1:bb.z1+1.5 },
+    'Zoomed to selection — turned the view so it fits');
+  return { dist:r.dist, center:r.center, turned:r.turned, n:selection.size };
 }
 
 
@@ -8023,6 +8198,10 @@ Object.assign(window.__mc, {
     dist(){ return camDist(); },
   },
   fit(){ return zoomFit(); },
+  zoomSel(){ return zoomToSelection(); },
+  project(x,y,z){ const s=projectToScreenPoint(x,y,z); return s? { x:Math.round(s.x), y:Math.round(s.y) } : null; },
+  theme:{ get(){ return themeDark?'dark':'light'; }, set(m){ return setTheme(m); },
+    toggle(){ return setTheme(themeDark?'light':'dark'); } },
   visibleRect(){ return visibleCanvasRect(); },
   // round 16 debug: does this view (elevation/azimuth/distance) frame the
   // build (or the empty plot)? Returns the corner projections + verdict.
