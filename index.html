@@ -382,9 +382,17 @@ body.panel-collapsed #sidePanel{ display:none; }
 .preset-card:hover{ border-color:#2e7d32; }
 .preset-card.flash{ animation:pcFlash 1.2s ease; }
 @keyframes pcFlash{ 0%,100%{ box-shadow:0 0 0 0 rgba(46,125,50,0);} 30%{ box-shadow:0 0 0 4px #ffd83d; } }
-.preset-card .pc-fields{ display:flex; flex-wrap:wrap; gap:4px 6px; align-items:center; font-size:12px; font-weight:700; color:#222; margin:8px 0 4px; }
-.preset-card .pc-fields input{ width:52px; border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; }
-.preset-card .pc-fields select{ border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; max-width:130px; }
+/* round 18: the field rows are a real aligned grid now — label + ft + in
+   per row — so a row can never wrap mid-field ("Width: 10 ft 0 in Depth:")
+   in the 300px panel or the phone bottom sheet. */
+.preset-card .pc-fields{ display:grid; gap:6px; margin:8px 0 4px; }
+.preset-card .pc-row{ display:grid; grid-template-columns:58px 52px 18px 52px 18px; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#222; }
+.preset-card .pc-row.wide{ grid-template-columns:104px 1fr; }
+/* the gap buttons need the full card width — label above, all three buttons on one line below */
+.preset-card .pc-row.gap-row{ grid-template-columns:1fr; }
+.preset-card .pc-row i{ font-style:normal; }
+.preset-card .pc-row input{ width:52px; border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; }
+.preset-card .pc-row select{ border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; width:100%; }
 .preset-card .pc-note{ font-size:12px; font-weight:800; color:#1b5e20; margin:2px 0 8px; }
 .preset-card .pc-go{ width:100%; background:#2e7d32; color:#fff; border:2px solid #1b5e20; border-radius:6px; font-weight:800; font-size:13px; padding:8px; cursor:pointer; }
 .preset-card .pc-go:hover{ background:#388e3c; }
@@ -580,10 +588,12 @@ body.touch #zoomBar button{ padding:6px 12px; }
       <div class="tpl-ico">🏠</div>
       <h3>Build a room</h3>
       <p>A hollow room with a wood floor and a 3-ft door gap on the front wall. Builds at the start of the floor you are on.</p>
-      <div class="pc-fields"><span>Width:</span><input id="pcRWft" type="number" min="2" max="30" value="10"> ft <input id="pcRWin" type="number" min="0" max="11.5" step="0.5" value="0"> in
-      <span>Depth:</span><input id="pcRDft" type="number" min="2" max="30" value="12"> ft <input id="pcRDin" type="number" min="0" max="11.5" step="0.5" value="0"> in
-      <span>Height:</span><input id="pcRHft" type="number" min="4" max="20" value="8"> ft <input id="pcRHin" type="number" min="0" max="11.5" step="0.5" value="0"> in</div>
-      <div class="pc-fields"><span>Wall material:</span><select id="pcRMat"></select></div>
+      <div class="pc-fields">
+        <div class="pc-row"><span>Width:</span><input id="pcRWft" type="number" min="2" max="30" value="10"><i>ft</i><input id="pcRWin" type="number" min="0" max="11.5" step="0.5" value="0"><i>in</i></div>
+        <div class="pc-row"><span>Depth:</span><input id="pcRDft" type="number" min="2" max="30" value="12"><i>ft</i><input id="pcRDin" type="number" min="0" max="11.5" step="0.5" value="0"><i>in</i></div>
+        <div class="pc-row"><span>Height:</span><input id="pcRHft" type="number" min="4" max="20" value="8"><i>ft</i><input id="pcRHin" type="number" min="0" max="11.5" step="0.5" value="0"><i>in</i></div>
+        <div class="pc-row wide"><span>Wall material:</span><select id="pcRMat"></select></div>
+      </div>
       <div class="pc-note" id="pcRoomNote"></div>
       <button class="pc-go" id="pcRoomGo">🧱 Build room</button>
     </div>
@@ -591,14 +601,16 @@ body.touch #zoomBar button{ padding:6px 12px; }
       <div class="tpl-ico">🧱</div>
       <h3>Build a wall</h3>
       <p>A straight wall along the front edge. Pick a door or window gap, or none.</p>
-      <div class="pc-fields"><span>Length:</span><input id="pcWLft" type="number" min="1" max="100" value="10"> ft <input id="pcWLin" type="number" min="0" max="11.5" step="0.5" value="0"> in
-      <span>Height:</span><input id="pcWHft" type="number" min="2" max="20" value="8"> ft <input id="pcWHin" type="number" min="0" max="11.5" step="0.5" value="0"> in</div>
-      <div class="pc-fields"><span>Wall material:</span><select id="pcWMat"></select></div>
-      <div class="pc-fields"><span>Gap:</span><span class="pc-gap">
-        <button data-pcgap="none" class="on">No gap</button>
-        <button data-pcgap="door" title="A 3-ft wide, 7-ft tall opening at floor level">🚪 Door</button>
-        <button data-pcgap="window" title="A 4-ft wide, 3-ft tall opening with its sill 3 ft up">🪟 Window</button>
-      </span></div>
+      <div class="pc-fields">
+        <div class="pc-row"><span>Length:</span><input id="pcWLft" type="number" min="1" max="100" value="10"><i>ft</i><input id="pcWLin" type="number" min="0" max="11.5" step="0.5" value="0"><i>in</i></div>
+        <div class="pc-row"><span>Height:</span><input id="pcWHft" type="number" min="2" max="20" value="8"><i>ft</i><input id="pcWHin" type="number" min="0" max="11.5" step="0.5" value="0"><i>in</i></div>
+        <div class="pc-row wide"><span>Wall material:</span><select id="pcWMat"></select></div>
+        <div class="pc-row gap-row"><span>Gap:</span><span class="pc-gap">
+          <button data-pcgap="none" class="on">No gap</button>
+          <button data-pcgap="door" title="A 3-ft wide, 7-ft tall opening at floor level">🚪 Door</button>
+          <button data-pcgap="window" title="A 4-ft wide, 3-ft tall opening with its sill 3 ft up">🪟 Window</button>
+        </span></div>
+      </div>
       <div class="pc-note" id="pcWallNote"></div>
       <button class="pc-go" id="pcWallGo">🧱 Build wall</button>
     </div>
@@ -713,7 +725,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   <button id="btnImport" title="Open a project JSON">⬆ Import</button>
   <div class="msep"></div>
   <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
-  <button id="btnSnap" title="Save a PNG photo of this view">📷 Photo</button>
+  <button id="btnPhoto" title="Save a PNG photo of this view">📷 Save a picture (PNG)</button>
   <button id="btnPlan" title="Download a top-down 2D plan of the active floor as a PNG">🗺️ Plan PNG</button>
   <button id="btnGLB" title="Download this build as a 3D .glb model (opens in Blender and other 3D tools)">🧊 Export 3D (.glb)</button>
   <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
@@ -1130,16 +1142,22 @@ T.slab = texCanvas((g,S,R)=>{ g.fillStyle='#b5b5b5'; g.fillRect(0,0,S,S);
   speckle(g,S,R,['#a8a8a8','#c2c2c2','#9a9a9a'],420); }, 18);
 T.leaf = texCanvas((g,S,R)=>{ g.fillStyle='#3f7a26'; g.fillRect(0,0,S,S);
   speckle(g,S,R,['#2f5e1c','#4c8f30','#5da33c'],520); }, 19);
-T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic slats
+T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic slats.
+  // round 18: the old low-contrast slats read as a plain grey slab from far
+  // away. Each slat now has a bright top edge, a light face and a 2px
+  // near-black groove, so the stripes survive at distance.
   for(let y=0;y<S;y+=8){
+    const alt=(((y/8)|0)%2===0);
     const grad=g.createLinearGradient(0,y,0,y+8);
-    grad.addColorStop(0,'#a9bfd2'); grad.addColorStop(0.45,'#7d97ad');
-    grad.addColorStop(0.55,'#5f7a92'); grad.addColorStop(1,'#8ba2b6');
+    grad.addColorStop(0, alt?'#dcebf5':'#c9dbe8');
+    grad.addColorStop(0.5, alt?'#a9c2d4':'#97b1c4');
+    grad.addColorStop(0.75, alt?'#7e9bb2':'#6e8ba2');
+    grad.addColorStop(1,'#22384c');
     g.fillStyle=grad; g.fillRect(0,y,S,8);
-    g.fillStyle='rgba(18,32,46,0.9)'; g.fillRect(0,y+7,S,1);
-    g.fillStyle='rgba(255,255,255,0.25)'; g.fillRect(0,y,S,1);
+    g.fillStyle='rgba(255,255,255,0.7)'; g.fillRect(0,y,S,1);
+    g.fillStyle='#16283a'; g.fillRect(0,y+6,S,2);
   }
-  speckle(g,S,R,['rgba(255,255,255,0.12)','rgba(0,0,0,0.12)'],120); }, 20);
+  speckle(g,S,R,['rgba(255,255,255,0.10)','rgba(0,0,0,0.10)'],100); }, 20);
 
 /* ================= block types ================= */
 const TYPES = [
@@ -1243,15 +1261,21 @@ let renderer, scene, camera, controls;
 let sunLight=null, hemiLight=null;   // the sun + sky fill — the Day / Evening / Night control moves these
 const instMeshes = [];             // per type: {mesh, keys[]}
 const groundMeshes = [];
-let ghost, floorBand, multiGhost, selGroup;
-const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.55, depthWrite:false });
+let ghost, floorBand, multiGhost, multiGhostEdges, selGroup;
+const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.8, depthWrite:false });
 const selBoxGeo = new THREE.BoxGeometry(1.04, 1.04, 1.04);
 const selBoxMat = new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.4, depthWrite:false });
+// round 18: a bright yellow outline for the multi-block ghost (paste / drag /
+// preset) — the translucent-green fill alone was nearly invisible on grass
+const multiGhostEdgeGeo = new THREE.EdgesGeometry(selBoxGeo);
+const multiGhostEdgeMat = new THREE.LineBasicMaterial({ color:0xffd83d, transparent:true, opacity:1 });
 const raycaster = new THREE.Raycaster();
 const pointerNDC = new THREE.Vector2();
 
 function initScene(){
-  renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+  // round 18: no preserveDrawingBuffer — it costs performance every frame.
+  // The picture export renders and captures in one synchronous task instead.
+  renderer = new THREE.WebGLRenderer({ antialias:true });
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1311,6 +1335,7 @@ function initScene(){
 
   // multi-block ghost: reused by Expand, Paste and preset placement
   multiGhost = new THREE.Group(); multiGhost.visible=false; scene.add(multiGhost);
+  multiGhostEdges = new THREE.Group(); multiGhostEdges.visible=false; scene.add(multiGhostEdges);
   // selection highlight boxes
   selGroup = new THREE.Group(); selGroup.visible=false; scene.add(selGroup);
 
@@ -1363,6 +1388,13 @@ function initScene(){
     tick(clockDelta());
     if(!WALK.active && !TOUR.active) controls.update();
     updateGizmo();
+    // round 18: the build or the camera changed under a stationary pointer
+    // — re-validate the tooltip instead of leaving stale coordinates up
+    if(pointerOnCanvas && !downPos && !WALK.active && !cardDragActive && lastHoverPt
+      && $('#hoverTag').style.display==='block'
+      && (blocks.size!==hoverBlocks
+        || (hoverCamPos && (!camera.position.equals(hoverCamPos) || !controls.target.equals(hoverCamTgt)))))
+      refreshHover();
     renderer.render(scene, camera);
   })();
 }
@@ -2906,12 +2938,27 @@ function importJSON(file){
   };
   rd.readAsText(file);
 }
-function snapshot(){
+/* round 18: save a PNG photo of the current 3D view. The renderer is NOT
+   created with preserveDrawingBuffer (it costs performance every frame),
+   so the picture is rendered and captured in the same synchronous task —
+   render() then toDataURL() before anything can clear the buffer. The
+   file is a real blob download, so it works on phones too. Returns
+   {name, size, dataUrl} so the test suite can check it without downloading. */
+function savePicture(){
   renderer.render(scene,camera);
+  const dataUrl=renderer.domElement.toDataURL('image/png');
+  const bin=atob(dataUrl.split(',')[1]);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  const blob=new Blob([bytes], { type:'image/png' });
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const name=(projectName||'design').replace(/\s+/g,'-').toLowerCase()
+    +'-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.png';
   const a=document.createElement('a');
-  a.href=renderer.domElement.toDataURL('image/png');
-  a.download='minecraft-design.png'; a.click();
-  toast('Photo saved');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  toast('Picture saved');
+  return { name, size:dataUrl.length, dataUrl };
 }
 
 /* ================= GLB export (round 8) ================= */
@@ -3337,6 +3384,27 @@ function toast(msg){ const t=$('#toast'); t.textContent=msg;
 
 /* ================= picking / ghost preview ================= */
 let hover = null;   // {cell:[x,y,z], block:[x,y,z]|null, type, valid}
+// round 18: the hover tooltip must never go stale. The last pointer spot
+// over the canvas is kept, so a camera move or an edit under a stationary
+// pointer re-validates the tooltip instead of leaving old coordinates up.
+let lastHoverPt = null, pointerOnCanvas = false;
+let hoverBlocks = -1, hoverCamPos = null, hoverCamTgt = null;
+function hideHover(){
+  const tag=$('#hoverTag'); if(tag) tag.style.display='none';
+  if(ghost) ghost.visible=false;
+  const rw=$('#roWall'); if(rw) rw.style.display='none';
+  const rh=$('#roHover'); if(rh) rh.textContent='Hover a block to see its spot — 1 block = 6 in';
+  hover=null;
+}
+function runHover(e){
+  updateHover(e);
+  hoverBlocks=blocks.size;
+  hoverCamPos=camera.position.clone(); hoverCamTgt=controls.target.clone();
+}
+function refreshHover(){
+  if(!pointerOnCanvas || !lastHoverPt || WALK.active || cardDragActive || downPos) return;
+  runHover({ clientX:lastHoverPt.x, clientY:lastHoverPt.y });
+}
 function setNDC(e){
   const r=renderer.domElement.getBoundingClientRect();
   pointerNDC.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
@@ -3369,7 +3437,7 @@ function raycastVoxel(e){
 }
 function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
 function updateHover(e){
-  if(WALK.active || cardDragActive){ ghost.visible=false; hover=null; return; }
+  if(WALK.active || cardDragActive){ ghost.visible=false; hover=null; $('#hoverTag').style.display='none'; return; }
   const hit=raycastVoxel(e);
   if(!hit){ ghost.visible=false; hover=null; hideMultiGhost();
     if(moveCarry){ moveCarry.valid=false; moveCarry.target=null;
@@ -3566,15 +3634,23 @@ function selectionBBox(){ return selection.size? bboxOfKeys([...selection]) : nu
 function showMultiGhost(cells, color){
   multiGhostMat.color.set(color||0x7CFC00);
   while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]);
-  if(!cells.length){ multiGhost.visible=false; return; }
+  while(multiGhostEdges.children.length) multiGhostEdges.remove(multiGhostEdges.children[0]);
+  if(!cells.length){ multiGhost.visible=false; multiGhostEdges.visible=false; return; }
   for(const c of cells){
     const m=new THREE.Mesh(selBoxGeo, multiGhostMat);
     m.position.set(c.x+0.5, c.y+0.5, c.z+0.5);
     multiGhost.add(m);
+    const e=new THREE.LineSegments(multiGhostEdgeGeo, multiGhostEdgeMat);
+    e.position.set(c.x+0.5, c.y+0.5, c.z+0.5);
+    multiGhostEdges.add(e);
   }
-  multiGhost.visible=true;
+  multiGhost.visible=true; multiGhostEdges.visible=true;
 }
-function hideMultiGhost(){ multiGhost.visible=false; while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]); }
+function hideMultiGhost(){
+  multiGhost.visible=false; if(multiGhostEdges) multiGhostEdges.visible=false;
+  while(multiGhost.children.length) multiGhost.remove(multiGhost.children[0]);
+  if(multiGhostEdges) while(multiGhostEdges.children.length) multiGhostEdges.remove(multiGhostEdges.children[0]);
+}
 
 /* ================= copy / paste ================= */
 function copySelection(){
@@ -5260,6 +5336,9 @@ function bindPointer(){
     const id=e.dataTransfer? e.dataTransfer.getData('text/plain') : '';
     if(id) dropElementAt(id, e.clientX, e.clientY); });
   el.addEventListener('pointermove', e=>{
+    // round 18: track the pointer even mid-drag, so a re-validation after
+    // an orbit or a pan uses the release spot, not where the drag started
+    lastHoverPt={ x:e.clientX, y:e.clientY }; pointerOnCanvas=true;
     if(lpTimer && lpPos && Math.hypot(e.clientX-lpPos[0], e.clientY-lpPos[1])>10){ clearTimeout(lpTimer); lpTimer=null; }
     if(WALK.active){
       if(walkDrag){
@@ -5276,8 +5355,11 @@ function bindPointer(){
     if(wallDrag && wallPlacing){ wallDragUpdate(e); return; }
     if(buildDrag){ buildDragUpdate(e); return; }
     if(lineStart){ updateLineAim(e); return; }
-    if(!downPos) updateHover(e);
+    if(!downPos) runHover(e);
   });
+  // round 18: leaving the canvas kills the tooltip at once — it must never
+  // sit there showing coordinates for a block that is no longer under the pointer
+  el.addEventListener('pointerleave', ()=>{ if(cardDragActive) return; pointerOnCanvas=false; hideHover(); });
   el.addEventListener('pointerdown', e=>{
     downPos=[e.clientX,e.clientY]; downTime=Date.now(); downBtn=e.button;
     if(WALK.active){ walkDrag={ x:e.clientX, y:e.clientY }; return; }
@@ -5341,7 +5423,7 @@ function bindPointer(){
     if(panDrag){
       const pmoved=Math.hypot(e.clientX-panDrag.x, e.clientY-panDrag.y);
       endPanDrag();
-      if(pmoved>6){ downPos=null; return; }   // it was a pan drag — swallow the click
+      if(pmoved>6){ downPos=null; refreshHover(); return; }   // it was a pan drag — swallow the click
       // a click (no real drag): fall through to the normal click logic below
     }
     if(!downPos) return;
@@ -5349,7 +5431,11 @@ function bindPointer(){
     const dt=Date.now()-downTime;
     downPos=null;
     if(menuJustClosed){ menuJustClosed=false; return; }
-    if(moved>6||dt>600) return;   // it was a drag (orbit/pan), not a click
+    // round 18: a drag just ended — kill the orbit damping tail HERE, at the
+    // exact release position. The old code left the tail running, so a
+    // marquee started within ~0.5s froze the camera wherever the tail had
+    // drifted to instead of where the orbit was released.
+    if(moved>6||dt>600){ if(!WALK.active && !TOUR.active) freezeOrbit(); refreshHover(); return; }
     const hit=raycastVoxel(e);
     // a click on a room label renames the room instead of placing a block
     if(e.button===0){
@@ -5672,6 +5758,7 @@ $('#btnBlueprints').classList.remove('on');
   if(t!=='fill' && t!=='line') hideSizeBar();
   if(pasteMode) setPasteMode(false);
   if(presetMode) setPresetMode(null);
+  hideHover();   // round 18: the old tool's tooltip must not survive a tool switch
 }
 function flushOrbitDrift(){
   // OrbitControls keeps applying a decaying rotation after a drag; flush it
@@ -6175,7 +6262,7 @@ function init(){
   });
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
     groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
-  $('#btnSnap').onclick=snapshot;
+  $('#btnPhoto').onclick=savePicture;
   $('#btnPlan').onclick=()=>{ downloadPlan(); };
   $('#btnGLB').onclick=()=>{ exportGLB(); };
   $('#btnExport').onclick=exportJSON;
@@ -6253,7 +6340,9 @@ function init(){
   if(matchMedia('(max-width:820px)').matches) setRailTab(null);   // phones start with the panel closed (round 13)
   try{ if(localStorage.getItem(PANEL_COLLAPSE_KEY)==='1') setPanelCollapsed(true); }catch(e){}
   updateCollapseBtn();
-  if(controls) controls.addEventListener('change', ()=>updateZoomUI());
+  // round 18: a camera move re-validates the hover tooltip at the last
+  // pointer spot, so it never shows the old block's coordinates
+  if(controls) controls.addEventListener('change', ()=>{ updateZoomUI(); refreshHover(); });
   updateZoomUI();
   window.__ready=true;
 }
@@ -7136,6 +7225,19 @@ window.__mc = {
   pasteAt(x,y,z){ return pasteAt([x,y,z]); },
   setPasteMode(on){ setPasteMode(on); },
   pasteModeOn(){ return pasteMode; },
+  /* round 18: hover tooltip + paste ghost + picture, for the test suite */
+  hover:{
+    visible(){ return $('#hoverTag').style.display==='block'; },
+    text(){ return $('#hoverTag').textContent; },
+    cell(){ return hover? [...hover.cell] : null; },
+    refresh(){ refreshHover(); return true; },
+  },
+  pasteGhost:{
+    fillOpacity(){ return multiGhostMat.opacity; },
+    hasOutline(){ return !!(multiGhostEdges && multiGhostEdges.children.length); },
+    cells(){ return multiGhost.children.length; },
+  },
+  photo(){ return savePicture(); },
   presetNames(){ return ['straight','L','U','shutter']; },
   placePreset(name,x,y,z,rot){
     if(name==='shutter'){
