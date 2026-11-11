@@ -160,6 +160,10 @@
   .tpl-item .tpl-name{font-weight:800;color:#ffd83d;white-space:nowrap}
   .tpl-item .tpl-desc{flex:1;font-weight:700}
   .tpl-item .tpl-size{font-weight:800;white-space:nowrap;color:#9be36d}
+  #matList .tpl-item{cursor:pointer}
+  #matList .tpl-item:hover{background:rgba(255,255,255,.18)}
+  #matList .tpl-item.on{background:#ffd83d}
+  #matList .tpl-item.on .tpl-name,#matList .tpl-item.on .tpl-desc{color:#4a3200}
   .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
   #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
@@ -643,7 +647,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
       <button data-tool="select" title="Click a block to select it, Shift-click adds its whole row, double-click selects all connected, drag a box to select many (S)">⬚ Select</button>
-      <button data-tool="expand" title="Click a wall and drag to make it longer or taller (X)">↔ Expand</button>
+      <button data-tool="expand" title="Click a wall and drag to make it longer, taller or deeper (X)">↔ Expand</button>
       <button data-tool="move" title="Click a block to pick it up, click again to drop it — or select many and move them together (M)">🚚 Move</button>
       <button data-tool="fill" title="Drag two corners to fill a box — Solid, Hollow, Walls, Outline or Keep (F)">📦 Fill</button>
       <button data-tool="line" title="Click two points for a straight run of blocks (L)">📏 Line</button>
@@ -931,7 +935,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
 </div>
 
 <div id="materialsPanel">
-  <div class="pp-title">Materials — what this build is made of · counts update as you build</div>
+  <div class="pp-title">Materials — what this build is made of · counts update as you build · tap a material to select all of it</div>
   <div id="matList" style="flex-basis:100%;display:flex;flex-direction:column;gap:4px"></div>
   <div class="pp-row"><span id="matTotal" class="pp-note"></span></div>
   <button id="btnCopyMaterials">📋 Copy list</button>
@@ -1387,6 +1391,7 @@ function initScene(){
     requestAnimationFrame(animate);
     tick(clockDelta());
     if(!WALK.active && !TOUR.active) controls.update();
+    updateFogForCamera();   // round 19: fog follows the camera so max zoom-out stays crisp
     updateGizmo();
     // round 18: the build or the camera changed under a stationary pointer
     // — re-validate the tooltip instead of leaving stale coordinates up
@@ -1412,6 +1417,18 @@ function updateViewOffset(){
   const sl=innerWidth<=820?0:(parseFloat(getComputedStyle(document.body).getPropertyValue('--shell-left'))||0);
   if(sl>0) camera.setViewOffset(innerWidth, innerHeight, -sl/2, 0, innerWidth, innerHeight);
   else camera.clearViewOffset();
+}
+/* round 19: fog that follows the camera. At the default view the plot
+   keeps the depth cueing it always had (fog starts just past the near
+   side of the plot, far plane a few hundred out), but at maximum zoom-out
+   the fog planes move out with the camera, so the plot stays crisp
+   instead of going milky. Close-up views (Walk, eye level) keep a floor
+   so nearby blocks are never fogged. */
+function updateFogForCamera(){
+  if(!scene || !scene.fog || !camera || !controls) return;
+  const d=camera.position.distanceTo(controls.target);
+  scene.fog.near=Math.max(d*1.05, 60);
+  scene.fog.far=Math.max(d*3.0, 320);
 }
 function resize(){
   const w=innerWidth, h=innerHeight;
@@ -1705,7 +1722,14 @@ function applyOp(op, useNext){
 }
 function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
 function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
-function updateUndoBtns(){ $('#btnUndo').style.opacity=undoStack.length?1:.45; $('#btnRedo').style.opacity=redoStack.length?1:.45; }
+function updateUndoBtns(){
+  const u=$('#btnUndo'), r=$('#btnRedo');
+  u.style.opacity=undoStack.length?1:.45; r.style.opacity=redoStack.length?1:.45;
+  // round 19: the buttons name the action they would undo / redo, using
+  // the History labels — "Undo: Placed Wall", not just "Undo"
+  u.title = undoStack.length? 'Undo: '+undoStack[undoStack.length-1].label+' (Ctrl+Z)' : 'Nothing to undo';
+  r.title = redoStack.length? 'Redo: '+redoStack[redoStack.length-1].label+' (Ctrl+Y)' : 'Nothing to redo';
+}
 
 /* ================= history panel (round 15): photo-editor-style states ================= */
 /* The panel lists the steps, newest first — no snapshots, the undo stack
@@ -1869,6 +1893,28 @@ function materialText(){
   lines.push('Total: '+blocks.size+' blocks · '+buildAreaSqFt()+' sq ft');
   return lines.join('\n');
 }
+/* round 19: tap a material row in the Materials panel to select every
+   block of that material in the whole build — then the Properties panel
+   works on that selection (Change colour, Delete, Move, Copy…). Tapping
+   the same row again, or tapping empty grass as usual, clears it. */
+let lastMaterialSelect=null;   // the material the last tap selected, so its row stays highlighted
+function selectByMaterial(ti){
+  const keys=[]; for(const [k,v] of blocks) if(v.t===ti) keys.push(k);
+  const same = keys.length>0 && keys.length===selection.size && keys.every(k=>selection.has(k));
+  selection.clear();
+  if(same){
+    lastMaterialSelect=null;
+    updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
+    toast('Selection cleared');
+    return 0;
+  }
+  for(const k of keys) selection.add(k);
+  lastMaterialSelect = keys.length? ti : null;
+  updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
+  if(keys.length) toast('Selected '+keys.length+' '+TYPES[ti].name+' block'+(keys.length>1?'s':''));
+  else toast('No '+TYPES[ti].name+' blocks in this build');
+  return keys.length;
+}
 function updateMaterialsPanel(){
   const list=$('#matList'); if(!list) return;
   list.innerHTML='';
@@ -1879,7 +1925,10 @@ function updateMaterialsPanel(){
     list.appendChild(d);
   }
   for(const c of cs){
-    const row=document.createElement('div'); row.className='tpl-item';
+    const row=document.createElement('div'); row.className='tpl-item'+(lastMaterialSelect===c.ti?' on':'');
+    row.title='Tap to select all '+c.name+' blocks';
+    row.setAttribute('role','button');
+    row.onclick=()=>selectByMaterial(c.ti);
     const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=c.name;
     const ct=document.createElement('span'); ct.className='tpl-desc'; ct.textContent='× '+c.n.toLocaleString('en-IN');
     row.append(nm,ct); list.appendChild(row);
@@ -3436,6 +3485,63 @@ function raycastVoxel(e){
   return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti, dist:h.distance };
 }
 function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
+/* round 19: the hover tooltip must never be covered by a panel or run
+   off-screen. It used to sit at cursor+14/+12 whatever was there — near
+   the right edge it slid under the Properties panel (the tag is z-index 9,
+   the panel is 11). Now the tag is placed from candidate spots (right /
+   below, left / below, right / above, left / above the cursor) and the
+   first one that is fully inside the window AND clear of every visible
+   panel wins; if none is fully clear, the best one is clamped into the
+   window and shoved out of any panel it still touches. */
+function panelRects(){
+  const out=[];
+  for(const sel of ['#sidePanel','#selPanel','#topbar','#readout','#sizeBar','#help','#gizmo','#zoomBar']){
+    const el=document.querySelector(sel); if(!el) continue;
+    if(getComputedStyle(el).display==='none') continue;
+    const r=el.getBoundingClientRect();
+    if(r.width>0 && r.height>0) out.push(r);
+  }
+  return out;
+}
+function placeHoverTag(e){
+  const tag=$('#hoverTag'); if(!tag) return;
+  tag.style.display='block';
+  const w=tag.offsetWidth, h=tag.offsetHeight;
+  const pad=8;
+  const blocked=panelRects();
+  const clear=(x,y)=>{
+    if(x<pad||y<pad||x+w>innerWidth-pad||y+h>innerHeight-pad) return false;
+    for(const r of blocked) if(!(x+w<=r.left||x>=r.right||y+h<=r.top||y>=r.bottom)) return false;
+    return true;
+  };
+  const cands=[
+    [e.clientX+14, e.clientY+12],
+    [e.clientX-w-14, e.clientY+12],
+    [e.clientX+14, e.clientY-h-12],
+    [e.clientX-w-14, e.clientY-h-12],
+  ];
+  let pick=null;
+  for(const [x,y] of cands) if(clear(x,y)){ pick=[x,y]; break; }
+  if(!pick){
+    // boxed in by panels (e.g. the bottom-left corner, where the readout
+    // meets the side panel): try tucking the tag against each visible
+    // panel's edges — left of it, right of it, above it, below it
+    const extra=[];
+    for(const r of blocked){
+      extra.push([r.left-w-pad, clamp(e.clientY+12,pad,Math.max(pad,innerHeight-h-pad))]);
+      extra.push([r.right+pad, clamp(e.clientY+12,pad,Math.max(pad,innerHeight-h-pad))]);
+      extra.push([clamp(e.clientX+14,pad,Math.max(pad,innerWidth-w-pad)), r.top-h-pad]);
+      extra.push([clamp(e.clientX+14,pad,Math.max(pad,innerWidth-w-pad)), r.bottom+pad]);
+    }
+    for(const [x,y] of extra) if(clear(x,y)){ pick=[x,y]; break; }
+  }
+  if(!pick){
+    // last resort: clamp the first spot into the window
+    let [x,y]=cands[0];
+    pick=[clamp(x,pad,Math.max(pad,innerWidth-w-pad)), clamp(y,pad,Math.max(pad,innerHeight-h-pad))];
+  }
+  tag.style.left=pick[0]+'px'; tag.style.top=pick[1]+'px';
+}
 function updateHover(e){
   if(WALK.active || cardDragActive){ ghost.visible=false; hover=null; $('#hoverTag').style.display='none'; return; }
   const hit=raycastVoxel(e);
@@ -3451,9 +3557,8 @@ function updateHover(e){
     updateMoveGhost();
     ghost.visible=false;
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     tag.innerHTML='<b>Moving '+moveCarry.items.length+' block'+(moveCarry.items.length>1?'s':'')+'</b> · '+(moveCarry.valid?'click to drop':'blocked — spot is taken');
+    placeHoverTag(e);
     $('#roHover').innerHTML='Moving <b>'+moveCarry.items.length+' block'+(moveCarry.items.length>1?'s':'')+'</b> — click to drop · Esc to cancel';
     return;
   }
@@ -3472,9 +3577,8 @@ function updateHover(e){
     showMultiGhost(cells);
     ghost.visible=false;
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):currentPresetLabel())+'</b> · click to place';
+    placeHoverTag(e);
     $('#roHover').innerHTML = pasteMode ? 'Click to paste <b>'+cells.length+'</b> blocks here — Esc to stop'
       : 'Click to place <b>'+currentPresetLabel()+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
     return;
@@ -3485,9 +3589,8 @@ function updateHover(e){
     ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
     ghost.material.color.set(0x7CFC00);
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     tag.innerHTML='<b>Fill</b> · drag from here to size a box ('+fillMode+')';
+    placeHoverTag(e);
     $('#roHover').innerHTML='Fill — drag from here to size a box · mode <b>'+fillMode+'</b> · type a length + Enter for exact size';
     return;
   }
@@ -3496,30 +3599,27 @@ function updateHover(e){
     ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
     ghost.material.color.set(0x7CFC00);
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     tag.innerHTML='<b>Line</b> · click to set the start point';
+    placeHoverTag(e);
     $('#roHover').innerHTML='Line — click to set the start point, then click the end point';
     return;
   }
   if(tool==='tape'){
     ghost.visible=false;
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     tag.innerHTML='<b>Tape</b> · '+(tapeStart?'click the second point':'click a point to measure from');
+    placeHoverTag(e);
     $('#roHover').innerHTML= tapeStart ? 'Tape — click the second point' : 'Tape — click two points to measure between them';
     return;
   }
   // Dropper / Flood work on the block itself, not the empty cell beside it
   if(tool==='dropper' || tool==='flood'){
     const tag=$('#hoverTag');
-    tag.style.display='block';
-    tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
     if(!hit.block){
       ghost.visible=false;
       tag.innerHTML='<b>'+(tool==='dropper'?'Dropper':'Flood')+'</b> · click a block';
       $('#roHover').innerHTML=(tool==='dropper'?'Dropper':'Flood')+' — click a block';
+      placeHoverTag(e);
       return;
     }
     const [bx,by,bz]=hit.block;
@@ -3535,6 +3635,7 @@ function updateHover(e){
       tag.innerHTML='<b>Flood</b> · '+(reg? reg.keys.length+' '+TYPES[reg.type].name+' blocks → '+TYPES[selType].name : '');
       $('#roHover').innerHTML= reg? 'Flood — click to repaint '+reg.keys.length+' connected '+TYPES[reg.type].name+' blocks as '+TYPES[selType].name : 'Flood — click a block';
     }
+    placeHoverTag(e);
     return;
   }
   const occupied=getBlock(cx,cy,cz)!==null;
@@ -3544,10 +3645,9 @@ function updateHover(e){
   ghost.position.set(cx+0.5, cy+0.5, cz+0.5);
   ghost.material.color.set(valid?0x7CFC00:0xff4444);
   const tag=$('#hoverTag');
-  tag.style.display='block';
-  tag.style.left=(e.clientX+14)+'px'; tag.style.top=(e.clientY+12)+'px';
   const typeName = hit.type!=null ? TYPES[hit.type].name : 'Ground';
   tag.innerHTML='<b>'+typeName+'</b> · '+ftin(cx*FT)+' × '+ftin(cy*FT)+' · '+ftin(cz*FT);
+  placeHoverTag(e);
   $('#roHover').innerHTML='At <b>'+ftin(cx*FT)+'</b> × <b>'+ftin(cy*FT)+'</b> · <b>'+ftin(cz*FT)+'</b> — '+(valid?'place <b>'+TYPES[selType].name+'</b> here':'blocked');
 }
 
@@ -4021,10 +4121,28 @@ function wallInfo(x,y,z){
     len:run.len, lenFt:run.len*FT, height, heightFt:height*FT, blocks,
     key: run.axis+'|'+run.fixed+'|'+run.a0+'|'+run.a1+'|'+run.type+'|'+run.y };
 }
+/* round 19: the floor a wall stands on — expanding down stops at the
+   floor's base, never below the plot. The Ground floor's base (y=0) sits
+   inside the grass slab, so a ground wall already stands on its floor. */
+function expandFloorBase(y){
+  const base=FLOORS[floorOfY(y)].base;
+  return base===0 ? 1 : base;
+}
 function expandCells(run, mode, dir, len, height=1){
   const cells=[];
   if(len<=0) return cells;
-  if(mode==='up'){
+  if(mode==='down'){
+    // layers go UNDER the wall's base row, down to the floor it stands on
+    const minY=expandFloorBase(run.y);
+    for(let layer=1; layer<=len; layer++){
+      const y=run.y-layer;
+      if(y<minY) break;
+      for(let a=run.a0; a<=run.a1; a++){
+        const x=run.axis==='x'? a : run.fixed, z=run.axis==='x'? run.fixed : a;
+        if(!getBlock(x, y, z)) cells.push({ x, y, z, t:run.type, r:0 });
+      }
+    }
+  } else if(mode==='up'){
     // layers go on top of the whole wall, not on top of the grabbed row
     const topY=run.y+(height||1)-1;
     for(let layer=1; layer<=len; layer++)
@@ -4058,6 +4176,11 @@ function expandDragUpdate(e){
   if(Math.abs(dy) > Math.abs(dx)*1.2 && dy < -12){
     // mostly upward drag -> taller
     mode='up'; len=clamp(Math.round(-dy/24), 0, 20);
+  } else if(Math.abs(dy) > Math.abs(dx)*1.2 && dy > 12){
+    // round 19: mostly downward drag -> deeper, down to the floor the wall stands on
+    mode='down';
+    const minY=expandFloorBase(run.y);
+    len=clamp(Math.round(dy/24), 0, Math.min(20, Math.max(0, run.y-minY)));
   } else {
     // sideways drag -> longer; follow the 3D point under the cursor
     setNDC(e); raycaster.setFromCamera(pointerNDC, camera);
@@ -4084,12 +4207,13 @@ function expandDragUpdate(e){
     const sp=wallLabelSprites.get(wi.key);
     if(sp){
       const projLen = mode==='up'? wi.lenFt : wi.lenFt + len*FT;
-      const projH = mode==='up'? wi.heightFt + len*FT : wi.heightFt;
+      const projH = (mode==='up'||mode==='down')? wi.heightFt + len*FT : wi.heightFt;
       setLabelText(sp.sprite, ftin(projLen)+' × '+ftin(projH));
     }
   }
-  $('#roHover').textContent = len===0 ? 'Drag to expand the wall — sideways = longer, up = taller'
+  $('#roHover').textContent = len===0 ? (mode==='down' ? 'This wall already reaches the floor — drag up or sideways instead' : 'Drag to expand the wall — sideways = longer, up = taller, down = deeper')
     : mode==='up' ? 'Expand taller: +'+len+' layer'+(len>1?'s':'')+' · '+d.cells.length+' blocks · '+ftin(len*FT)+' higher'
+    : mode==='down' ? 'Expand deeper: +'+len+' layer'+(len>1?'s':'')+' · '+d.cells.length+' blocks · '+ftin(len*FT)+' lower'
     : 'Expand longer: +'+len+' column'+(len>1?'s':'')+' · '+d.cells.length+' blocks · '+ftin(len*FT);
 }
 function expandStart(e, hit){
@@ -7067,6 +7191,7 @@ window.__mc = {
   floor(){ return activeFloor; },
   loadEmpty(){ buildEmpty(); },
   undo(){ doUndo(); }, redo(){ doRedo(); },
+  undoTitles(){ return { undo:$('#btnUndo').title, redo:$('#btnRedo').title }; },
   tool(){ return tool; },
   setTool(t){ setTool(t); },
   typeIndex(id){ return TYPES.findIndex(t=>t.id===id); },
@@ -7109,6 +7234,9 @@ window.__mc = {
     /* round 17: reset the camera to a named view (same as the Home / Top /
        Front / Eye buttons) — lets a test start from a known camera */
     setCam(name){ setCam(name); return true; },
+    /* round 19: fog planes, so a test can prove they moved out at max zoom */
+    fog(){ return scene.fog? { near:+scene.fog.near.toFixed(1), far:+scene.fog.far.toFixed(1) } : null; },
+    dist(){ return +camDist().toFixed(1); },
   },
   cheat:{
     open(){ toggleCheatPanel(true); return true; },
@@ -7231,6 +7359,15 @@ window.__mc = {
     text(){ return $('#hoverTag').textContent; },
     cell(){ return hover? [...hover.cell] : null; },
     refresh(){ refreshHover(); return true; },
+    /* round 19: tooltip geometry + a deterministic place-at, so a test can
+       prove the tag never runs off-screen or under a panel */
+    rect(){ const t=$('#hoverTag'); if(!t || t.style.display!=='block') return null;
+      const r=t.getBoundingClientRect(); return { left:Math.round(r.left), top:Math.round(r.top),
+        right:Math.round(r.right), bottom:Math.round(r.bottom),
+        w:Math.round(r.width), h:Math.round(r.height) }; },
+    placeAt(x,y){ const t=$('#hoverTag'); if(!t) return null;
+      t.innerHTML="<b>Brick</b> - 10 ft 0 in x 0 ft 6 in - 10 ft 0 in";
+      placeHoverTag({ clientX:x, clientY:y }); return true; },
   },
   pasteGhost:{
     fillOpacity(){ return multiGhostMat.opacity; },
@@ -7294,6 +7431,9 @@ window.__mc = {
     open(){ toggleMaterialsPanel(true); return true; },
     close(){ toggleMaterialsPanel(false); return true; },
     isOpen(){ return $('#materialsPanel').classList.contains('on'); },
+    select(ti){ return selectByMaterial(ti); },
+    selectedType(){ return lastMaterialSelect; },
+    rowCount(){ return document.querySelectorAll('#matList .tpl-item').length; },
     listText(){ return $('#matList').textContent; },
     totalText(){ return $('#matTotal').textContent; },
   },
