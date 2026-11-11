@@ -551,6 +551,17 @@ body.dark #toolBar button.on{ background:#2e7d32; color:#fff; border-color:#2e7d
   background:#fff; color:#1a1a1a; border:1px solid #e0e0e0; border-radius:10px;
   box-shadow:0 2px 12px rgba(0,0,0,.15); padding:12px; max-height:calc(100vh - 260px); overflow-y:auto; }
 #selPanel .sp-title{ color:#1a1a1a; font-size:14px; }
+.sp-wall{ border-top:1px solid rgba(0,0,0,.18); margin-top:8px; padding-top:8px; text-align:left; }
+.sp-wall-title{ font-weight:800; margin-bottom:4px; font-size:13px; }
+.sp-wall-row{ display:flex; align-items:center; gap:6px; margin:5px 0; font-size:13px; flex-wrap:wrap; }
+.sp-wall-row b{ min-width:74px; }
+.sp-wall-row input[type=number]{ width:64px; padding:3px 6px; font-size:13px; }
+.sp-wall-row .mini{ padding:3px 8px; font-size:12px; border:1px solid #999; border-radius:6px; background:#fff; cursor:pointer; font-weight:700; }
+.sp-wall-row .mini.on{ background:#2e7d32; color:#fff; border-color:#2e7d32; }
+.sp-sw{ width:26px; height:26px; border-radius:6px; border:2px solid rgba(0,0,0,.25); cursor:pointer; padding:0; }
+.sp-sw.on{ border-color:#1a1a1a; box-shadow:0 0 0 2px #fff inset; }
+body.dark .sp-wall{ border-top-color:rgba(255,255,255,.2); }
+body.dark .sp-wall-row .mini{ background:#2b2b2b; color:#f0f0f0; border-color:#555; }
 #selProps{ flex-basis:100%; font-size:12px; color:#444; line-height:1.6; font-weight:700; }
 #selProps b{ color:#1b5e20; }
 #selPanel button{ background:#f5f5f5; color:#1a1a1a; border:1px solid #d8d8d8; }
@@ -1020,6 +1031,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
   <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
   <button id="btnLabels" title="Show / hide the white wall dimension labels (H)">🏷️ Labels</button>
+  <button id="btnFadeWalls" class="on" title="Fade the walls between you and the inside so you can see through (SpacePlanner-style)">🌫️ Fade front walls</button>
   <button id="btnTheme" title="Switch between light and dark">🌙 Dark theme</button>
   <div class="msep"></div>
   <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
@@ -1029,6 +1041,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <div class="msep"></div>
   <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
   <button id="btnPhoto" title="Save a PNG photo of this view">📷 Save a picture (PNG)</button>
+  <button id="btnRender" title="A polished, high-quality PNG of this view — soft shadows, warm light">✨ Render this view</button>
   <button id="btnPlan" title="Download a top-down 2D plan of the active floor as a PNG">🗺️ Plan PNG</button>
   <button id="btnGLB" title="Download this build as a 3D .glb model (opens in Blender and other 3D tools)">🧊 Export 3D (.glb)</button>
   <button id="btnClearMeasures" title="Remove all pinned tape measures">📏 Clear measures</button>
@@ -1539,6 +1552,8 @@ T.screen = texCanvas((g,S,R)=>{ g.fillStyle='#101418'; g.fillRect(0,0,S,S);
 T.ceramic = texCanvas((g,S,R)=>{ g.fillStyle='#f7f7f5'; g.fillRect(0,0,S,S);
   g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,0,S,6);
   speckle(g,S,R,['#ececea','#ffffff','#e2e2de'],160); }, 23);
+T.white = texCanvas((g,S,R)=>{ g.fillStyle='#f2efe8'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#e8e4da','#faf8f2','#ded9cc'],300); }, 24);
 
 /* ================= block types ================= */
 const TYPES = [
@@ -1555,6 +1570,7 @@ const TYPES = [
   { id:'fabric', name:'Fabric', mats:[T.fabric,T.fabric,T.fabric,T.fabric,T.fabric,T.fabric] },
   { id:'screen', name:'TV screen', mats:[T.screen,T.screen,T.screen,T.screen,T.screen,T.screen] },
   { id:'ceramic', name:'Ceramic', mats:[T.ceramic,T.ceramic,T.ceramic,T.ceramic,T.ceramic,T.ceramic] },
+  { id:'white', name:'White paint', mats:[T.white,T.white,T.white,T.white,T.white,T.white] },
 ];
 function matFor(ti){
   const ty=TYPES[ti];
@@ -1582,6 +1598,7 @@ let groundVisible = true;
 
 /* ---- selection / copy-paste / presets / expand ---- */
 let selection = new Set();         // block keys
+let selectedWallKey=null, selectedWallAnchor=null;   // round 34: whole-wall selection
 let clipboard = [];                // [{dx,dy,dz,t,r}] relative to the copied min corner
 /* round 25: copy-paste across projects — Copy also writes the selection
    to localStorage, so it survives switching projects (and a reload).
@@ -1643,6 +1660,12 @@ let mirrorAxis='x';                  // mirror plane axis: 'x' or 'z'
 let mirrorCenter=0;                  // mirror plane position, in blocks
 let symmetry={ on:false, axis:'x' }; // live symmetry while building
 let viewMode='normal';               // 'normal' | 'isolate' | 'dollhouse'
+/* round 34: smart wall fade — near-side walls turn translucent from any
+   orbit angle (SpacePlanner-style). ON by default, remembered. */
+const WALLFADE_KEY='home-designer-minecraft-wallfade-v1';
+let wallFadeOn=true;
+try{ const v=localStorage.getItem(WALLFADE_KEY); if(v==='0') wallFadeOn=false; }catch(e){}
+let fadeDirty=true, fadeLastAz=null;
 const DOLL_CUT=10;                   // dollhouse: blocks up to 10 above a floor's base stay visible (walls cut at eye level)
 let mirrorLine=null;                 // magenta bar on the ground marking the mirror plane
 
@@ -1674,6 +1697,9 @@ const TOUR = { active:false, angle:0, speed:Math.PI*2/45, radius:60, height:40, 
 let renderer, scene, camera, controls;
 let sunLight=null, hemiLight=null;   // the sun + sky fill — the Day / Evening / Night control moves these
 const instMeshes = [];             // per type: {mesh, keys[]}
+const fadeMeshes = [];              // round 34: translucent twins, one per type, for faded walls
+let fadedKeys = new Set();          // round 34: block keys currently faded
+let fadedWallKeys = new Set();      // round 34: wall keys currently faded
 const groundMeshes = [];
 let ghost, multiGhost, multiGhostEdges, selGroup;
 const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.8, depthWrite:false });
@@ -1732,6 +1758,16 @@ function initScene(){
     mesh.frustumCulled = false;
     scene.add(mesh);
     instMeshes.push({ mesh, keys:[] });
+  });
+  // round 34: faded-wall meshes — one translucent twin per material type,
+  // fed by the same rebuild; the solid meshes are never touched.
+  TYPES.forEach((ty,ti)=>{
+    const mats = matFor(ti).map(m=>{ const c=m.clone(); c.transparent=true; c.opacity=ty.glass?0.15:0.2; c.depthWrite=false; return c; });
+    const mesh = new THREE.InstancedMesh(ti===6?stairGeo:boxGeo, ti===6? mats[0] : mats, 64);
+    mesh.count=0; mesh.castShadow=false; mesh.receiveShadow=false;
+    mesh.userData.type=ti; mesh.userData.fade=true; mesh.frustumCulled=false;
+    scene.add(mesh);
+    fadeMeshes.push({ mesh, keys:[] });
   });
 
   // ghost preview cube
@@ -1796,6 +1832,7 @@ function initScene(){
     tick(clockDelta());
     if(!WALK.active && !TOUR.active) controls.update();
     updateFogForCamera();   // round 19: fog follows the camera so max zoom-out stays crisp
+    refreshWallFade();      // round 34: smart wall fade follows the camera angle
     updateGizmo();
     // round 18: the build or the camera changed under a stationary pointer
     // — re-validate the tooltip instead of leaving stale coordinates up
@@ -2099,43 +2136,108 @@ function applyBatch(list, label){
 function getBlock(x,y,z){ return blocks.get(key3(x,y,z)) || null; }
 function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
 
-function rebuild(){
+/* round 34: write one instanced-mesh slot (solid or faded) from a list
+   of [key, block] pairs — grows the mesh when the list outgrows it. */
+function writeMeshSlot(slot, list){
+  if(list.length > slot.mesh.instanceMatrix.array.length/16){
+    const cap = Math.max(64, Math.ceil(list.length*1.4));
+    const old = slot.mesh;
+    const nm = new THREE.InstancedMesh(old.geometry, old.material, cap);
+    nm.count=0; nm.castShadow=old.castShadow; nm.receiveShadow=old.receiveShadow;
+    nm.userData.type=old.userData.type; nm.userData.fade=!!old.userData.fade; nm.frustumCulled=false;
+    scene.remove(old); old.dispose();
+    scene.add(nm); slot.mesh = nm;
+  }
+  const mesh = slot.mesh;
+  mesh.count = list.length;
+  slot.keys = new Array(list.length);
+  for(let i=0;i<list.length;i++){
+    const [k,v] = list[i];
+    const [x,y,z] = parseKey(k);
+    dummy.position.set(x+0.5, y+0.5, z+0.5);
+    dummy.rotation.set(0,0,0);
+    if(TYPES[mesh.userData.type].stair){
+      const d=STAIR_DIRS[v.r||0];
+      dummy.rotation.y = Math.atan2(-d[0], -d[1]);
+    }
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+    slot.keys[i]=k;
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingSphere();
+}
+/* round 34: partition every rendered block into its solid mesh and its
+   type's faded twin (only the blocks in fadedKeys go translucent). */
+function writeAllMeshes(){
   const byType = TYPES.map(()=>[]);
   for(const [k,v] of blocks){ if(moveHidden.has(k)) continue;
     const p=parseKey(k); if(!blockRendered(p[0],p[1],p[2])) continue; byType[v.t].push([k, v]); }
   byType.forEach((list, ti)=>{
-    const slot = instMeshes[ti];
-    if(list.length > slot.mesh.instanceMatrix.array.length/16){
-      const cap = Math.max(64, Math.ceil(list.length*1.4));
-      const old = slot.mesh;
-      const nm = new THREE.InstancedMesh(old.geometry, old.material, cap);
-      nm.count=0; nm.castShadow=true; nm.receiveShadow=true;
-      nm.userData.type=ti; nm.frustumCulled=false;
-      scene.remove(old); old.dispose();
-      scene.add(nm); slot.mesh = nm;
-    }
-    const mesh = slot.mesh;
-    mesh.count = list.length;
-    slot.keys = new Array(list.length);
-    for(let i=0;i<list.length;i++){
-      const [k,v] = list[i];
-      const [x,y,z] = parseKey(k);
-      dummy.position.set(x+0.5, y+0.5, z+0.5);
-      dummy.rotation.set(0,0,0);
-      if(TYPES[ti].stair){
-        const d=STAIR_DIRS[v.r||0];
-        dummy.rotation.y = Math.atan2(-d[0], -d[1]);
-      }
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-      slot.keys[i]=k;
-    }
-    mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
+    const solidList=[], fadeList=[];
+    for(const item of list){ (fadedKeys.has(item[0])?fadeList:solidList).push(item); }
+    writeMeshSlot(instMeshes[ti], solidList);
+    writeMeshSlot(fadeMeshes[ti], fadeList);
   });
+}
+function rebuild(){
+  fadeDirty=true;   // round 34: the build changed — the faded set may too
+  writeAllMeshes();
   updateWallLabels();
   updateRoomLabels();
   updateClearance();
+}
+
+/* ================= smart wall fade (round 34, SpacePlanner-style) ============== */
+/* When the camera orbits outside the building, the walls between the
+   camera and the interior turn translucent (opacity 0.2) so the inside
+   stays visible from ANY angle — the wall is still there, still
+   clickable, and no block data changes (purely visual: the faded
+   blocks simply live in the translucent twin meshes). A wall fades
+   when the camera and the build centre sit on opposite sides of it.
+   Never fades: the selected wall, any wall holding a selected block,
+   Walk mode (camera inside), Isolate / Dollhouse views. */
+function setWallFade(on){
+  wallFadeOn=!!on;
+  try{ localStorage.setItem(WALLFADE_KEY, wallFadeOn?'1':'0'); }catch(e){}
+  const b=$('#btnFadeWalls'); if(b) b.classList.toggle('on', wallFadeOn);
+  fadeDirty=true; refreshWallFade(true);
+  return wallFadeOn;
+}
+function buildCentre(){
+  if(!blocks.size) return { x:11, z:35 };
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+  for(const k of blocks.keys()){ const [x,y,z]=parseKey(k);
+    if(x<x0)x0=x; if(x>x1)x1=x; if(z<z0)z0=z; if(z>z1)z1=z; }
+  return { x:(x0+x1+1)/2, z:(z0+z1+1)/2 };
+}
+function refreshWallFade(force){
+  if(!renderer || !camera || !controls) return;
+  const off=camera.position.clone().sub(controls.target);
+  const az=Math.atan2(off.x, off.z);
+  if(!force && !fadeDirty && fadeLastAz!==null && Math.abs(az-fadeLastAz)<0.1) return;
+  fadeLastAz=az; fadeDirty=false;
+  const want = wallFadeOn && !WALK.active && viewMode==='normal' && blocks.size>0;
+  const newWallKeys=new Set(), newKeys=new Set();
+  if(want){
+    const c=buildCentre();
+    const camX=camera.position.x, camZ=camera.position.z;
+    for(const w of findWalls(1,4)){
+      if(selectedWallKey && w.key===selectedWallKey) continue;
+      let between=false;
+      if(w.axis==='x') between=(camZ-w.fixed)*(c.z-w.fixed)<0;
+      else between=(camX-w.fixed)*(c.x-w.fixed)<0;
+      if(!between) continue;
+      const cells=wallBlockCells(w);
+      if(selection.size && cells.some(cc=>selection.has(key3(cc.x,cc.y,cc.z)))) continue;
+      newWallKeys.add(w.key);
+      for(const cc of cells) newKeys.add(key3(cc.x,cc.y,cc.z));
+    }
+  }
+  if(!force && newWallKeys.size===fadedWallKeys.size
+    && [...newWallKeys].every(k=>fadedWallKeys.has(k))) return;
+  fadedWallKeys=newWallKeys; fadedKeys=newKeys;
+  writeAllMeshes();
 }
 
 /* ================= undo / redo (single op or {batch:[ops]}) ================= */
@@ -2594,7 +2696,7 @@ function setLabelText(sp, text){
 function wallLabelText(w){ return ftin(w.lenFt)+' × '+ftin(w.heightFt); }
 /* every wall in the build: origin = leftmost/frontmost block of its run
    at the lowest row of its vertical stack, per axis */
-function findWalls(){
+function findWalls(minLen=2, minH=4){
   const seen=new Set(), walls=[];
   for(const [k,v] of blocks){
     const [x,y,z]=parseKey(k);
@@ -2613,7 +2715,7 @@ function findWalls(){
       // (2 ft) high. A 1-ft stub (sill, step, plinth) never gets a tag —
       // those tiny tags were overlapping the real ones and blocking the view.
       // The size of a short wall still shows in the readout panel on hover.
-      if(info.len>=2 && info.height>=4) walls.push(info);
+      if(info.len>=minLen && info.height>=minH) walls.push(info);
     }
   }
   return walls;
@@ -3672,6 +3774,66 @@ function savePicture(){
   return { name, size:dataUrl.length, dataUrl };
 }
 
+/* ================= Render this view (round 34) ================= */
+/* A polished, high-quality PNG of the current camera view — visibly
+   better than the quick "Save a picture" shot, and still free: during
+   the capture ONLY, the renderer uses ACES tone mapping with a slightly
+   warm exposure, a warm sun boost, and 2x pixel ratio, with labels,
+   ghosts and the selection highlight hidden for a clean shot. Live
+   settings are restored exactly afterwards, so the FPS never changes.
+   Returns {name, size, dataUrl} so the test suite can check it. */
+function renderView(){
+  if(!renderer) return null;
+  const saved={
+    toneMapping: renderer.toneMapping,
+    exposure: renderer.toneMappingExposure,
+    pixelRatio: renderer.getPixelRatio(),
+    sunInt: sunLight.intensity, sunColor: sunLight.color.getHex(),
+    hemiInt: hemiLight.intensity,
+    labelVis: wallLabelGroup? wallLabelGroup.visible : true,
+    roomVis: roomLabelGroup? roomLabelGroup.visible : true,
+    selVis: selGroup.visible,
+    ghostVis: ghost.visible,
+    multiVis: multiGhost.visible,
+    multiEdgeVis: multiGhostEdges? multiGhostEdges.visible : false,
+  };
+  try{
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.15;
+    renderer.setPixelRatio(2);
+    sunLight.intensity=2.3; sunLight.color.setHex(0xffe6bf);
+    hemiLight.intensity=1.05;
+    if(wallLabelGroup) wallLabelGroup.visible=false;
+    if(roomLabelGroup) roomLabelGroup.visible=false;
+    selGroup.visible=false; ghost.visible=false;
+    multiGhost.visible=false; if(multiGhostEdges) multiGhostEdges.visible=false;
+    renderer.render(scene,camera);
+    const dataUrl=renderer.domElement.toDataURL('image/png');
+    const bin=atob(dataUrl.split(',')[1]);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    const blob=new Blob([bytes], { type:'image/png' });
+    const d=new Date(), pad=n=>String(n).padStart(2,'0');
+    const name=(projectName||'design').replace(/\s+/g,'-').toLowerCase()
+      +'-render-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.png';
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob); a.download=name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+    toast('Render saved — polished view');
+    return { name, size:dataUrl.length, dataUrl };
+  } finally {
+    renderer.toneMapping=saved.toneMapping;
+    renderer.toneMappingExposure=saved.exposure;
+    renderer.setPixelRatio(saved.pixelRatio);
+    sunLight.intensity=saved.sunInt; sunLight.color.setHex(saved.sunColor);
+    hemiLight.intensity=saved.hemiInt;
+    if(wallLabelGroup) wallLabelGroup.visible=saved.labelVis;
+    if(roomLabelGroup) roomLabelGroup.visible=saved.roomVis;
+    selGroup.visible=saved.selVis; ghost.visible=saved.ghostVis;
+    multiGhost.visible=saved.multiVis; if(multiGhostEdges) multiGhostEdges.visible=saved.multiEdgeVis;
+  }
+}
+
 /* ================= GLB export (round 8) ================= */
 /* The whole build as one .glb file (Blender / Unity / Godot). The
    instanced meshes are copied into a fresh group — ground, labels,
@@ -4191,7 +4353,7 @@ function raycastVoxel(e){
   setNDC(e);
   raycaster.setFromCamera(pointerNDC, camera);
   raycaster.far = Infinity;
-  const targets=[...instMeshes.map(s=>s.mesh), ...groundMeshes];
+  const targets=[...instMeshes.map(s=>s.mesh), ...fadeMeshes.map(s=>s.mesh), ...groundMeshes];
   const hits=raycaster.intersectObjects(targets, false);
   if(!hits.length) return null;
   const h=hits[0];
@@ -4203,7 +4365,7 @@ function raycastVoxel(e){
     return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)], type:null, dist:h.distance };
   }
   const ti=h.object.userData.type;
-  const slot=instMeshes[ti];
+  const slot=h.object.userData.fade? fadeMeshes[ti] : instMeshes[ti];
   const k=slot.keys[h.instanceId];
   if(!k) return null;
   const bp=parseKey(k);
@@ -4399,6 +4561,18 @@ function updateSelectionHighlight(){
     sz.style.display='block';
     sz.textContent='Selected: '+selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d)+' × '+ftin(h);
   } else sz.style.display='none';
+  // round 34: the whole-wall selection only survives while the selection
+  // is still exactly that wall — any other selection drops it
+  if(selectedWallKey && selectedWallAnchor){
+    const wi=wallInfo(selectedWallAnchor[0],selectedWallAnchor[1],selectedWallAnchor[2]);
+    if(!wi || wi.len<2 || wi.height<4){ selectedWallKey=null; selectedWallAnchor=null; }
+    else{
+      const wc=wallBlockCells(wi);
+      if(selection.size!==wc.length || !wc.every(c=>selection.has(key3(c.x,c.y,c.z))))
+        { selectedWallKey=null; selectedWallAnchor=null; }
+    }
+  }
+  fadeDirty=true;   // round 34: selection changes which walls may fade
   updateSelPanel();   // the contextual panel lives and dies with the selection (round 10)
 }
 function clearSelection(){ selection.clear(); updateSelectionHighlight(); }
@@ -4450,6 +4624,138 @@ function selectConnected(x,y,z,additive){
   updateSelectionHighlight();
   toast('Selected '+reg.keys.length+' connected '+TYPES[reg.type].name+' block'+(reg.keys.length>1?'s':''));
   return reg.keys.length;
+}
+
+/* ================= whole-wall select + wall edits (round 34) ============== */
+/* wallBlockCells: every block of the wall, exactly as wallInfo counts them —
+   per column, the same-type stack up from the wall's base row. */
+function wallBlockCells(info){
+  const cells=[];
+  for(let a=info.a0;a<=info.a1;a++){
+    const bx=info.axis==='x'?a:info.fixed, bz=info.axis==='x'?info.fixed:a;
+    // round 34: include the blocks above a window/door gap too — a gap
+    // (empty or glass) never ends the wall, only a different material does
+    for(let y=info.y; y<info.y+info.height; y++){
+      const b=getBlock(bx, y, bz);
+      if(b && b.t===info.type) cells.push({ x:bx, y, z:bz, t:info.type, r:b.r||0 });
+    }
+  }
+  return cells;
+}
+/* one click on a wall (len>=2, height>=4 — the same detection the wall
+   labels use) selects the WHOLE wall. Anything else: single block. */
+function selectWallAt(x,y,z){
+  const info=wallInfo(x,y,z);
+  if(!info || info.len<2 || info.height<4) return false;
+  const cells=wallBlockCells(info);
+  if(!cells.length) return false;
+  selection.clear();
+  for(const c of cells) selection.add(key3(c.x,c.y,c.z));
+  selectedWallKey=info.key;
+  selectedWallAnchor=[info.axis==='x'?info.a0:info.fixed, info.y, info.axis==='x'?info.fixed:info.a0];
+  updateSelectionHighlight();
+  toast('Wall selected — '+cells.length+' blocks · '+ftin(info.lenFt)+' long × '+ftin(info.heightFt)+' high');
+  return true;
+}
+function currentWallInfo(){
+  if(!selectedWallAnchor) return null;
+  const info=wallInfo(selectedWallAnchor[0],selectedWallAnchor[1],selectedWallAnchor[2]);
+  if(!info || info.len<2 || info.height<4) return null;
+  return info;
+}
+/* after a wall edit, re-select the (possibly changed) wall so the panel
+   and the counts stay on it */
+function reselectWall(){
+  const info=currentWallInfo();
+  if(!info){ selection.clear(); selectedWallKey=null; selectedWallAnchor=null; updateSelectionHighlight(); return 0; }
+  const cells=wallBlockCells(info);
+  selection.clear();
+  for(const c of cells) selection.add(key3(c.x,c.y,c.z));
+  selectedWallKey=info.key;
+  selectedWallAnchor=[info.axis==='x'?info.a0:info.fixed, info.y, info.axis==='x'?info.fixed:info.a0];
+  updateSelectionHighlight();
+  return cells.length;
+}
+/* thickness: a wall is 2 thick when a parallel same-type run covers at
+   least half its blocks on the inside face (toward the room centre) */
+function wallThickness(info){
+  const c=buildCentre();
+  const dx=info.axis==='z'? (c.x>info.fixed?1:-1) : 0;
+  const dz=info.axis==='x'? (c.z>info.fixed?1:-1) : 0;
+  const cells=wallBlockCells(info);
+  let inner=0;
+  for(const cc of cells){ const b=getBlock(cc.x+dx, cc.y, cc.z+dz); if(b && b.t===info.type) inner++; }
+  return { thick: inner>=cells.length*0.5?2:1, dx, dz, inner, cells:cells.length };
+}
+function setWallHeight(ft){
+  const info=currentWallInfo(); if(!info) return 0;
+  const H=clamp(Math.round(ft/FT), 1, 20);   // 0.5 ft (1 block) .. 10 ft (1 floor)
+  const cells=wallBlockCells(info);
+  // round 34: a column's height is its TOP block, not its block count —
+  // a window gap must not make the column look shorter (or the edit
+  // would brick the window up when raising the wall)
+  const topByCol=new Map();
+  for(const c of cells){ const a=info.axis==='x'?c.x:c.z;
+    topByCol.set(a, Math.max(topByCol.has(a)?topByCol.get(a):-1, c.y)); }
+  const ops=[];
+  for(let a=info.a0;a<=info.a1;a++){
+    const bx=info.axis==='x'?a:info.fixed, bz=info.axis==='x'?info.fixed:a;
+    const top=topByCol.get(a);
+    const span=top==null?0:(top-info.y+1);
+    // braces are load-bearing here: without them the else binds to the
+    // INNER if(inBounds...) (dangling else) and the lower branch never runs
+    if(H>span){
+      for(let y=info.y+span;y<info.y+H;y++)
+        if(inBounds(bx,y,bz) && !getBlock(bx,y,bz)) ops.push({x:bx,y:y,z:bz,t:info.type,r:0});
+    } else if(H<span){
+      for(let y=info.y+H;y<=top;y++) ops.push({x:bx,y:y,z:bz,t:null,r:0});
+    }
+  }
+  if(!ops.length){ toast('Wall is already '+ftin(H*FT)+' high'); return 0; }
+  const n=applyBatch(ops, 'Wall height → '+ftin(H*FT));
+  if(n){ reselectWall(); toast('Wall height set to '+ftin(H*FT)); }
+  return n;
+}
+function setWallThickness(n){
+  const info=currentWallInfo(); if(!info) return 0;
+  const th=wallThickness(info);
+  if(n===th.thick){ toast('Wall is already '+n+' block'+(n>1?'s':'')+' thick'); return 0; }
+  const cells=wallBlockCells(info), ops=[];
+  if(n===2){
+    for(const cc of cells){
+      const x=cc.x+th.dx, y=cc.y, z=cc.z+th.dz;
+      if(inBounds(x,y,z) && !getBlock(x,y,z)) ops.push({x:x,y:y,z:z,t:info.type,r:0});
+    }
+    if(!ops.length){ toast('No room for a second layer here'); return 0; }
+    const m=applyBatch(ops, 'Wall thickness → 2 blocks');
+    if(m){ reselectWall(); toast('Wall is now 2 blocks thick'); } return m;
+  }
+  // 2 -> 1: remove the parallel run — exactly the inner neighbour of
+  // each of this wall's own cells (the cells the 1 -> 2 step adds) — but
+  // keep a cell that belongs to a crossing wall: it has a same-type
+  // neighbour one step further inward, because the crossing wall
+  // continues past the inner line (e.g. the side walls at the corners,
+  // which already occupy the inner line there — removing them would
+  // punch the corners out of the next wall)
+  for(const cc of cells){
+    const x=cc.x+th.dx, y=cc.y, z=cc.z+th.dz;
+    const b=getBlock(x,y,z);
+    if(!b || b.t!==info.type) continue;
+    const beyond=getBlock(x+th.dx, y, z+th.dz);
+    if(beyond && beyond.t===info.type) continue;
+    ops.push({x:x,y:y,z:z,t:null,r:0});
+  }
+  if(!ops.length){ toast('Wall is already 1 block thick'); return 0; }
+  const m=applyBatch(ops, 'Wall thickness → 1 block');
+  if(m){ reselectWall(); toast('Wall is now 1 block thick'); } return m;
+}
+function paintWall(ti){
+  const info=currentWallInfo(); if(!info) return 0;
+  if(ti===info.type){ toast('Wall is already '+TYPES[ti].name); return 0; }
+  const cells=wallBlockCells(info).map(c=>({ x:c.x, y:c.y, z:c.z, t:ti, r:c.r||0 }));
+  const n=applyBatch(cells, 'Painted wall '+TYPES[ti].name);
+  if(n){ reselectWall(); toast('Wall painted '+TYPES[ti].name); }
+  return n;
 }
 function bboxOfKeys(keys){
   let x0=1e9,y0=1e9,z0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;
@@ -5020,9 +5326,18 @@ function wallInfo(x,y,z){
   let blocks=0, height=0;
   for(let a=run.a0;a<=run.a1;a++){
     const bx=run.axis==='x'?a:run.fixed, bz=run.axis==='x'?run.fixed:a;
-    let h=0;
-    while(true){ const nb=getBlock(bx, run.y+h, bz); if(nb&&nb.t===run.type) h++; else break; }
-    height=Math.max(height,h); blocks+=h;
+    // round 34: a wall keeps going above a window/door gap (empty cells)
+    // and above a glass window — only a different material caps it — so
+    // the blocks above a window belong to the wall too (select / paint /
+    // fade / height all work on the whole wall, not just below the window)
+    let y=run.y, lastTop=-1, cnt=0;
+    while(y<=Y_MAX){
+      const nb=getBlock(bx, y, bz);
+      if(nb && nb.t===run.type){ cnt++; lastTop=y; y++; }
+      else if(!nb || nb.t===5){ y++; }
+      else break;
+    }
+    if(lastTop>=0){ height=Math.max(height, lastTop-run.y+1); blocks+=cnt; }
   }
   return { type:run.type, axis:run.axis, fixed:run.fixed, y:run.y, a0:run.a0, a1:run.a1,
     len:run.len, lenFt:run.len*FT, height, heightFt:height*FT, blocks,
@@ -6513,7 +6828,9 @@ function bindPointer(){
     if(tool==='select'){
       if(hit&&hit.block){
         if(e.shiftKey) selectRow(hit.block[0],hit.block[1],hit.block[2], true);
-        else selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), false);
+        // round 34: one click on a wall selects the whole wall; a plain
+        // block still selects just itself
+        else if(!selectWallAt(hit.block[0],hit.block[1],hit.block[2])) selectBlockKey(key3(hit.block[0],hit.block[1],hit.block[2]), false);
       }
       else if(!e.shiftKey) clearSelection();
       return;
@@ -6926,6 +7243,7 @@ function walkStart(){
   cancelMove();
   if(viewMode!=='normal') setView('normal');   // walking needs the whole build visible
   WALK.active=true;
+  fadeDirty=true;   // round 34: walking turns the fade off (camera is inside)
   updateSelPanel();   // the selection panel stays out of the way while walking (round 10)
   if(wallLabelGroup) wallLabelGroup.visible=false;
   if(roomLabelGroup) roomLabelGroup.visible=false;
@@ -6944,6 +7262,7 @@ function walkStart(){
 function walkStop(){
   if(!WALK.active) return;
   WALK.active=false;
+  fadeDirty=true;   // round 34: back outside — the fade may apply again
   WALK.fp=false;
   walker.visible=false;
   updateSelPanel();   // the selection panel may come back now (round 10)
@@ -7415,6 +7734,9 @@ function init(){
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
     groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
   $('#btnPhoto').onclick=savePicture;
+  $('#btnRender').onclick=renderView;
+  $('#btnFadeWalls').onclick=()=>setWallFade(!wallFadeOn);
+  $('#btnFadeWalls').classList.toggle('on', wallFadeOn);
   $('#btnPlan').onclick=()=>{ downloadPlan(); };
   $('#btnGLB').onclick=()=>{ exportGLB(); };
   $('#btnExport').onclick=exportJSON;
@@ -8414,6 +8736,38 @@ function updateSelProps(){
   if(top) line('Material:', TYPES[top[0]].name+(counts.size>1?' · +'+(counts.size-1)+' more':'')
     +' ('+top[1]+' block'+(top[1]>1?'s':'')+')');
   line('Floor:', FLOORS[floorOfY(bb.y0)].name);
+  // round 34: whole-wall selection — length, height, thickness, paint
+  const winfo=selectedWallAnchor? wallInfo(selectedWallAnchor[0],selectedWallAnchor[1],selectedWallAnchor[2]) : null;
+  if(winfo && winfo.len>=2 && winfo.height>=4 && selectedWallKey){
+    const wcells=wallBlockCells(winfo);
+    const wset=new Set(wcells.map(c=>key3(c.x,c.y,c.z)));
+    if(selection.size===wcells.length && [...selection].every(k=>wset.has(k))){
+      const sec=document.createElement('div'); sec.className='sp-wall';
+      const tt=document.createElement('div'); tt.className='sp-wall-title'; tt.textContent='🧱 Wall'; sec.appendChild(tt);
+      const wline=(label,val)=>{ const r=document.createElement('div'); r.className='sp-wall-row';
+        const b=document.createElement('b'); b.textContent=label; r.appendChild(b);
+        r.appendChild(typeof val==='string'? document.createTextNode(val) : val); sec.appendChild(r); };
+      wline('Length:', ftin(winfo.lenFt)+' · '+winfo.blocks+' blocks');
+      const hIn=document.createElement('input');
+      hIn.type='number'; hIn.min='0.5'; hIn.max='10'; hIn.step='0.5'; hIn.value=+(winfo.heightFt).toFixed(1);
+      hIn.title='Wall height in feet';
+      hIn.addEventListener('change', ()=>{ const v=parseFloat(hIn.value); if(!isNaN(v)) setWallHeight(v); });
+      const hWrap=document.createElement('span'); hWrap.appendChild(hIn); hWrap.appendChild(document.createTextNode(' ft'));
+      wline('Height:', hWrap);
+      const th=wallThickness(winfo);
+      const thWrap=document.createElement('span');
+      for(const n of [1,2]){ const b=document.createElement('button'); b.className='mini'+(th.thick===n?' on':'');
+        b.textContent=n+' block'+(n>1?'s':''); b.addEventListener('click', ()=>setWallThickness(n)); thWrap.appendChild(b); }
+      wline('Thickness:', thWrap);
+      const pw=document.createElement('span');
+      for(const [ti,col,nm] of [[4,'#9a4a38','Brick'],[2,'#a0824f','Wood Planks'],[3,'#8d8d8d','Stone Bricks'],[5,'#cfe8f5','Glass'],[13,'#f5f2ea','White paint']]){
+        const s=document.createElement('button'); s.className='sp-sw'+(winfo.type===ti?' on':'');
+        s.style.background=col; s.title='Paint '+nm; s.setAttribute('aria-label','Paint '+nm);
+        s.addEventListener('click', ()=>paintWall(ti)); pw.appendChild(s); }
+      wline('Paint:', pw);
+      el.appendChild(sec);
+    }
+  }
 }
 
 /* ---- Canva-style zoom bar (bottom-right), wired to the real camera ---- */
@@ -8606,6 +8960,11 @@ window.__mc = {
     /* round 17: reset the camera to a named view (same as the Home / Top /
        Front / Eye buttons) — lets a test start from a known camera */
     setCam(name){ setCam(name); return true; },
+    /* round 34: set the camera from azimuth/elevation/distance (tests) */
+    setAzEl(az,el,dist){ flushOrbitDrift(); const t=controls.target.clone();
+      const d=dist||camDist();
+      const off=new THREE.Vector3(Math.cos(el)*Math.sin(az), Math.sin(el), Math.cos(el)*Math.cos(az));
+      camera.position.copy(t).addScaledVector(off,d); controls.update(); refreshWallFade(true); return true; },
     /* round 19: fog planes, so a test can prove they moved out at max zoom */
     fog(){ return scene.fog? { near:+scene.fog.near.toFixed(1), far:+scene.fog.far.toFixed(1) } : null; },
     dist(){ return +camDist().toFixed(1); },
@@ -8767,6 +9126,31 @@ window.__mc = {
     isOpen(id){ const map={ blueprints:'blueprintPanel' }; const el=document.getElementById(map[id]||(id+'Panel')); return !!el && el.classList.contains('on'); },
   },
   photo(){ return savePicture(); },
+  /* round 34: smart wall fade + whole-wall editing + polished render */
+  fade:{
+    on(){ return wallFadeOn; },
+    set(on){ return setWallFade(on); },
+    faded(){ return fadedKeys.size; },
+    fadedWalls(){ return [...fadedWallKeys]; },
+    opacity(){ if(!fadeMeshes.length) return null; const m=fadeMeshes[4].mesh.material; return Array.isArray(m)? m[0].opacity : m.opacity; },
+    fadedInstances(){ let n=0; for(const s of fadeMeshes) n+=s.mesh.count; return n; },
+    refresh(){ refreshWallFade(true); return fadedKeys.size; },
+  },
+  wallEdit:{
+    select(x,y,z){ return selectWallAt(x,y,z); },
+    selected(){ const info=currentWallInfo(); return info? { ...info } : null; },
+    cells(){ const info=currentWallInfo(); return info? wallBlockCells(info).map(c=>({x:c.x,y:c.y,z:c.z,t:c.t})) : []; },
+    setHeightFt(ft){ return setWallHeight(ft); },
+    setThickness(n){ return setWallThickness(n); },
+    thickness(){ const info=currentWallInfo(); return info? wallThickness(info) : null; },
+    paint(ti){ return paintWall(ti); },
+  },
+  render:{
+    view(){ return renderView(); },
+    settings(){ return { toneMapping:renderer.toneMapping, exposure:+renderer.toneMappingExposure.toFixed(3),
+      pixelRatio:renderer.getPixelRatio(), sunInt:sunLight.intensity, sunColor:'#'+sunLight.color.getHexString(),
+      hemiInt:hemiLight.intensity }; },
+  },
   presetNames(){ return ['straight','L','U','shutter']; },
   placePreset(name,x,y,z,rot){
     if(name==='shutter'){
@@ -9168,6 +9552,8 @@ function gsStaticItems(){
   act(themeDark?'Light theme':'Dark theme','Switch the look','dark theme night black light',
     ()=>setTheme(themeDark?'light':'dark'));
   act('Save a picture','PNG of this view','picture photo png screenshot image',()=>savePicture());
+  act('Render this view','Polished PNG — soft shadows, warm light','render photo polished high quality',()=>renderView());
+  act('Fade front walls','See through near walls','fade walls transparent see through',()=>setWallFade(!wallFadeOn));
   act('Export 3D (.glb)','For Blender & 3D tools','glb export 3d model blender',()=>exportGLB());
   act('Plan PNG','Top-down 2D plan','plan top view floor plan drawing',()=>downloadPlan());
   act('Share build','Copy a link','share link send copy',()=>shareBuild());
