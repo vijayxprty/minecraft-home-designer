@@ -150,15 +150,15 @@
   /* ---------- inline confirm + blueprint name boxes (round 11): same
      styling as the room rename box, but z-index 70 so they sit above the
      start screen too — nothing in the app pops a browser dialog any more */
-  #confirmBox,#bpNameBox{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:70;display:none;
+  #confirmBox,#bpNameBox,#dupFloorBox{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:70;display:none;
     background:rgba(0,0,0,.75);border:3px solid #ffd83d;border-radius:8px;padding:10px;gap:8px;flex-wrap:wrap;max-width:420px}
-  #confirmBox.on,#bpNameBox.on{display:flex}
-  #confirmBox .pp-title,#bpNameBox .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #confirmBox #confirmText{flex-basis:100%;color:#fff;font-size:13px;font-weight:700}
+  #confirmBox.on,#bpNameBox.on,#dupFloorBox.on{display:flex}
+  #confirmBox .pp-title,#bpNameBox .pp-title,#dupFloorBox .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #confirmBox #confirmText,#dupFloorBox #dupFloorText{flex-basis:100%;color:#fff;font-size:13px;font-weight:700}
   #bpNameBox input{flex:1;border:2px solid #555;border-radius:4px;padding:7px 9px;font-weight:800;font-size:14px;color:#222;background:#fff;min-width:180px}
-  #confirmBox button,#bpNameBox button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #confirmBox button,#bpNameBox button,#dupFloorBox button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 12px;color:#222}
-  #confirmBox button.on,#bpNameBox button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #confirmBox button.on,#bpNameBox button.on,#dupFloorBox button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
   .cheat-grid{flex-basis:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;color:#fff;font-size:12px;font-weight:700}
   .cheat-grid b{color:#ffd83d;white-space:nowrap}
   .tpl-item{flex-basis:100%;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;color:#fff;font-size:12px}
@@ -170,7 +170,7 @@
    never wraps; the row wraps instead — buttons drop to a second line
    when the panel is narrow, and stay on one line at full width. */
 #blueprintList .tpl-item{ flex-wrap:wrap; }
-#blueprintList .tpl-desc{ white-space:nowrap; }
+#blueprintList .tpl-desc{ white-space:nowrap; flex-shrink:0; }   /* round 32: the count also never shrinks below its text width, so "5 blocks" can never be squeezed or split — the row wraps at the button boundary instead */
 #blueprintList .tpl-item button{ flex-shrink:0; }
   #matList .tpl-item{cursor:pointer}
   #matList .tpl-item:hover{background:rgba(255,255,255,.18)}
@@ -483,6 +483,19 @@ body.panel-collapsed #sidePanel{ display:none; }
 #readout{ left:calc(var(--shell-left) + 10px); bottom:10px; background:#fff; color:#1a1a1a;
   border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.12);
   font-size:12px; line-height:1.5; padding:8px 12px; max-width:500px; }
+  /* round 33: above 820px the bottom-centre toolbar is visible, so the
+     readout's width is capped to leave its room. The readout is
+     shrink-to-fit, so a long "Click to place…" hint (max-content ~430px)
+     used to stretch it to ~440px and eat the toolbar's gap — the toolbar
+     then hid exactly while a preset was armed, the moment the user most
+     needs it. The cap leaves 560px for the toolbar (236) + zoom bar
+     (286) + gaps, so at 1280px with the panel open the readout stops at
+     356px and the gap stays open; the hint wraps to a second line
+     instead. With the panel collapsed there is room for the full 500px
+     again. At 820px and below the toolbar is hidden, so no cap applies. */
+@media (min-width:821px){
+  #readout{ max-width:min(500px, max(200px, calc(100vw - var(--shell-left) - 560px))); }
+}
   /* round 25: 500px, not 380px — the "N blocks on this floor" count made
      line 1 longer, and at 380px it ellipsised ("· …") whenever a selection
      was active. 464px is the longest realistic line (house + First floor
@@ -511,6 +524,28 @@ body.panel-collapsed #sidePanel{ display:none; }
 #zoomBar button:hover{ background:#f0f4f0; }
 #zoomBar input[type=range]{ width:110px; accent-color:#2e7d32; }
 #zoomPct{ font-size:12px; font-weight:800; color:#1a1a1a; min-width:42px; text-align:center; }
+/* ---------- round 33: Figma-style bottom-centre toolbar ---------- */
+/* The 12 tools, always visible — the left rail and the right-click menu
+   hid them too well. A floating pill, two rows of six, sitting in the
+   free gap between the readout (bottom-left) and the zoom bar
+   (bottom-right); positionToolBar() measures that gap live and hides
+   the bar when the gap is too narrow to hold it. It never overlaps the
+   readout, the zoom bar or a toast (the toast sits 96px up). On phones
+   the sheet's Tools tab already covers tool switching, so the bar hides. */
+#toolBar{ position:fixed; left:50%; bottom:10px; transform:translateX(-50%); z-index:12;
+  display:flex; flex-wrap:wrap; gap:4px; width:228px; padding:6px;   /* 228px fits six 32px buttons + gaps inside border-box (6*32+5*4+12 pad+2 border=226) */
+  background:#fff; border:1px solid #d8d8d8; border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15); }
+#toolBar button{ flex:0 0 32px; width:32px; height:32px; border:1px solid transparent;
+  border-radius:8px; background:none; font-size:17px; line-height:1; cursor:pointer;
+  color:#1a1a1a; padding:0; }
+#toolBar button:hover{ background:#f0f4f0; }
+#toolBar button.on{ background:#2e7d32; color:#fff; border-color:#2e7d32; }
+body.dark #toolBar{ background:#1f1f1f; border-color:#333; }
+body.dark #toolBar button{ color:#f0f0f0; }
+body.dark #toolBar button:hover{ background:#2c2c2c; }
+body.dark #toolBar button.on{ background:#2e7d32; color:#fff; border-color:#2e7d32; }
+@media (max-width:820px){ #toolBar{ display:none !important; } }
 /* ---------- Figma-style right Properties panel (was the bottom selection bar) ---------- */
 #selPanel{ left:auto; right:10px; top:190px; bottom:auto; transform:none; max-width:280px; width:280px;
   background:#fff; color:#1a1a1a; border:1px solid #e0e0e0; border-radius:10px;
@@ -523,8 +558,11 @@ body.panel-collapsed #sidePanel{ display:none; }
 #selPanel input{ background:#fff; color:#1a1a1a; }
 /* ---------- floating tool panels centre on the visible canvas, not the window ---------- */
 #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
-#buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
-  bottom:14px; left:calc(50% + var(--shell-left)/2); }
+#buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
+  /* round 33: lifted above the bottom-centre toolbar (10px + ~76px tall),
+     so a panel never hides under it; the toast is transient and
+     pointer-events-none, so it may still float over a panel briefly, as before */
+  bottom:92px; left:calc(50% + var(--shell-left)/2); }
 #sizeBar{ left:calc(var(--shell-left) + 10px); }
 #toast{ left:calc(50% + var(--shell-left)/2); }
 /* ---------- home screen: projects list + template section ---------- */
@@ -571,7 +609,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   #gizmo{ display:none; }
   #sizeBar{ left:10px; }
   #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
-  #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#tourBar,#walkHint{
+  #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
     left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0;
     /* round 21: on a phone the zoom bar (bottom 68px) sits over the
        bottom row of these sheets — the Materials panel's Close button
@@ -806,6 +844,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
      to the right. Tap the active rail tab again to close the panel. -->
 <div id="rail">
   <button class="rail-btn on" data-tab="elements" title="Elements — blocks and pieces to drag onto the canvas">🧱<span>Elements</span></button>
+  <button class="rail-btn" data-tab="furniture" title="Furniture — beds, sofas, kitchen, bathroom, doors and people">🛋️<span>Furniture</span></button>
   <button class="rail-btn" data-tab="templates" title="Templates — starter homes">🏠<span>Templates</span></button>
   <button class="rail-btn" data-tab="builds" title="My builds — your saved projects">📁<span>My builds</span></button>
   <button class="rail-btn" data-tab="layers" title="Layers — the 5 floors, show or hide each one">🗂️<span>Layers</span></button>
@@ -838,6 +877,11 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <div class="sp-sec">Blocks</div>
     <div id="matGrid" class="card-grid"></div>
     <div class="sp-note">Drag a card onto the grass to place it — or tap it to pick it up, then click the grass.</div>
+  </div>
+  <div class="sp-tab" id="tab-furniture">
+    <div class="sp-sec">Furniture — tap one, then click a floor to place it</div>
+    <div id="furnGrid"></div>
+    <div class="sp-note">Drag a card onto the floor to place it — or tap it, then click the floor. R rotates, Esc stops. Items land on the floor you click, on any floor.</div>
   </div>
   <div class="sp-tab" id="tab-templates">
     <div class="sp-sec">Quick builds — type a size, one tap builds it</div>
@@ -1241,6 +1285,14 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <button id="confirmNo">Cancel</button>
 </div>
 
+<div id="dupFloorBox">
+  <div class="pp-title">Duplicate this floor?</div>
+  <div id="dupFloorText"></div>
+  <button id="dupFloorWith" class="on">Copy with roof</button>
+  <button id="dupFloorWithout">Copy without roof</button>
+  <button id="dupFloorCancel">Cancel</button>
+</div>
+
 <div id="bpNameBox">
   <div class="pp-title">Name this blueprint</div>
   <input id="bpNameInput" maxlength="24" spellcheck="false" autocomplete="off">
@@ -1295,6 +1347,20 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
 <div id="tourBar">🎥 Tour — slow orbit around the build · Esc stops <button id="btnTourRec" title="Record this tour as a .webm video">● Record</button> <button id="btnTourStop">✕ Stop</button></div>
 <div id="hoverTag"></div>
 <div id="toast"></div>
+<div id="toolBar" title="Tools — always here, like Figma">
+  <button data-tool="build" class="on" title="Build — B" aria-label="Build">🧱</button>
+  <button data-tool="erase" title="Erase — E" aria-label="Erase">⛏</button>
+  <button data-tool="pick" title="Pick — P" aria-label="Pick">🎯</button>
+  <button data-tool="select" title="Select — S" aria-label="Select">⬚</button>
+  <button data-tool="expand" title="Expand — X" aria-label="Expand">↔</button>
+  <button data-tool="move" title="Move — M" aria-label="Move">🚚</button>
+  <button data-tool="fill" title="Fill — F" aria-label="Fill">📦</button>
+  <button data-tool="line" title="Line — L" aria-label="Line">📏</button>
+  <button data-tool="tape" title="Tape — T" aria-label="Tape">📐</button>
+  <button data-tool="dropper" title="Dropper — I" aria-label="Dropper">💧</button>
+  <button data-tool="flood" title="Flood — U" aria-label="Flood">🪣</button>
+  <button data-tool="wall" title="Wall — W" aria-label="Wall">🏗️</button>
+</div>
 <div id="note">Visualisation only — not certified architectural or structural documentation.</div>
 <div id="zoomBar" title="Zoom the view">
   <button id="btnFit" title="Fit the build in view (0)">⤢</button>
@@ -1345,6 +1411,13 @@ const FLOORS = [
   { name:'Rooftop',  base:60 },
 ];
 const FLOOR_H = 20;                   // blocks per floor (10 ft)
+/* round 33: the build height cap. The Rooftop band is y 60-79, and a
+   stair standing on the highest roof slab starts at y=80 — the old cap
+   (79) made that click say "Outside the build area". One full band
+   above the roof (y 80-99) lets a 10-step stair, and even a 20-step
+   stair from a y=79 slab (reaching exactly 98), fit. Those blocks are
+   Rooftop blocks — see inFloorBand() below. */
+const Y_MAX = 99;
 const LSKEY = 'home-designer-minecraft-v2';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -1373,6 +1446,13 @@ function parseFtIn(str){
   return null;
 }
 function floorOfY(y){ let fi=0; for(let i=0;i<FLOORS.length;i++) if(y>=FLOORS[i].base) fi=i; return fi; }
+/* round 33: is this y on floor fi? The top band is special — blocks at
+   y 80-99 sit above the Rooftop band (60-79) but they ARE Rooftop
+   blocks: floorOfY says so and the Layers panel counts them there.
+   Every "on this floor" test must agree, or Clear would leave blocks
+   the count still shows and Select-this-floor would miss the stair. */
+function inFloorBand(y, fi){ return fi===FLOORS.length-1 ? (y>=FLOORS[fi].base && y<=Y_MAX)
+  : (y>=FLOORS[fi].base && y<FLOORS[fi].base+FLOOR_H); }
 /* round 25: blocks per floor (each floor is a 20-block band) — the
    Materials panel's per-floor breakdown, the Layers tab and the
    readout's "on this floor" count all read the same numbers */
@@ -1449,6 +1529,17 @@ T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic 
   }
   speckle(g,S,R,['rgba(255,255,255,0.08)','rgba(0,0,0,0.08)'],40); }, 20);
 
+T.fabric = texCanvas((g,S,R)=>{ g.fillStyle='#f2ead8'; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#e6dcc2','#faf4e4','#ded2b4','#fff8e8'],380); }, 21);
+T.screen = texCanvas((g,S,R)=>{ g.fillStyle='#101418'; g.fillRect(0,0,S,S);
+  const grad=g.createLinearGradient(0,0,S,S);
+  grad.addColorStop(0,'rgba(90,140,190,0.35)'); grad.addColorStop(0.5,'rgba(90,140,190,0.05)');
+  grad.addColorStop(1,'rgba(90,140,190,0.0)'); g.fillStyle=grad; g.fillRect(0,0,S,S);
+  speckle(g,S,R,['#1c222a','#0a0d10','#232c36'],120); }, 22);
+T.ceramic = texCanvas((g,S,R)=>{ g.fillStyle='#f7f7f5'; g.fillRect(0,0,S,S);
+  g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,0,S,6);
+  speckle(g,S,R,['#ececea','#ffffff','#e2e2de'],160); }, 23);
+
 /* ================= block types ================= */
 const TYPES = [
   { id:'grass', name:'Grass',   mats:[T.grassSide,T.grassSide,T.grassTop,T.dirt,T.grassSide,T.grassSide] },
@@ -1461,6 +1552,9 @@ const TYPES = [
   { id:'slab',  name:'Roof Slab', mats:[T.slab,T.slab,T.slab,T.slab,T.slab,T.slab] },
   { id:'shutter', name:'Shutter', mats:[T.shutter,T.shutter,T.shutter,T.shutter,T.shutter,T.shutter] },
   { id:'leaf',  name:'Leaves', mats:[T.leaf,T.leaf,T.leaf,T.leaf,T.leaf,T.leaf] },
+  { id:'fabric', name:'Fabric', mats:[T.fabric,T.fabric,T.fabric,T.fabric,T.fabric,T.fabric] },
+  { id:'screen', name:'TV screen', mats:[T.screen,T.screen,T.screen,T.screen,T.screen,T.screen] },
+  { id:'ceramic', name:'Ceramic', mats:[T.ceramic,T.ceramic,T.ceramic,T.ceramic,T.ceramic,T.ceramic] },
 ];
 function matFor(ti){
   const ty=TYPES[ti];
@@ -1581,7 +1675,7 @@ let renderer, scene, camera, controls;
 let sunLight=null, hemiLight=null;   // the sun + sky fill — the Day / Evening / Night control moves these
 const instMeshes = [];             // per type: {mesh, keys[]}
 const groundMeshes = [];
-let ghost, floorBand, multiGhost, multiGhostEdges, selGroup;
+let ghost, multiGhost, multiGhostEdges, selGroup;
 const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.8, depthWrite:false });
 const selBoxGeo = new THREE.BoxGeometry(1.04, 1.04, 1.04);
 const selBoxMat = new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.4, depthWrite:false });
@@ -1644,14 +1738,6 @@ function initScene(){
   ghost = new THREE.Mesh(new THREE.BoxGeometry(1.002,1.002,1.002),
     new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.45, depthWrite:false }));
   ghost.visible = false; scene.add(ghost);
-
-  // active-floor band: a thin translucent sheet just above the floor surface,
-  // sized to the footprint of what is built on the active floor
-  floorBand = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1),
-    new THREE.MeshBasicMaterial({ color:0xffd83d, transparent:true, opacity:0.22, depthWrite:false }));
-  floorBand.position.set(0, 1.03, 0);
-  floorBand.scale.set(12, 1, 12);
-  scene.add(floorBand);
 
   // multi-block ghost: reused by Expand, Paste and preset placement
   multiGhost = new THREE.Group(); multiGhost.visible=false; scene.add(multiGhost);
@@ -2177,9 +2263,8 @@ function setFloor(i, focus=false){
 /* ================= stats / readouts ================= */
 // bounding box of everything built inside one floor's 20-block band
 function floorBBox(fi){
-  const y0=FLOORS[fi].base, y1=y0+FLOOR_H;
   let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,n=0;
-  for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1){ n++;
+  for(const [k] of blocks){ const p=parseKey(k); if(inFloorBand(p[1], fi)){ n++;
     if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; } }
   return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
 }
@@ -2195,13 +2280,6 @@ function buildBBox(){
   for(const [k] of blocks){ const p=parseKey(k); n++;
     if(p[0]<x0)x0=p[0]; if(p[0]>x1)x1=p[0]; if(p[2]<z0)z0=p[2]; if(p[2]>z1)z1=p[2]; }
   return n? { x0,x1,z0,z1, w:x1-x0+1, d:z1-z0+1 } : null;
-}
-function updateFloorBand(){
-  const b=floorBBox(activeFloor);
-  const w=b?b.w:12, d=b?b.d:12;
-  const cx=b?(b.x0+b.x1+1)/2:0, cz=b?(b.z0+b.z1+1)/2:0;
-  floorBand.scale.set(w,1,d);
-  floorBand.position.set(cx, FLOORS[activeFloor].base+1.03, cz);
 }
 function updateStats(){
   $('#roBlocks').textContent = blocks.size.toLocaleString('en-IN');
@@ -2226,8 +2304,8 @@ function updateStats(){
     rb.style.display='none';
     largeWarned=false;
   }
-  updateFloorBand();
   updateSymmetryReadout();
+  positionToolBar();   // round 33: the readout's width moves the toolbar's gap
   updateLayersPanel();   // floor block counts in the Layers tab (round 13)
   guideCheck();   // the 3-step first build ticks itself off as you build (round 10)
   if($('#materialsPanel') && $('#materialsPanel').classList.contains('on')) updateMaterialsPanel();
@@ -2281,8 +2359,7 @@ function selectByMaterial(ti){
    on that floor — the mirror of selectByMaterial, same toggle-off, same
    toast, same Properties panel afterwards. */
 function selectByFloor(fi){
-  const y0=FLOORS[fi].base, y1=y0+FLOOR_H;
-  const keys=[]; for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1) keys.push(k); }
+  const keys=[]; for(const [k] of blocks){ const p=parseKey(k); if(inFloorBand(p[1], fi)) keys.push(k); }
   const same = keys.length>0 && keys.length===selection.size && keys.every(k=>selection.has(k));
   selection.clear();
   lastMaterialSelect=null;   // a floor tap clears the material highlight
@@ -2379,7 +2456,7 @@ $('#blueprintPanel').classList.remove('on');
    side panel are all handled. A MutationObserver + ResizeObserver call
    this whenever a panel opens, closes or changes height, so no toggle
    has to remember to. */
-const CENTRE_PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','fillPanel','wallPanel','materialsPanel','buildRoomPanel','renameBox','confirmBox','bpNameBox'];
+const CENTRE_PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','fillPanel','wallPanel','materialsPanel','buildRoomPanel','renameBox','confirmBox','bpNameBox','dupFloorBox'];
 function centrePanelOpen(){
   return CENTRE_PANEL_IDS.some(id=>{ const e=document.getElementById(id);
     return e && e.classList.contains('on') && getComputedStyle(e).display!=='none'; });
@@ -3867,6 +3944,11 @@ function b64urlDecode(str){
 function encodeShare(){
   const cells=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; })
     .sort((a,b)=> a.y-b.y || a.z-b.z || a.x-b.x);
+  /* round 33: the first cell's y is written in 7 bits (y+30), so a build
+     whose LOWEST block is at y>=98 cannot be encoded — the link would
+     silently fail to load. Only reachable by erasing everything below
+     a floating high stair; refuse plainly instead of copying a dead link. */
+  if(cells.length && cells[0].y+30>127) return null;
   const w=BitW();
   /* round 31, version 3: run-length encoding on top of the v2 layout.
      The next entry's delta is measured from the LAST cell of the run,
@@ -3974,6 +4056,7 @@ function applyShared(data){
 }
 function shareBuild(){
   const payload=encodeShare();
+  if(!payload){ toast('This build sits too high to fit in a share link — the lowest block is above y=97'); return null; }
   const url=location.origin+location.pathname+'#s='+payload;
   const done=()=>{
     if(payload.length>1800) toast('Share link copied — '+payload.length.toLocaleString('en-IN')+' characters; it works best for smaller builds');
@@ -4130,7 +4213,7 @@ function raycastVoxel(e){
   const n=h.face.normal.clone().applyQuaternion(q).round();
   return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti, dist:h.distance };
 }
-function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=79&&z>=-30&&z<=100; }
+function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=Y_MAX&&z>=-30&&z<=100; }
 /* round 19: the hover tooltip must never be covered by a panel or run
    off-screen. It used to sit at cursor+14/+12 whatever was there — near
    the right edge it slid under the Properties panel (the tag is z-index 9,
@@ -4486,14 +4569,21 @@ const SHUTTER_CELLS=(()=>{ const a=[];
 function currentPresetCells(){
   if(presetMode==='shutter') return SHUTTER_CELLS.map(c=>rotOffset(c, presetRot));
   if(presetMode==='stairs') return stairCells(stairShape, currentStepCount(), stairWidthBlocks).map(c=>rotOffset(c, presetRot));
+  if(presetMode && presetMode.startsWith('furn:')) return furnCells(presetMode.slice(5)).map(c=>rotOffset(c, presetRot));
   return [];
 }
 function currentPresetLabel(){
   if(presetMode==='shutter') return "Shutter door 6' × 7'";
   if(presetMode==='stairs') return (stairShape==='straight'?'Straight':stairShape==='L'?'L-shaped':'U-shaped')+' '+currentStepCount()+' steps · '+ftin(stairWidthBlocks*FT)+' wide';
+  if(presetMode && presetMode.startsWith('furn:')){
+    const d=FURNITURE_DEFS.find(x=>x.id===presetMode.slice(5));
+    return d? d.name : '';
+  }
   return '';
 }
 function placeCurrentPreset(ox,oy,oz){
+  if(presetMode==='stairs') return placeStairs(stairShape, currentStepCount(), ox,oy,oz, presetRot);
+  if(presetMode && presetMode.startsWith('furn:')) return placeFurnitureAt(presetMode.slice(5), ox,oy,oz, presetRot);
   const cells=currentPresetCells().map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
     .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
   const n=applyBatch(cells, currentPresetLabel()+' placed');
@@ -4501,11 +4591,34 @@ function placeCurrentPreset(ox,oy,oz){
   return n;
 }
 function placeStairs(shape, steps, ox,oy,oz, rot=0){
-  const cells=stairCells(shape, steps, stairWidthBlocks).map(c=>rotOffset(c, rot))
-    .map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }))
-    .filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
-  const n=applyBatch(cells, (shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps placed');
-  if(n) toast((shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps placed — '+n+' blocks');
+  const label=(shape==='straight'?'Straight':shape==='L'?'L-shaped':'U-shaped')+' '+steps+' steps';
+  const wanted=stairCells(shape, steps, stairWidthBlocks).map(c=>rotOffset(c, rot))
+    .map(c=>({ x:ox+c.dx, y:oy+c.dy, z:oz+c.dz, t:c.t, r:c.r }));
+  const taken=wanted.filter(c=>getBlock(c.x,c.y,c.z)).length;
+  const oob=wanted.filter(c=>!getBlock(c.x,c.y,c.z) && !inBounds(c.x,c.y,c.z)).length;
+  const cells=wanted.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells, label+' placed');
+  /* round 33: a stair that only partly fits says so in plain words —
+     never a silent partial stair, never silent nothing. A step counts
+     as placed when at least one of its step blocks landed (landings
+     are not steps). */
+  const placedSteps=new Set();
+  for(const c of cells) if(c.t===6) placedSteps.add(c.y-oy);
+  const ps=placedSteps.size;
+  if(n){
+    if(ps>=steps) toast(label+' placed — '+n+' blocks');
+    else{
+      const why=[];
+      if(oob) why.push('the top steps would go past the edge');
+      if(taken) why.push('some steps were blocked by blocks already there');
+      toast('Placed '+ps+' of '+steps+' steps — '+(why.length? why.join(' and ') : 'the rest did not fit'));
+    }
+  } else {
+    const why=[];
+    if(oob) why.push('the steps would go past the edge');
+    if(taken) why.push('the spot is taken');
+    toast('No steps placed — '+(why.length? why.join(' and ') : 'nothing fit there'));
+  }
   return n;
 }
 function updateStairWidthLabel(){ const el=$('#stairWBlocks'); if(el) el.textContent='= '+stairWidthBlocks+' blocks · '+ftin(stairWidthBlocks*FT); }
@@ -4526,7 +4639,7 @@ function rotOffset(o, rot){
 function setPresetMode(name){
   presetMode=name; presetRot=0;
   $$('#presetPanel button[data-preset]').forEach(b=>b.classList.toggle('on', b.dataset.preset===name));
-  if(name) toast(currentPresetLabel()+' — click the ground to place, R rotates, Esc stops');
+  if(name) toast(currentPresetLabel()+' — '+(name.startsWith('furn:')?'click a floor to place it':'click the ground to place')+', R rotates, Esc stops');
   if(!name){ hideMultiGhost(); $('#hoverTag').style.display='none';
     $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; }
 }
@@ -4837,7 +4950,7 @@ function renderBlueprintPanel(){
   $('#bpHint').textContent = selection.size? selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' selected' : 'Select blocks first, then save';
   if(!bps.length){
     const d=document.createElement('div'); d.className='tpl-empty';
-    d.textContent='No blueprints saved yet — select some blocks and save one.';
+    d.textContent='No blueprints yet — select some blocks, then tap Save as blueprint';
     list.appendChild(d); return;
   }
   for(const bp of bps){
@@ -5826,10 +5939,9 @@ function stackSelection(n){
 /* Select every block on the floor you are building on (the active floor's
    20-block band) — and nothing from any other floor. */
 function selectFloorBlocks(){
-  const y0=FLOORS[activeFloor].base, y1=y0+FLOOR_H;
   let n=0;
   selection.clear();
-  for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1){ selection.add(k); n++; } }
+  for(const [k] of blocks){ const p=parseKey(k); if(inFloorBand(p[1], activeFloor)){ selection.add(k); n++; } }
   updateSelectionHighlight();
   if(n) toast('Selected this floor — '+n+' block'+(n>1?'s':'')+' · '+FLOORS[activeFloor].name);
   else toast('Nothing on this floor yet — '+FLOORS[activeFloor].name+' is empty');
@@ -6379,6 +6491,7 @@ function bindPointer(){
     if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
     if($('#bpNameBox').classList.contains('on')){ closeBpNameBox(); return; }
     if($('#confirmBox').classList.contains('on')){ closeConfirmBox(false); return; }
+    if($('#dupFloorBox').classList.contains('on')){ closeDupFloorBox(null); return; }
     if(e.button===2){ // right-click opens the tool menu now (erase moved to the Erase tool)
       ctxTarget=(hit&&hit.block)? [...hit.block] : null;
       showCtxMenu(e.clientX, e.clientY);
@@ -6545,12 +6658,42 @@ function setBuildMode(m){
   setTool(buildMode==='remove'?'erase':'build');
   updateModeUI();
 }
+/* round 33: keep the bottom-centre toolbar in the free gap between the
+   readout (bottom-left) and the zoom bar (bottom-right). The readout
+   grows with the build, so measure it live; hide the bar when the gap
+   is too narrow to hold it (narrow windows), and never show it on
+   phones (the sheet's Tools tab covers it there). Called from
+   updateStats (the readout changes with the build), on resize, and
+   whenever the shell changes (panel open/close/collapse, theme). */
+function positionToolBar(){
+  const tb=$('#toolBar'); if(!tb) return;
+  if(innerWidth<=820){ tb.style.display='none'; return; }
+  const ro=$('#readout'), zb=$('#zoomBar');
+  if(!ro||!zb){ tb.style.display=''; return; }
+  const gapL=ro.getBoundingClientRect().right+8, gapR=zb.getBoundingClientRect().left-8;
+  const w=tb.offsetWidth||228;
+  if(gapR-gapL<w+8){ tb.style.display='none'; return; }
+  tb.style.display='';
+  tb.style.left=Math.round((gapL+gapR)/2)+'px';
+}
+window.addEventListener('resize', positionToolBar);
+/* round 33: the readout breathes — a preset hint or a selection makes it
+   wider or taller — and the zoom bar's label changes with the zoom %.
+   Re-centre the toolbar live whenever either changes size, or it would
+   sit stale and overlap the readout's right edge once the readout grows. */
+if(window.ResizeObserver){
+  const tbRO=new ResizeObserver(()=>positionToolBar());
+  const roEl=document.querySelector('#readout'), zbEl=document.querySelector('#zoomBar');
+  if(roEl) tbRO.observe(roEl); if(zbEl) tbRO.observe(zbEl);
+}
+new MutationObserver(()=>positionToolBar()).observe(document.body, { attributes:true, attributeFilter:['class'] });
+
 /* ================= contextual selection panel (round 10) ================= */
 /* Only when something is selected — the panel shows the actions that fit
    a selection, in plain words. Clicking empty space clears the selection
    and the panel goes away with it. It steps aside while a settings panel
    is open, and the material strip rides above it when both show. */
-const PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel','materialsPanel','buildRoomPanel','confirmBox','bpNameBox'];
+const PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','renameBox','fillPanel','wallPanel','materialsPanel','buildRoomPanel','confirmBox','bpNameBox','dupFloorBox'];
 function anyPanelOpen(){ return PANEL_IDS.some(id=>{ const e=document.getElementById(id); return e && e.classList.contains('on'); }); }
 function updateSelPanel(){
   const p=$('#selPanel'); if(!p) return;
@@ -6706,6 +6849,7 @@ function setTool(t){
   updateHotbar();
   $$('#toolsList button[data-tool]').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   $$('#ctxMenu button').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+  $$('#toolBar button[data-tool]').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
   // the fill panel and the stair panel share the same bottom-centre spot —
   // never show both at once
   $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
@@ -6971,6 +7115,7 @@ function bindKeys(){
       if($('#renameBox').classList.contains('on')){ closeRenameBox(); return; }
       if($('#confirmBox').classList.contains('on')){ closeConfirmBox(false); return; }
       if($('#bpNameBox').classList.contains('on')){ closeBpNameBox(); return; }
+      if($('#dupFloorBox').classList.contains('on')){ closeDupFloorBox(null); return; }
       if($('#materialsPanel').classList.contains('on')){ toggleMaterialsPanel(false); return; }
       if($('#buildRoomPanel').classList.contains('on')){ toggleBuildRoomPanel(false); return; }
       if($('#warnPanel').classList.contains('on')){ toggleWarnPanel(false); return; }
@@ -7081,8 +7226,6 @@ function tick(dt){
   if(WALK.active) return;
   tourTick(dt);
   turntableTick(dt);
-  // keep the floor band under the active floor
-  floorBand.position.y = FLOORS[activeFloor].base + 1.03;
   updateLabelVisibility();   // two white tags must never cover each other
 }
 
@@ -7091,12 +7234,15 @@ function init(){
   initScene();
   buildWalker();
   buildElementCards();   // element + material cards in the left panel (round 13)
+  buildFurnitureCards();   // furniture & people cards (round 33c)
   buildLayersPanel();   // floor layers as a list (round 13)
   bindPointer();
   bindKeys();
   $$('#floorbar button').forEach((b,i)=>b.classList.toggle('on', i===activeFloor));
   setFloor(1);
   $$('#toolsList button[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+  $$('#toolBar button[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+  positionToolBar();
   $$('#toolsView button[data-cam]').forEach(b=>b.onclick=()=>{
     $$('#toolsView button[data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
   $('#btnUndo').onclick=doUndo;
@@ -7305,6 +7451,9 @@ function init(){
   updatePresetCards();
   $('#confirmYes').onclick=()=>closeConfirmBox(true);
   $('#confirmNo').onclick=()=>closeConfirmBox(false);
+  $('#dupFloorWith').onclick=()=>closeDupFloorBox(true);
+  $('#dupFloorWithout').onclick=()=>closeDupFloorBox(false);
+  $('#dupFloorCancel').onclick=()=>closeDupFloorBox(null);
   $('#bpNameSave').onclick=commitBpNameBox;
   $('#bpNameCancel').onclick=closeBpNameBox;
   $('#bpNameInput').addEventListener('keydown', e=>{
@@ -7644,7 +7793,7 @@ function setPanelCollapsed(on){
 }
 
 /* ---- left rail + panel (Canva) ---- */
-const RAIL_TABS={ elements:'Elements', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', history:'History', help:'Help' };
+const RAIL_TABS={ elements:'Elements', furniture:'Furniture', templates:'Templates', builds:'My builds', layers:'Layers', tools:'Tools', history:'History', help:'Help' };
 let railTab='elements';
 function setRailTab(tab, force){
   if(tab && tab===railTab && !force) tab=null;   // tap the active tab again = close the panel
@@ -7736,6 +7885,7 @@ function updateLayersPanel(){
       dp.title = noTarget ? (i===FLOORS.length-1 ? 'Nothing above the Rooftop to copy onto'
           : 'The floor above is the Rooftop — a copy would land on the roof')
         : counts[i]===0 ? 'This floor is empty — nothing to copy'
+        : floorRoofCount(i) ? 'Duplicate the '+FLOORS[i].name+' floor onto the '+dst.name+' floor — you can copy it with or without the roof'
         : 'Duplicate the '+FLOORS[i].name+' floor onto the '+dst.name+' floor';
     }
     const up=row.querySelector('.ly-up'), dn=row.querySelector('.ly-down'), cl=row.querySelector('.ly-clear');
@@ -7774,10 +7924,23 @@ function setLayerVisible(i,on){
   return layerVisible[i];
 }
 
-/* ================= duplicate a whole floor (round 26) ================= */
+/* ================= duplicate a whole floor (round 26; round 32 asks
+   first when the floor has a roof) ================= */
 /* copies every block on floor i one floor up (20 blocks higher), skipping
    cells that are already occupied or outside the floor above. One undo
-   step, via applyBatch. */
+   step, via applyBatch. Round 32: when the floor contains Roof Slab
+   blocks, a small inline choice asks whether to copy the roof too —
+   floors with no roof copy straight away, with no extra step. The
+   choice is asked every time; nothing is remembered. */
+function floorRoofCount(i){
+  const src=FLOORS[i]; let n=0;
+  for(const [k,v] of blocks){
+    const p=parseKey(k);
+    if(inFloorBand(p[1], i) && v.t===7) n++;
+  }
+  return n;
+}
+let dupFloorTarget=null;
 function duplicateFloor(i){
   const src=FLOORS[i], dst=FLOORS[i+1];
   if(!dst || dst.name==='Rooftop'){
@@ -7785,10 +7948,33 @@ function duplicateFloor(i){
       : 'The floor above is the Rooftop — a copy would land on the roof');
     return 0;
   }
-  const list=[]; let skipped=0, total=0;
+  const counts=floorBlockCounts();
+  if(!counts[i]){ toast(src.name+' floor is empty — nothing to copy'); return 0; }
+  const roof=floorRoofCount(i);
+  if(!roof) return duplicateFloorRun(i, true);   // no roof — copy straight away
+  dupFloorTarget=i;
+  $('#dupFloorText').textContent=src.name+' floor has '+counts[i].toLocaleString('en-IN')+' blocks, including '+roof.toLocaleString('en-IN')+' roof blocks. Copy the roof too?';
+  $('#dupFloorBox').classList.add('on');
+  return -1;   // choice pending — the box's buttons call closeDupFloorBox
+}
+function closeDupFloorBox(withRoof){
+  $('#dupFloorBox').classList.remove('on');
+  const i=dupFloorTarget; dupFloorTarget=null;
+  if(i==null || withRoof==null) return 0;   // cancelled
+  return duplicateFloorRun(i, !!withRoof);
+}
+function duplicateFloorRun(i, withRoof){
+  const src=FLOORS[i], dst=FLOORS[i+1];
+  if(!dst || dst.name==='Rooftop'){
+    toast(i>=FLOORS.length-1 ? 'Nothing above the Rooftop to copy onto'
+      : 'The floor above is the Rooftop — a copy would land on the roof');
+    return 0;
+  }
+  const list=[]; let skipped=0, total=0, roofLeft=0;
   for(const [k,v] of blocks){
     const p=parseKey(k);
-    if(p[1]>=src.base && p[1]<src.base+FLOOR_H){
+    if(inFloorBand(p[1], i)){
+      if(!withRoof && v.t===7){ roofLeft++; continue; }   // round 32: leave the roof behind
       total++;
       const ty=p[1]+FLOOR_H;
       if(ty>=dst.base && ty<dst.base+FLOOR_H && !blocks.has(key3(p[0],ty,p[2])))
@@ -7796,11 +7982,15 @@ function duplicateFloor(i){
       else skipped++;
     }
   }
-  if(!total){ toast(src.name+' floor is empty — nothing to copy'); return 0; }
+  if(!total){
+    toast(roofLeft ? 'The '+src.name+' floor is only roof blocks — nothing to copy without the roof'
+      : src.name+' floor is empty — nothing to copy');
+    return 0;
+  }
   if(!list.length){ toast(total===1 ? 'Nothing new — the 1 block is already on the '+dst.name+' floor' : 'Nothing new — all '+total.toLocaleString('en-IN')+' blocks are already on the '+dst.name+' floor'); return 0; }
-  const placed=applyBatch(list, 'Duplicated '+src.name+' floor onto '+dst.name+' floor');
+  const placed=applyBatch(list, 'Duplicated '+src.name+' floor onto '+dst.name+' floor'+(withRoof?'':' (without the roof)'));
   const pb=n=>n.toLocaleString('en-IN')+' block'+(n>1?'s':'');
-  toast('Duplicated '+src.name+' floor — '+pb(placed)+' placed on the '+dst.name+' floor'+(skipped? ', '+pb(skipped)+' skipped (already there)':''));
+  toast('Duplicated '+src.name+' floor — '+pb(placed)+' placed on the '+dst.name+' floor'+(roofLeft? ', '+pb(roofLeft)+' roof blocks left behind':'')+(skipped? ', '+pb(skipped)+' skipped (already there)':''));
   return placed;
 }
 
@@ -7822,7 +8012,7 @@ function moveFloor(i, dir){
   const list=[]; const remap=new Map(); let skipped=0, total=0;
   for(const [k,v] of blocks){
     const p=parseKey(k);
-    if(p[1]>=src.base && p[1]<src.base+FLOOR_H){
+    if(inFloorBand(p[1], i)){
       total++;
       const ty=p[1]+dir*FLOOR_H;
       if(ty>=dst.base && ty<dst.base+FLOOR_H && !blocks.has(key3(p[0],ty,p[2]))){
@@ -7862,7 +8052,7 @@ function clearFloor(i){
   const list=[];
   for(const [k] of blocks){
     const p=parseKey(k);
-    if(p[1]>=src.base && p[1]<src.base+FLOOR_H) list.push({ x:p[0], y:p[1], z:p[2], t:null });
+    if(inFloorBand(p[1], i)) list.push({ x:p[0], y:p[1], z:p[2], t:null });
   }
   if(!list.length){ toast(src.name+' floor is already empty'); return 0; }
   const n=applyBatch(list, 'Cleared '+src.name+' floor');
@@ -7989,10 +8179,26 @@ function dropPoint(sx, sy){
   const p=new THREE.Vector3();
   return ray.ray.intersectPlane(plane, p)? p : null;
 }
+/* round 33: the cell a dragged element would land on. A raycast against
+   the placed blocks first: dragging stairs onto a roof slab lands the
+   stair ON the slab, not at the active floor's base. A hit on the bare
+   ground falls through to the floor plane, exactly as before — the
+   ground sits at y=0 but the First floor builds at y=21, and only the
+   plane knows which floor is active. */
+function dropCell(sx, sy){
+  const hit=raycastVoxel({ clientX:sx, clientY:sy });
+  if(hit && hit.block) return { x:hit.cell[0], y:hit.cell[1], z:hit.cell[2] };
+  const p=dropPoint(sx, sy);
+  if(!p) return null;
+  return { x:Math.floor(p.x+1e-4), y:FLOORS[activeFloor].base+1, z:Math.floor(p.z+1e-4) };
+}
 /* round 14: the exact cells an element card would place at (x,y,z),
    without placing them — the drag preview ghost and the drop use the
    same list, so what you see is what lands. */
 function elementCells(elId, x, y, z){
+  if(elId && elId.startsWith('furn:'))
+    return furnCells(elId.slice(5)).map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }))
+      .filter(c=>!getBlock(c.x,c.y,c.z)&&inBounds(c.x,c.y,c.z));
   const def=ELEMENT_DEFS.find(d=>d.id===elId);
   let cells=[];
   if(def && def.preset==='shutter') cells=SHUTTER_CELLS.map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }));
@@ -8017,9 +8223,9 @@ function elementCells(elId, x, y, z){
 /* round 14 — live drag preview: while a card is dragged over the canvas,
    the multi-block ghost shows exactly the cells the drop would place. */
 function updateDragGhost(elId, sx, sy){
-  const p=dropPoint(sx, sy);
-  if(!p){ hideMultiGhost(); return 0; }
-  const x=Math.floor(p.x+1e-4), z=Math.floor(p.z+1e-4), y=FLOORS[activeFloor].base+1;
+  const c=dropCell(sx, sy);
+  if(!c){ hideMultiGhost(); return 0; }
+  const x=c.x, z=c.z, y=c.y;
   if(!inBounds(x,y,z)){ hideMultiGhost(); return 0; }
   const cells=elementCells(elId, x, y, z);
   if(!cells.length){ hideMultiGhost(); return 0; }
@@ -8029,10 +8235,11 @@ function updateDragGhost(elId, sx, sy){
 function hideDragGhost(){ hideMultiGhost(); }
 
 function dropElementAt(elId, sx, sy){
-  const p=dropPoint(sx, sy);
-  if(!p){ toast('Drop it on the grass'); return 0; }
-  const x=Math.floor(p.x+1e-4), z=Math.floor(p.z+1e-4), y=FLOORS[activeFloor].base+1;
+  const c=dropCell(sx, sy);
+  if(!c){ toast('Drop it on the grass'); return 0; }
+  const x=c.x, z=c.z, y=c.y;
   if(!inBounds(x,y,z)){ toast('Outside the build area'); return 0; }
+  if(elId && elId.startsWith('furn:')) return placeFurnitureAt(elId.slice(5), x, y, z, 0);
   const def=ELEMENT_DEFS.find(d=>d.id===elId);
   if(def && def.preset==='shutter') return placeShutterAt(x,y,z);
   switch(elId){
@@ -8073,6 +8280,121 @@ function placeShutterAt(x,y,z){
   if(n) toast('Shutter door placed — 6\' 0" × 7\' 0"');
   else toast('That spot is taken');
   return n;
+}
+
+/* ---- furniture & people library (round 33c, final round) ----
+   25 multi-block presets in a Furniture rail tab. 1 block = 6 in, so a
+   double bed really is 10 x 13 blocks (5 ft x 6 ft 6 in). Each item is a
+   list of {dx,dy,dz,t} offsets from the clicked cell, built from the
+   existing materials plus the 3 new types (10 Fabric, 11 TV screen,
+   12 Ceramic). F(w,d,h,t,ox,oy,oz) fills one solid box. */
+function F(w,d,h,t,ox=0,oy=0,oz=0){ const a=[];
+  for(let x=0;x<w;x++) for(let y=0;y<h;y++) for(let z=0;z<d;z++)
+    a.push({ dx:ox+x, dy:oy+y, dz:oz+z, t, r:0 });
+  return a; }
+const FURNITURE_DEFS=[
+  { group:'Bedroom', id:'bed-double', name:'Double bed', sub:"5' × 6' 6\" · sleeps two", icon:'🛏️', syn:'double bed bedroom sleep' },
+  { group:'Bedroom', id:'bed-single', name:'Single bed', sub:"3' × 6' 6\" · sleeps one", icon:'🛏️', syn:'single bed bedroom sleep' },
+  { group:'Bedroom', id:'almirah', name:'Almirah', sub:"4' wide · 7' tall wardrobe", icon:'🗄️', syn:'almirah wardrobe cupboard closet mirror' },
+  { group:'Bedroom', id:'bedside', name:'Bedside table', sub:"1' 6\" × 1' 6\" · next to the bed", icon:'🗄️', syn:'bedside table nightstand drawer' },
+  { group:'Living', id:'sofa', name:'Sofa', sub:"6' wide · seats three", icon:'🛋️', syn:'sofa couch three seater living' },
+  { group:'Living', id:'armchair', name:'Armchair', sub:"3' wide · one seat", icon:'🪑', syn:'armchair chair single seat living' },
+  { group:'Living', id:'coffee-table', name:'Coffee table', sub:"3' × 1' 6\" · low table", icon:'☕', syn:'coffee table low living' },
+  { group:'Living', id:'tv-unit', name:'TV unit + TV', sub:"5' wide · TV on a stand", icon:'📺', syn:'tv television unit stand screen living' },
+  { group:'Living', id:'bookshelf', name:'Bookshelf', sub:"3' wide · 6' tall shelves", icon:'📚', syn:'bookshelf books shelf living' },
+  { group:'Living', id:'dining-table', name:'Dining table', sub:"5' × 3' · seats four", icon:'🍽️', syn:'dining table eat food' },
+  { group:'Living', id:'chair', name:'Chair', sub:"1' 6\" · pull up to a table", icon:'🪑', syn:'chair seat dining' },
+  { group:'Kitchen', id:'kitchen-counter', name:'Kitchen counter', sub:"6' run · worktop + cupboards", icon:'🍳', syn:'kitchen counter worktop cupboard' },
+  { group:'Kitchen', id:'stove', name:'Stove', sub:"2' · four burners", icon:'🔥', syn:'stove gas burner cook kitchen' },
+  { group:'Kitchen', id:'fridge', name:'Fridge', sub:"2' 6\" × 2' · 6' tall", icon:'🧊', syn:'fridge refrigerator kitchen cold' },
+  { group:'Kitchen', id:'sink', name:'Sink', sub:"2' · basin + tap", icon:'🚰', syn:'sink wash basin kitchen tap water' },
+  { group:'Bathroom', id:'toilet', name:'Toilet', sub:"1' 6\" × 2' 6\" · with tank", icon:'🚽', syn:'toilet wc bathroom' },
+  { group:'Bathroom', id:'basin', name:'Basin', sub:"2' · wash basin on a stand", icon:'🧼', syn:'basin wash sink bathroom' },
+  { group:'Bathroom', id:'bathtub', name:'Bathtub', sub:"5' 6\" × 2' 6\" · soak", icon:'🛁', syn:'bathtub bath tub bathroom soak' },
+  { group:'Doors & windows', id:'door-wood', name:'Wooden door', sub:"3' × 7' · solid wood", icon:'🚪', syn:'wooden door wood entrance' },
+  { group:'Doors & windows', id:'door-glass', name:'Glass door', sub:"3' × 7' · see-through", icon:'🚪', syn:'glass door transparent entrance' },
+  { group:'Doors & windows', id:'window-large', name:'Large window', sub:"6' × 4' · big glass", icon:'🪟', syn:'large window big glass light' },
+  { group:'People', id:'person-adult', name:'Adult standing', sub:"5' 6\" tall · standing", icon:'🧍', syn:'adult person man woman standing people' },
+  { group:'People', id:'person-sitting', name:'Adult sitting', sub:"sitting · chair height", icon:'🧍', syn:'adult sitting sit chair people' },
+  { group:'People', id:'person-child', name:'Child standing', sub:"3' 6\" tall · standing", icon:'🧒', syn:'child kid boy girl standing people' },
+  { group:'People', id:'person-sleeping', name:'Person sleeping', sub:"lying down · 5' 6\" long", icon:'😴', syn:'sleeping lying down bed person people' },
+];
+const FURN_GROUPS=['Bedroom','Living','Kitchen','Bathroom','Doors & windows','People'];
+function furnCells(id){
+  switch(id){
+    case 'bed-double': return [...F(10,13,2,2), ...F(10,13,1,10,0,2,0), ...F(10,1,2,2,0,3,0), ...F(4,2,1,10,1,3,1), ...F(4,2,1,10,5,3,1)];
+    case 'bed-single': return [...F(6,13,2,2), ...F(6,13,1,10,0,2,0), ...F(6,1,2,2,0,3,0), ...F(3,2,1,10,1,3,1)];
+    case 'almirah': return [...F(8,1,14,2,0,0,0), ...F(1,1,14,2,0,0,1), ...F(1,1,14,2,7,0,1), ...F(3,1,14,2,0,0,2), ...F(3,1,14,2,5,0,2), ...F(2,1,1,2,3,13,2), ...F(2,1,1,2,3,0,2), ...F(2,1,12,5,3,1,2)];
+    case 'bedside': return [...F(3,3,3,2), ...F(3,3,1,7,0,3,0)];
+    case 'sofa': return [...F(12,5,1,2), ...F(12,5,1,10,0,1,0), ...F(12,2,3,10,0,2,0), ...F(2,3,2,10,0,2,2), ...F(2,3,2,10,10,2,2)];
+    case 'armchair': return [...F(6,5,1,2), ...F(6,5,1,10,0,1,0), ...F(6,2,3,10,0,2,0), ...F(1,3,2,10,0,2,2), ...F(1,3,2,10,5,2,2)];
+    case 'coffee-table': return [...F(6,3,1,2,0,2,0), ...F(1,1,2,2,0,0,0), ...F(1,1,2,2,5,0,0), ...F(1,1,2,2,0,0,2), ...F(1,1,2,2,5,0,2)];
+    case 'tv-unit': return [...F(10,3,2,2), ...F(8,1,5,11,1,2,1), ...F(1,1,5,2,0,2,1), ...F(1,1,5,2,9,2,1), ...F(10,1,1,2,0,7,1)];
+    case 'bookshelf': return [...F(6,1,12,2,0,0,0), ...F(1,1,12,2,0,0,1), ...F(1,1,12,2,5,0,1), ...F(4,1,1,2,1,2,1), ...F(4,1,1,2,1,5,1), ...F(4,1,1,2,1,8,1), ...F(4,1,1,2,1,11,1), ...F(2,1,1,4,1,3,1), ...F(2,1,1,9,3,6,1), ...F(2,1,1,4,1,9,1)];
+    case 'dining-table': return [...F(10,6,1,2,0,3,0), ...F(1,1,3,2,0,0,0), ...F(1,1,3,2,9,0,0), ...F(1,1,3,2,0,0,5), ...F(1,1,3,2,9,0,5)];
+    case 'chair': return [...F(3,3,1,2,0,2,0), ...F(1,1,2,2,0,0,0), ...F(1,1,2,2,2,0,0), ...F(1,1,2,2,0,0,2), ...F(1,1,2,2,2,0,2), ...F(3,1,3,2,0,3,0)];
+    case 'kitchen-counter': return [...F(12,3,3,3), ...F(12,3,1,7,0,3,0)];
+    case 'stove': return [...F(4,3,3,3), ...F(1,3,1,7,0,3,0), ...F(1,3,1,7,3,3,0), ...F(2,1,1,7,1,3,1), ...F(1,1,1,11,1,3,0), ...F(1,1,1,11,2,3,0), ...F(1,1,1,11,1,3,2), ...F(1,1,1,11,2,3,2)];
+    case 'fridge': return [...F(5,4,8,12,0,0,0), ...F(5,4,4,7,0,8,0)];
+    case 'sink': return [...F(4,3,2,12), ...F(4,1,1,12,0,2,0), ...F(4,1,1,12,0,2,2), ...F(1,1,1,12,0,2,1), ...F(1,1,1,12,3,2,1), ...F(2,1,1,5,1,2,1), ...F(1,1,2,3,1,3,0)];
+    case 'toilet': return [...F(3,5,2,12), ...F(3,1,4,12,0,2,0), ...F(3,3,1,12,0,2,2)];
+    case 'basin': return [...F(2,2,3,12), ...F(4,3,1,12,0,3,0), ...F(1,1,2,3,1,4,0)];
+    case 'bathtub': return [...F(11,5,1,12,0,0,0), ...F(11,1,2,12,0,1,0), ...F(11,1,2,12,0,1,4), ...F(1,3,2,12,0,1,1), ...F(1,3,2,12,10,1,1), ...F(9,3,1,5,1,1,1)];
+    case 'door-wood': return F(6,1,14,2);
+    case 'door-glass': return [...F(1,1,14,2,0,0,0), ...F(1,1,14,2,5,0,0), ...F(4,1,1,2,1,13,0), ...F(4,1,1,2,1,0,0), ...F(4,1,12,5,1,1,0)];
+    case 'window-large': return [...F(1,1,8,2,0,0,0), ...F(1,1,8,2,11,0,0), ...F(10,1,1,2,1,7,0), ...F(10,1,1,2,1,0,0), ...F(10,1,6,5,1,1,0)];
+    case 'person-adult': return [...F(1,1,4,1,0,0,0), ...F(1,1,4,1,2,0,0), ...F(3,1,4,4,0,4,0), ...F(2,1,2,2,0,8,0), ...F(2,1,1,9,0,10,0)];
+    case 'person-sitting': return [...F(1,3,1,1,0,2,0), ...F(1,3,1,1,2,2,0), ...F(1,1,2,1,0,0,3), ...F(1,1,2,1,2,0,3), ...F(3,1,4,4,0,3,0), ...F(2,1,2,2,0,7,0), ...F(2,1,1,9,0,9,0)];
+    case 'person-child': return [...F(1,1,2,1,0,0,0), ...F(1,1,2,1,2,0,0), ...F(3,1,3,9,0,2,0), ...F(2,1,2,2,0,5,0), ...F(2,1,1,9,0,7,0)];
+    case 'person-sleeping': return [...F(2,4,1,1,0,0,0), ...F(2,4,1,4,0,0,4), ...F(2,1,1,2,0,0,8), ...F(2,1,1,10,0,0,9), ...F(2,4,1,10,0,1,4)];
+    default: return [];
+  }
+}
+function furnBBox(id, rot=0){
+  const cells=furnCells(id).map(c=>rotOffset(c, rot));
+  if(!cells.length) return null;
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,y1=0;
+  for(const c of cells){ if(c.dx<x0)x0=c.dx; if(c.dx>x1)x1=c.dx; if(c.dz<z0)z0=c.dz; if(c.dz>z1)z1=c.dz; if(c.dy>y1)y1=c.dy; }
+  return { w:x1-x0+1, d:z1-z0+1, h:y1+1, n:cells.length };
+}
+function placeFurnitureAt(id, x, y, z, rot=0){
+  const def=FURNITURE_DEFS.find(d=>d.id===id); if(!def) return 0;
+  const wanted=furnCells(id).map(c=>rotOffset(c, rot))
+    .map(c=>({ x:x+c.dx, y:y+c.dy, z:z+c.dz, t:c.t, r:c.r }));
+  const cells=wanted.filter(c=>!getBlock(c.x,c.y,c.z) && inBounds(c.x,c.y,c.z));
+  const n=applyBatch(cells, def.name+' placed');
+  if(n) toast(def.name+' placed — '+n+' blocks');
+  else toast('That spot is taken');
+  return n;
+}
+function selectFurnitureCard(id){
+  const def=FURNITURE_DEFS.find(d=>d.id===id); if(!def) return false;
+  if($('#presetPanel').classList.contains('on')) togglePresetPanel(false);
+  setPresetMode('furn:'+id);
+  return true;
+}
+function buildFurnitureCards(){
+  const grid=$('#furnGrid'); if(!grid) return;
+  grid.innerHTML='';
+  for(const g of FURN_GROUPS){
+    const h=document.createElement('div'); h.className='sp-sec'; h.textContent=g;
+    grid.appendChild(h);
+    const wrap=document.createElement('div'); wrap.className='card-grid';
+    for(const def of FURNITURE_DEFS.filter(d=>d.group===g)){
+      const b=document.createElement('button');
+      b.className='el-card'; b.dataset.el='furn:'+def.id; b.dataset.name=def.name;
+      b.draggable=true;
+      const hd=document.createElement('span'); hd.className='el-handle'; hd.textContent='⠿';
+      hd.title='Drag from here to place it'; b.appendChild(hd);
+      const ic=document.createElement('span'); ic.className='el-ico'; ic.textContent=def.icon; b.appendChild(ic);
+      const nm=document.createElement('span'); nm.className='el-name'; nm.textContent=def.name; b.appendChild(nm);
+      const sb=document.createElement('span'); sb.className='el-sub'; sb.textContent=def.sub; b.appendChild(sb);
+      b.onclick=()=>{ if(cardDragged){ cardDragged=false; return; } selectFurnitureCard(def.id); };
+      bindCardDrag(b, 'furn:'+def.id);
+      wrap.appendChild(b);
+    }
+    grid.appendChild(wrap);
+  }
 }
 
 /* ---- Figma-style Properties: what the selection is ---- */
@@ -8554,6 +8876,15 @@ window.__mc = {
     value(){ return $('#bpNameInput').value; },
     set(v){ $('#bpNameInput').value=v; return true; },
   },
+  dupFloor:{
+    ask(i){ return duplicateFloor(i); },
+    with(){ return closeDupFloorBox(true); },
+    without(){ return closeDupFloorBox(false); },
+    cancel(){ return closeDupFloorBox(null); },
+    isOpen(){ return $('#dupFloorBox').classList.contains('on'); },
+    text(){ return $('#dupFloorText').textContent; },
+    roofCount(i){ return floorRoofCount(i); },
+  },
   expandAt(x,y,z,mode,dir,len){ const info=wallInfo(x,y,z); if(!info) return 0;
     const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
     return expandCommit(run,mode,dir,len,info.height); },
@@ -8758,7 +9089,7 @@ window.__mc = {
    dropdown opens downward on desktop and upward on a phone, over the
    canvas, never under the sheet. */
 const GS_SEC_ORDER=['Elements','Blocks','Tools','Templates','Blueprints','My builds','Actions'];
-const GS_SEC_ICON={ Elements:'\u{1F9F1}', Blocks:'\u{25A6}', Tools:'\u{1F6E0}\u{FE0F}', Templates:'\u{1F3E0}', Blueprints:'\u{1F4BE}', 'My builds':'\u{1F4C1}', Actions:'\u{26A1}' };
+const GS_SEC_ICON={ Elements:'\u{1F9F1}', Furniture:'\u{1F6CB}\u{FE0F}', Blocks:'\u{25A6}', Tools:'\u{1F6E0}\u{FE0F}', Templates:'\u{1F3E0}', Blueprints:'\u{1F4BE}', 'My builds':'\u{1F4C1}', Actions:'\u{26A1}' };
 const GS_MAX_PER_SEC=5, GS_MAX_TOTAL=24;
 let gsHL=-1;
 function gsEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -8771,9 +9102,13 @@ function gsStaticItems(){
       roof:'slab', stairs:'steps staircase', tree:'leaves trunk plant', shutter:'rolling' }[d.id]||'';
     add('Elements', d.name, d.sub, extra, ()=>selectElementCard(d.id));
   }
-  // Blocks — the 10 materials (same action as tapping a material card)
+  // Furniture — the 25 cards (same action as tapping a card)
+  for(const d of FURNITURE_DEFS)
+    add('Furniture', d.name, d.sub, d.syn||'', ()=>selectFurnitureCard(d.id));
+  // Blocks — the 13 materials (same action as tapping a material card)
   const matSyn={ grass:'green', dirt:'brown', wood:'planks floor', stone:'grey gray',
-    brick:'red', glass:'transparent window', stair:'steps', slab:'roof', shutter:'door rolling', leaf:'tree green' };
+    brick:'red', glass:'transparent window', stair:'steps', slab:'roof', shutter:'door rolling', leaf:'tree green',
+    fabric:'soft white bed sofa', screen:'tv dark', ceramic:'white toilet basin' };
   TYPES.forEach((ty,ti)=>add('Blocks', ty.name, 'Block', matSyn[ty.id]||'',
     ()=>{ selectType(ti); setBuildMode('add'); }));
   // Tools
@@ -8940,6 +9275,18 @@ Object.assign(window.__mc, {
     search(q){ const s2=$('#elSearch'); s2.value=q; s2.dispatchEvent(new Event('input'));
       return [...document.querySelectorAll('#elGrid .el-card, #matGrid .el-card')]
         .filter(c=>c.style.display!=='none').length; },
+  },
+  furniture:{
+    list(){ return FURNITURE_DEFS.map(d=>({ id:d.id, name:d.name, group:d.group, sub:d.sub })); },
+    groups(){ return [...FURN_GROUPS]; },
+    cells(id, rot=0){ return furnCells(id).map(c=>rotOffset(c, rot||0)); },
+    bbox(id, rot=0){ return furnBBox(id, rot||0); },
+    count(id){ return furnCells(id).length; },
+    place(id,x,y,z,rot=0){ return placeFurnitureAt(id,x,y,z,rot||0); },
+    select(id){ return selectFurnitureCard(id); },
+    mode(){ return presetMode; },
+    rot(){ return presetRot; },
+    types(){ return TYPES.map((t,i)=>({ i, id:t.id, name:t.name })); },
   },
   projects:{
     list(){ return loadProjects().map(p=>({ id:p.id, name:p.name, updatedAt:p.updatedAt,
