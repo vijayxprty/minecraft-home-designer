@@ -165,6 +165,13 @@
   .tpl-item .tpl-name{font-weight:800;color:#ffd83d;white-space:nowrap}
   .tpl-item .tpl-desc{flex:1;font-weight:700}
   .tpl-item .tpl-size{font-weight:800;white-space:nowrap;color:#9be36d}
+/* round 29: blueprint rows carry 5 buttons now, so the block count
+   ("5 blocks") wrapped onto two lines on the third row. The count
+   never wraps; the row wraps instead — buttons drop to a second line
+   when the panel is narrow, and stay on one line at full width. */
+#blueprintList .tpl-item{ flex-wrap:wrap; }
+#blueprintList .tpl-desc{ white-space:nowrap; }
+#blueprintList .tpl-item button{ flex-shrink:0; }
   #matList .tpl-item{cursor:pointer}
   #matList .tpl-item:hover{background:rgba(255,255,255,.18)}
   #matList .tpl-item.on{background:#ffd83d}
@@ -487,6 +494,14 @@ body.panel-collapsed #sidePanel{ display:none; }
    blocks + floor (+ selection count), line 2 is footprint + area — and
    every line is nowrap with ellipsis, so nothing ever wraps mid-phrase */
 #readout #roLine1,#readout #roBuilt,#roSelSize{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* round 29: on a very narrow phone the first line still ellipsised
+   ("…") whenever a selection was active — the line is ~500px and the
+   phone pill is 370px. Under 480px the line wraps instead of
+   ellipsising, so everything stays readable; the pill just grows
+   taller. Same for the selection-size line, which can be long too. */
+@media (max-width:480px){
+  #readout #roLine1,#readout #roSelSize{ white-space:normal; }
+}
 /* ---------- zoom bar (Canva, bottom-right) + note above it ---------- */
 #note{ right:10px; bottom:66px; background:rgba(255,255,255,.92); color:#555; font-size:10px; max-width:230px; pointer-events:none; }   /* round 15: clicks pass through to the canvas — the note sits over a plot corner */
 #zoomBar{ position:fixed; right:10px; bottom:10px; z-index:11; display:flex; align-items:center; gap:6px;
@@ -548,7 +563,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   /* round 14: while a card is being dragged, the bottom sheet gets out of
      the way so the canvas — and the drop ghost — is actually visible */
   body.card-dragging #sidePanel{ max-height:0; border:0; box-shadow:none; }
-  #readout{ left:10px; bottom:68px; max-width:calc(100vw - 20px); }
+  #readout{ left:10px; bottom:120px; max-width:calc(100vw - 20px); }   /* round 29: stacked above the zoom bar — on a narrow phone the full-width pill ran underneath it and the zoom bar covered the Saved/FPS lines */
   #toast{ left:50%; }   /* round 16: no left shell on phones, so no offset */
   #note{ display:none; }
   #zoomBar{ bottom:68px; }
@@ -899,7 +914,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <div class="msep"></div>
   <button id="btnIsolate" title="Show only the active floor">👁 Isolate</button>
   <button id="btnDollhouse" title="All floors stacked, walls cut at eye level">🏠 Dollhouse</button>
-  <button id="btnLabels" class="on" title="Show / hide the white wall dimension labels (H)">🏷️ Labels ✓</button>
+  <button id="btnLabels" title="Show / hide the white wall dimension labels (H)">🏷️ Labels</button>
   <button id="btnTheme" title="Switch between light and dark">🌙 Dark theme</button>
   <div class="msep"></div>
   <button id="btnCheat" title="Keyboard shortcuts (?)">❓ Shortcuts</button>
@@ -1082,7 +1097,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <b>F (in Walk)</b><span>First-person view, eye 5'6" — Esc back to third-person</span>
     <b>☀️ Sun</b><span>Day / evening / night lighting (top bar)</span>
     <b>📱 Touch</b><span>Touch mode — bigger buttons, tap to build, long-press to erase</span>
-    <b>Room labels</b><span>Click a room label to rename it · H hides all labels</span>
+    <b>Room labels</b><span>Click a room label to rename it · H hides only the dimension labels</span>
     <b>W A S D · Q / E</b><span>Fly · down / up (Shift = faster)</span>
     <b>Drag · Scroll</b><span>Look around · zoom</span>
     <b>Camera gizmo</b><span>Top-right — click an axis to snap to that view, drag to orbit, centre for the angle view</span>
@@ -1354,18 +1369,23 @@ T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic 
   // away at a glancing angle. Four bold 16px slats now, with a much
   // darker groove and a brighter top edge, so the stripes survive at
   // distance; the close-up look is the same slatted shutter, bolder.
+  // round 29: at a glancing angle from far the stripes were STILL
+  // subtle — NearestFilter minification samples the 64px texture
+  // sparsely, so a 3px groove is easy to miss entirely. The groove is
+  // now 5px (nearly a third of a slat), the top edge 3px, the slats
+  // alternate harder, and the speckle is lighter so it cannot muddy
+  // the bands. Close-up the shutter is the same slatted door, bolder.
   for(let y=0;y<S;y+=16){
     const alt=(((y/16)|0)%2===0);
     const grad=g.createLinearGradient(0,y,0,y+16);
-    grad.addColorStop(0, alt?'#e8f2fa':'#b9cfe0');
-    grad.addColorStop(0.45, alt?'#aec6d8':'#8aa8bf');
-    grad.addColorStop(0.8, alt?'#6d8aa3':'#57708a');
-    grad.addColorStop(1,'#0e2233');
+    grad.addColorStop(0, alt?'#f0f7fd':'#a9c2d6');
+    grad.addColorStop(0.5, alt?'#b9d0e2':'#7d9bb5');
+    grad.addColorStop(1, alt?'#7d9bb5':'#4e6a84');
     g.fillStyle=grad; g.fillRect(0,y,S,16);
-    g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,y,S,2);
-    g.fillStyle='#0a1a28'; g.fillRect(0,y+13,S,3);
+    g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(0,y,S,3);
+    g.fillStyle='#050f18'; g.fillRect(0,y+11,S,5);
   }
-  speckle(g,S,R,['rgba(255,255,255,0.10)','rgba(0,0,0,0.10)'],100); }, 20);
+  speckle(g,S,R,['rgba(255,255,255,0.08)','rgba(0,0,0,0.08)'],40); }, 20);
 
 /* ================= block types ================= */
 const TYPES = [
@@ -1577,7 +1597,7 @@ function initScene(){
   // selection highlight boxes
   selGroup = new THREE.Group(); selGroup.visible=false; scene.add(selGroup);
 
-  // always-on wall dimension labels (dimension line + ft/in tag above each wall)
+  // wall dimension labels (dimension line + ft/in tag above each wall) — OFF by default since round 29
   wallLabelGroup = new THREE.Group(); scene.add(wallLabelGroup);
 
   // room area labels (one tag per enclosed room, floating above its walls)
@@ -1843,6 +1863,9 @@ function turntableStart(){
 function turntableStop(){
   if(!TURN.active) return false;
   TURN.active=false;
+  freezeOrbit();   // round 29: stop means stop — zero the damping tail
+  // so the camera doesn't keep drifting after the spin ends (the
+  // suite measured ~0.028 rad in 400 ms without this)
   $('#btnTurntable').textContent='🔄 Turntable';
   $('#btnTurntable').classList.remove('on');
   return true;
@@ -2299,20 +2322,30 @@ function centrePanelOpen(){
   return CENTRE_PANEL_IDS.some(id=>{ const e=document.getElementById(id);
     return e && e.classList.contains('on') && getComputedStyle(e).display!=='none'; });
 }
-function fixReadoutOverlap(){
-  const ro=$('#readout'); if(!ro) return;
+/* round 29: the "Visualisation only" note at bottom-right can be
+   covered by a centred panel too — with the side panel open the
+   centred panel shifts right and its right edge reaches past the
+   note (seen in the round-28 screenshot). The same lift that keeps
+   the readout clear now keeps the note clear: while a panel would
+   cover it, it sits just above the highest such panel. */
+function liftAbovePanels(el){
+  if(!el || getComputedStyle(el).display==='none') return;
   const open=CENTRE_PANEL_IDS.map(id=>document.getElementById(id))
     .filter(e=>e && e.classList.contains('on') && getComputedStyle(e).display!=='none');
-  if(!open.length){ if(ro.style.bottom) ro.style.bottom=''; return; }
-  ro.style.bottom='';   // measure the readout where it sits by default
-  const rr=ro.getBoundingClientRect();
+  if(!open.length){ if(el.style.bottom) el.style.bottom=''; return; }
+  el.style.bottom='';   // measure the element where it sits by default
+  const rr=el.getBoundingClientRect();
   let top=null;
   for(const p of open){
     const mr=p.getBoundingClientRect();
     const hit=!(mr.right<=rr.left||mr.left>=rr.right||mr.bottom<=rr.top||mr.top>=rr.bottom);
     if(hit && (top===null || mr.top<top)) top=mr.top;
   }
-  ro.style.bottom = top===null ? '' : Math.round(innerHeight-top+10)+'px';
+  el.style.bottom = top===null ? '' : Math.round(innerHeight-top+10)+'px';
+}
+function fixReadoutOverlap(){
+  liftAbovePanels($('#readout'));
+  liftAbovePanels($('#note'));
 }
 /* round 22: on a phone the side panel is a bottom sheet (z-index 12) that
    would paint over any centred panel (z-index 11) — the panel would be
@@ -2513,22 +2546,24 @@ function updateLabelVisibility(){
 }
 
 /* ================= labels toggle (round 6 fix) ================= */
-let labelsOn=true;                   // white wall dimension labels visible
-const LABELS_KEY='home-designer-minecraft-labels-v1';
+let labelsOn=false;                  // round 29: white wall dimension labels OFF by default — the user found the boxes irritating; H / the Labels button brings them back
+const LABELS_KEY='home-designer-minecraft-labels-v2';   // round 29: bumped from v1 so a browser that stored 'on' under v1 still gets the new OFF default
 function setLabels(on){
   labelsOn=!!on;
   try{ localStorage.setItem(LABELS_KEY, labelsOn?'on':'off'); }catch(e){}
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
-  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
+  // room labels are NOT dimension boxes — they stay visible whatever this says (round 29)
   const b=$('#btnLabels');
   if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
   if(!labelsOn) toast('Wall labels hidden — click Labels to show them again');
   return labelsOn;
 }
 function loadLabelsPref(){
-  try{ if(localStorage.getItem(LABELS_KEY)==='off') labelsOn=false; }catch(e){}
+  // round 29: OFF by default — only an explicit 'on' under the v2 key turns
+  // the dimension labels on, so a browser that stored 'on' under v1 still
+  // gets the new default. Room labels stay visible regardless.
+  try{ if(localStorage.getItem(LABELS_KEY)==='on') labelsOn=true; }catch(e){}
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;
-  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
   const b=$('#btnLabels');
   if(b){ b.classList.toggle('on', labelsOn); b.textContent=labelsOn?'🏷️ Labels ✓':'🏷️ Labels'; }
 }
@@ -6059,7 +6094,9 @@ function updateBoxDrag(e){
    screen and at least ~24px clear of every visible dimension label. */
 function marqueeLabelRects(){
   const rects=[];
-  if(!labelsOn) return rects;
+  // round 29: no early return on labelsOn — room tags stay visible when the
+  // dimension labels are off, and the marquee label must still avoid them;
+  // the per-group visibility check below does the filtering
   const halfH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
   for(const grp of [wallLabelGroup, roomLabelGroup]){
     if(!grp || !grp.visible) continue;
@@ -6680,7 +6717,7 @@ function walkStop(){
   if(fpb){ fpb.classList.remove('on'); fpb.textContent='👁 First-person'; }
   if(document.pointerLockElement===renderer.domElement){ try{ document.exitPointerLock(); }catch(e){} }
   if(wallLabelGroup) wallLabelGroup.visible=labelsOn;   // restore the labels preference, don't force them on
-  if(roomLabelGroup) roomLabelGroup.visible=labelsOn;
+  if(roomLabelGroup) roomLabelGroup.visible=true;   // room labels are not dimension boxes — always back after a walk (round 29)
   controls.enabled=true;
   if(savedCam){ camera.position.copy(savedCam.pos); controls.target.copy(savedCam.tgt); controls.update(); }
   $('#walkHint').style.display='none';
@@ -7198,7 +7235,7 @@ function init(){
   if(!shared) showStartScreen();
   const pill=$('#savePill');
   if(pill) pill.textContent = hadSave ? '✓ Saved on this device' : 'Saves on this device as you build';
-  loadLabelsPref();   // wall labels: on by default, remembered choice wins
+  loadLabelsPref();   // round 29: wall dimension labels OFF by default, remembered choice wins
   loadThemePref();    // light / dark chrome: light by default, remembered choice wins
   loadSunPref();      // sunlight: Day by default, remembered choice wins
   loadTouchPref();    // touch mode: off by default, remembered choice wins
