@@ -320,6 +320,11 @@ body.panel-closed{ --shell-left:64px; }
   box-shadow:none; font-weight:700; font-size:13px; padding:6px 10px; }
 #topbar .actions button:hover{ background:#f0f4f0; }
 #topbar .actions button.on{ background:#e8f5e9; color:#1b5e20; border-color:#2e7d32; }
+/* round 24: back to Your builds — same look as the other top-bar buttons */
+#topbar #btnHome{ background:#fff; color:#1a1a1a; border:1px solid #d8d8d8; border-radius:6px;
+  box-shadow:none; font-weight:700; font-size:13px; padding:6px 10px; white-space:nowrap; }
+#topbar #btnHome:hover{ background:#f0f4f0; }
+#topbar #btnHome .hb-short{ display:none; }
 #savePill{ position:static; background:#e8f5e9; color:#1b5e20; font-size:12px; padding:5px 10px; border-radius:20px; white-space:nowrap; }
 /* ---------- left icon rail (Canva) ---------- */
 #rail{ position:fixed; left:0; top:48px; bottom:0; width:64px; z-index:12; background:#fff;
@@ -512,6 +517,9 @@ body.touch #zoomBar button{ padding:6px 12px; }
   #savePill{ display:none; }
   #panelCollapse{ display:none; }   /* phones use the bottom-sheet panel, not collapse */
   #topbar .proj-name{ max-width:120px; }
+  #topbar #btnHome .hb-full{ display:none; }
+  #topbar #btnHome .hb-short{ display:inline; }
+  #topbar .actions button .tb-txt{ display:none; }
   #rail{ left:0; right:0; top:auto; bottom:0; width:100%; height:58px; flex-direction:row;
     border-right:0; border-top:1px solid #e0e0e0; padding:4px; justify-content:space-around; }
   .rail-btn{ flex:1; padding:4px 2px; }
@@ -564,6 +572,8 @@ body.dark #topbar .actions button:hover{ background:#383838; }
 body.dark #topbar .actions button.on{ background:#1b3a1e; color:#9be36d; border-color:#2e7d32; }
 body.dark #topbar .actions button.warn{ background:#7a3a1a; color:#ffb84d; border-color:#5a2a10; }
 body.dark #savePill{ background:#1b3a1e; color:#9be36d; }
+body.dark #topbar #btnHome{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
+body.dark #topbar #btnHome:hover{ background:#383838; }
 body.dark .ss-theme{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
 body.dark .ss-theme:hover{ background:#383838; }
 body.dark #rail{ background:#1f1f1f; border-right-color:#333; border-top-color:#333; }
@@ -686,11 +696,12 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
 
 <div id="topbar">
   <div class="brand">⛏️ Minecraft Home Designer</div>
+  <button id="btnHome" title="Back to Your builds — your work is saved first"><span class="hb-full">← My builds</span><span class="hb-short">← Builds</span></button>
   <button id="btnProjName" class="proj-name" title="Tap to rename this build"><span id="projName">My Build</span> ✎</button>
   <input id="projNameInput" maxlength="24" spellcheck="false" autocomplete="off" style="display:none">
   <div class="actions">
-    <button id="btnUndo" title="Ctrl+Z">↩ Undo</button>
-    <button id="btnRedo" title="Ctrl+Y">↪ Redo</button>
+    <button id="btnUndo" title="Ctrl+Z">↩ <span class="tb-txt">Undo</span></button>
+    <button id="btnRedo" title="Ctrl+Y">↪ <span class="tb-txt">Redo</span></button>
     <span id="savePill">✓ Saved on this device</span>
     <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
@@ -840,7 +851,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
       <b>Click Add blocks</b>, pick a block in Elements, then click where it goes.<br>
       <b>Drag</b> to look around · <b>Scroll</b> to zoom · <b>0</b> fits the build in view<br>
       <b>Hold Space</b> and drag to move the view<br>
-      <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row<br>
+      <b>Click a block</b> to select it · <b>Shift+click</b> grabs the whole row · <b>Ctrl+A</b> selects all · <b>Del</b> deletes<br>
       With <b>Select</b>, drag empty grass to box-select an area · <b>Shift</b> adds to it · <b>🏠 Home</b> resets the view.
     </div>
     <div style="height:12px"></div>
@@ -1038,9 +1049,10 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <b>Ctrl + C / V</b><span>Copy / paste the selection</span>
     <b>Ctrl + X</b><span>Cut the selection — paste it somewhere else with Ctrl + V</span>
     <b>Ctrl + D</b><span>Duplicate the selection one block over</span>
+    <b>Ctrl + A</b><span>Select every block in the build</span>
     <b>⬆ Stack up</b><span>Copy the selection upward, as many times as you type — buttons when blocks are selected</span>
     <b>⬚ Select this floor</b><span>Select every block on the floor you are on (More menu / right-click)</span>
-    <b>Del</b><span>Delete the selection</span>
+    <b>Del / Backspace</b><span>Delete the selection</span>
     <b>Ctrl + Z / Y</b><span>Undo / redo (one drag or fill = one step)</span>
     <b>V</b><span>Walk mode on / off</span>
     <b>F (in Walk)</b><span>First-person view, eye 5'6" — Esc back to third-person</span>
@@ -3005,7 +3017,7 @@ function updateMirrorPanel(){
   $$('#mirrorPanel button[data-sym]').forEach(b=>b.classList.toggle('on',
     symmetry.on? b.dataset.sym===symmetry.axis : b.dataset.sym==='off'));
   const h=$('#mirrorHint');
-  if(h) h.textContent = selection.size? selection.size+' block'+(selection.size>1?'s':'')+' selected — Mirror selection flips them' : 'Mirror selection needs a selection first';
+  if(h) h.textContent = selection.size? selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' selected — Mirror selection flips them' : 'Mirror selection needs a selection first';
   const sh=$('#symHint');
   if(sh) sh.textContent = symmetry.on? 'On — mirroring across '+symmetry.axis.toUpperCase()+' at '+mirrorCenter : 'Build on one side, the other side builds itself';
 }
@@ -3979,13 +3991,13 @@ function updateSelectionHighlight(){
     m.position.set(x+0.5, y+0.5, z+0.5);
     selGroup.add(m);
   }
-  $('#roSel').textContent = selection.size? ' · Selected: '+selection.size+' block'+(selection.size>1?'s':'') : '';
+  $('#roSel').textContent = selection.size? ' · Selected: '+selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'') : '';
   const sz=$('#roSelSize');
   if(selection.size){
     const bb=selectionBBox();
     const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT, h=(bb.y1-bb.y0+1)*FT;
     sz.style.display='block';
-    sz.textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d)+' × '+ftin(h);
+    sz.textContent='Selected: '+selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d)+' × '+ftin(h);
   } else sz.style.display='none';
   updateSelPanel();   // the contextual panel lives and dies with the selection (round 10)
 }
@@ -4489,7 +4501,7 @@ function importBlueprintFile(file){
 function renderBlueprintPanel(){
   const list=$('#blueprintList'); list.innerHTML='';
   const bps=loadBlueprints();
-  $('#bpHint').textContent = selection.size? selection.size+' block'+(selection.size>1?'s':'')+' selected' : 'Select blocks first, then save';
+  $('#bpHint').textContent = selection.size? selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' selected' : 'Select blocks first, then save';
   if(!bps.length){
     const d=document.createElement('div'); d.className='tpl-empty';
     d.textContent='No blueprints saved yet — select some blocks and save one.';
@@ -5483,6 +5495,19 @@ function selectFloorBlocks(){
   else toast('Nothing on this floor yet — '+FLOORS[activeFloor].name+' is empty');
   return n;
 }
+/* round 24: select every block in the whole build (Ctrl+A) — the
+   Properties panel then works on the lot (Change colour, Move, Copy,
+   Cut, Duplicate, Stack, Flip, Delete). Esc clears the selection. */
+function selectAllBlocks(){
+  if(WALK.active) return 0;
+  let n=0;
+  selection.clear();
+  for(const k of blocks.keys()){ selection.add(k); n++; }
+  updateSelectionHighlight();
+  if(n) toast('Selected '+n.toLocaleString('en-IN')+' block'+(n>1?'s':'')+' — the whole build');
+  else toast('Nothing to select yet — the plot is empty');
+  return n;
+}
 function rotateSelection(){
   if(selection.size<2){ toast('Select 2 or more blocks to rotate them'); return false; }
   const bb=selectionBBox();
@@ -6192,7 +6217,7 @@ function updateSelPanel(){
   if(on){
     const bb=selectionBBox();
     const w=(bb.x1-bb.x0+1)*FT, d=(bb.z1-bb.z0+1)*FT;
-    $('#selPanelTitle').textContent='Selected: '+selection.size+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d);
+    $('#selPanelTitle').textContent='Selected: '+selection.size.toLocaleString('en-IN')+' block'+(selection.size>1?'s':'')+' · '+ftin(w)+' × '+ftin(d);
     updateSelProps();   // Figma-style properties: size, material, floor (round 13)
   }
 }
@@ -6224,6 +6249,13 @@ function renderStartScreen(){
   }
 }
 function showStartScreen(){ renderStartScreen(); $('#startScreen').classList.add('on'); }
+/* round 24: back to "Your builds" from the editor — save the open
+   project first (synchronously, so the home list shows the fresh
+   block count), then show the start screen. */
+function goHome(){
+  try{ saveLocal(); }catch(e){ scheduleSave(); }
+  showStartScreen();
+}
 function hideStartScreen(){ $('#startScreen').classList.remove('on'); }
 function startPick(id){
   hideStartScreen();
@@ -6593,6 +6625,10 @@ function bindKeys(){
       else if(tapeStart){ tapeStart=null; startMarker.visible=false; $('#roTool').style.display='none'; }
       else if(tool==='tape' && measures.length){ clearMeasures(); }
       else if(ctxMenuOpen()){ hideCtxMenu(); }
+      /* round 24: a plain Esc with a selection clears the selection (the
+         panel and dialog branches above run first, so Esc still closes
+         those before it ever reaches here) */
+      else if(selection.size){ clearSelection(); }
       return;
     }
     if((e.ctrlKey||e.metaKey)&&k==='KeyZ'){ e.preventDefault(); e.shiftKey?doRedo():doUndo(); return; }
@@ -6603,6 +6639,11 @@ function bindKeys(){
     if((e.ctrlKey||e.metaKey)&&k==='KeyV'){ e.preventDefault();
       if(!WALK.active){ if(clipboard.length) setPasteMode(!pasteMode); else toast('Nothing copied yet — select blocks and press Ctrl+C'); }
       return; }
+    /* round 24: Ctrl+A / Cmd+A selects the whole build. The handler
+       returns here, before KeyA reaches the fly-keys set, so holding
+       it never flies the camera backwards; text fields keep their
+       own Ctrl+A via the INPUT early return above. */
+    if((e.ctrlKey||e.metaKey)&&k==='KeyA'){ e.preventDefault(); if(!WALK.active) selectAllBlocks(); return; }
     if((k==='Delete'||k==='Backspace') && !WALK.active && selection.size){ e.preventDefault(); deleteSelection(); return; }
     if(k==='KeyV'){ WALK.active?walkStop():walkStart(); return; }
     if(WALK.active && k==='KeyF'){ setWalkFP(!WALK.fp); return; }
@@ -6684,6 +6725,7 @@ function init(){
     $$('#toolsView button[data-cam]').forEach(x=>x.classList.remove('on')); b.classList.add('on'); setCam(b.dataset.cam); });
   $('#btnUndo').onclick=doUndo;
   $('#btnRedo').onclick=doRedo;
+  $('#btnHome').onclick=()=>goHome();
   // Add / Remove modes + the full material strip (round 10)
   $('#btnModeAdd').onclick=()=>setBuildMode('add');
   $('#btnModeRemove').onclick=()=>setBuildMode('remove');
@@ -7909,6 +7951,7 @@ window.__mc = {
   cut(){ return cutSelection(); },
   duplicate(){ return duplicateSelection(); },
   selectFloor(){ return selectFloorBlocks(); },
+  selectAll(){ return selectAllBlocks(); },
   lastMoveDir(){ return [...lastMoveDir]; },
   materials:{
     counts(){ return materialCounts(); },
@@ -8260,6 +8303,7 @@ Object.assign(window.__mc, {
   metaText(id){ const p=loadProjects().find(x=>x.id===id); return p? projectMeta(p) : null; },
   home:{
     visible(){ return $('#startScreen').classList.contains('on'); },
+    go(){ goHome(); return true; },   // round 24: back to the home screen from the editor
     projects(){ return loadProjects().map(p=>p.name); },
     open(id){ return openProject(id); },
   },
