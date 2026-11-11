@@ -375,6 +375,22 @@ body.panel-collapsed #sidePanel{ display:none; }
 .tpl-card h3{ font-size:15px; color:#1a1a1a; margin:4px 0 2px; }
 .tpl-card p{ font-size:12px; color:#555; line-height:1.45; }
 .tpl-card .tpl-size{ font-weight:800; color:#1b5e20; font-size:12px; margin-top:6px; }
+/* round 17: parametric preset cards at the top of the Templates tab — the
+   same room/wall builders as the old bottom panel, surfaced where a new
+   user actually looks. */
+.preset-card{ background:#fffbe6; border:2px solid #b8860b; }
+.preset-card:hover{ border-color:#2e7d32; }
+.preset-card.flash{ animation:pcFlash 1.2s ease; }
+@keyframes pcFlash{ 0%,100%{ box-shadow:0 0 0 0 rgba(46,125,50,0);} 30%{ box-shadow:0 0 0 4px #ffd83d; } }
+.preset-card .pc-fields{ display:flex; flex-wrap:wrap; gap:4px 6px; align-items:center; font-size:12px; font-weight:700; color:#222; margin:8px 0 4px; }
+.preset-card .pc-fields input{ width:52px; border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; }
+.preset-card .pc-fields select{ border:2px solid #555; border-radius:4px; padding:4px 5px; font-weight:800; font-size:12px; color:#222; background:#fff; max-width:130px; }
+.preset-card .pc-note{ font-size:12px; font-weight:800; color:#1b5e20; margin:2px 0 8px; }
+.preset-card .pc-go{ width:100%; background:#2e7d32; color:#fff; border:2px solid #1b5e20; border-radius:6px; font-weight:800; font-size:13px; padding:8px; cursor:pointer; }
+.preset-card .pc-go:hover{ background:#388e3c; }
+.preset-card .pc-gap{ display:flex; gap:4px; flex-wrap:wrap; }
+.preset-card .pc-gap button{ background:#fff; border:2px solid #555; border-radius:4px; font-weight:800; font-size:12px; padding:4px 8px; cursor:pointer; color:#222; }
+.preset-card .pc-gap button.on{ background:#ffd83d; border-color:#7a5b00; box-shadow:0 0 0 2px #fff; }
 .proj-row{ display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #d8d8d8;
   border-radius:10px; padding:8px; margin-bottom:8px; cursor:pointer; color:#1a1a1a; }
 .proj-row:hover{ border-color:#2e7d32; }
@@ -559,6 +575,33 @@ body.touch #zoomBar button{ padding:6px 12px; }
     <div class="sp-note">Drag a card onto the grass to place it — or tap it to pick it up, then click the grass.</div>
   </div>
   <div class="sp-tab" id="tab-templates">
+    <div class="sp-sec">Quick builds — type a size, one tap builds it</div>
+    <div id="tplRoomCard" class="tpl-card preset-card">
+      <div class="tpl-ico">🏠</div>
+      <h3>Build a room</h3>
+      <p>A hollow room with a wood floor and a 3-ft door gap on the front wall. Builds at the start of the floor you are on.</p>
+      <div class="pc-fields"><span>Width:</span><input id="pcRWft" type="number" min="2" max="30" value="10"> ft <input id="pcRWin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+      <span>Depth:</span><input id="pcRDft" type="number" min="2" max="30" value="12"> ft <input id="pcRDin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+      <span>Height:</span><input id="pcRHft" type="number" min="4" max="20" value="8"> ft <input id="pcRHin" type="number" min="0" max="11.5" step="0.5" value="0"> in</div>
+      <div class="pc-fields"><span>Wall material:</span><select id="pcRMat"></select></div>
+      <div class="pc-note" id="pcRoomNote"></div>
+      <button class="pc-go" id="pcRoomGo">🧱 Build room</button>
+    </div>
+    <div id="tplWallCard" class="tpl-card preset-card">
+      <div class="tpl-ico">🧱</div>
+      <h3>Build a wall</h3>
+      <p>A straight wall along the front edge. Pick a door or window gap, or none.</p>
+      <div class="pc-fields"><span>Length:</span><input id="pcWLft" type="number" min="1" max="100" value="10"> ft <input id="pcWLin" type="number" min="0" max="11.5" step="0.5" value="0"> in
+      <span>Height:</span><input id="pcWHft" type="number" min="2" max="20" value="8"> ft <input id="pcWHin" type="number" min="0" max="11.5" step="0.5" value="0"> in</div>
+      <div class="pc-fields"><span>Wall material:</span><select id="pcWMat"></select></div>
+      <div class="pc-fields"><span>Gap:</span><span class="pc-gap">
+        <button data-pcgap="none" class="on">No gap</button>
+        <button data-pcgap="door" title="A 3-ft wide, 7-ft tall opening at floor level">🚪 Door</button>
+        <button data-pcgap="window" title="A 4-ft wide, 3-ft tall opening with its sill 3 ft up">🪟 Window</button>
+      </span></div>
+      <div class="pc-note" id="pcWallNote"></div>
+      <button class="pc-go" id="pcWallGo">🧱 Build wall</button>
+    </div>
     <div class="sp-sec">Starter homes — tap one to open it</div>
     <div id="tplCards"></div>
     <div class="sp-note">Loading a home replaces the current build — it asks first.</div>
@@ -1611,7 +1654,14 @@ function nb(n){ return n+' block'+(n>1?'s':''); }   // history labels: '1 block'
 function pushUndo(op, label){
   const e=Array.isArray(op)?{batch:op}:op;
   e.label=label||'Edit'; e.time=histTime();
-  undoStack.push(e); if(undoStack.length>200) undoStack.shift(); redoStack.length=0; updateUndoBtns(); renderHistory(); }
+  undoStack.push(e);
+  // round 17: cap raised 200 -> 500 steps so long builds keep more history.
+  // Trade-off: every step holds its own before/after cell list, so 500
+  // steps of big fills can hold tens of MB in memory — the cap is a
+  // balance, not a limit on the build itself. The History panel still shows
+  // at most 30 rows, windowed around the current one.
+  if(undoStack.length>500) undoStack.shift();
+  redoStack.length=0; updateUndoBtns(); renderHistory(); }
 function applySingle(op, useNext){
   const v = useNext ? op.next : op.prev;
   if(v) blocks.set(key3(op.x,op.y,op.z), { t:v.t, r:v.r||0 });
@@ -3974,6 +4024,7 @@ function expandStart(e, hit){
   if(!info) return false;
   const run={ axis:info.axis, fixed:info.fixed, a0:info.a0, a1:info.a1, y:info.y, len:info.len, type:info.type };
   expandDrag={ anchor:[x,y,z], run, height:info.height, mode:'h', dir:1, len:0, cells:[], startX:e.clientX, startY:e.clientY };
+  freezeOrbit();   // round 17: same damping-tail drift as the marquee
   controls.enabled=false;
   return true;
 }
@@ -4129,6 +4180,7 @@ function fillDragUpdate(e){
   $('#roHover').textContent='Release to fill · type a length + Enter for an exact size';
 }
 function fillStart(e, cell){
+  freezeOrbit();   // round 17: same damping-tail drift as the marquee
   fillDrag={ anchor:[...cell], cur:[...cell] };
   fillLocked=null;
   controls.enabled=false;
@@ -4351,6 +4403,7 @@ function applyWallHeight(){
   updateWallPanel(); updateWallGhost();
 }
 function wallStart(e, cell){
+  freezeOrbit();   // round 17: same damping-tail drift as the marquee
   wallDrag={ anchor:[...cell], cur:[...cell] };
   wallPlacing=true;
   controls.enabled=false;
@@ -4513,6 +4566,54 @@ function buildRoomMatSelect(){
     const o=document.createElement('option'); o.value=ti; o.textContent=ty.name; sel.appendChild(o);
   });
   sel.value=4;   // Brick, the usual wall material
+}
+/* round 17: the room/wall presets also live as visual cards at the top of
+   the Templates tab — same builders, same one-undo-step behaviour, no more
+   digging through the More menu. The bottom panel stays exactly as it was. */
+function updatePresetCards(){
+  const w=ftInInputsToBlocks('#pcRWft','#pcRWin',4,60), d=ftInInputsToBlocks('#pcRDft','#pcRDin',4,60),
+        h=ftInInputsToBlocks('#pcRHft','#pcRHin',8,40);
+  const doorH=Math.min(14,h);
+  const rn=$('#pcRoomNote');
+  if(rn) rn.textContent='Room: '+ftin(w*FT)+' × '+ftin(d*FT)+' × '+ftin(h*FT)
+    +' · wood floor · door gap 3 ft × '+ftin(doorH*FT)+' on the front wall';
+  const len=ftInInputsToBlocks('#pcWLft','#pcWLin',2,200), wh=ftInInputsToBlocks('#pcWHft','#pcWHin',4,40);
+  const gapTxt=brGap==='none'?'no gap': brGap==='door'?'door gap 3 ft × 7 ft':'window gap 4 ft × 3 ft, sill 3 ft';
+  const wn=$('#pcWallNote');
+  if(wn) wn.textContent='Wall: '+ftin(len*FT)+' long × '+ftin(wh*FT)+' high · '+gapTxt;
+  $$('#tplWallCard button[data-pcgap]').forEach(b=>b.classList.toggle('on', b.dataset.pcgap===brGap));
+  $$('#buildRoomPanel button[data-bgap]').forEach(b=>b.classList.toggle('on', b.dataset.bgap===brGap));
+}
+function buildRoomFromCard(){
+  return buildRoomPreset(
+    parseFloat($('#pcRWft').value)||0, parseFloat($('#pcRWin').value)||0,
+    parseFloat($('#pcRDft').value)||0, parseFloat($('#pcRDin').value)||0,
+    parseFloat($('#pcRHft').value)||0, parseFloat($('#pcRHin').value)||0,
+    +$('#pcRMat').value);
+}
+function buildWallFromCard(){
+  return buildWallPreset(
+    parseFloat($('#pcWLft').value)||0, parseFloat($('#pcWLin').value)||0,
+    parseFloat($('#pcWHft').value)||0, parseFloat($('#pcWHin').value)||0,
+    brGap, +$('#pcWMat').value);
+}
+function buildPresetCardMatSelects(){
+  for(const selId of ['#pcRMat','#pcWMat']){
+    const sel=$(selId); if(!sel) continue;
+    TYPES.forEach((ty,ti)=>{ const o=document.createElement('option'); o.value=ti; o.textContent=ty.name; sel.appendChild(o); });
+    sel.value=4;   // Brick, the usual wall material
+  }
+}
+function openPresetCard(which){
+  // the More-menu "Build a room" entry now opens the Templates tab at the
+  // preset cards instead of the old bottom panel — the panel still exists
+  // and still works (presets.open in the test API), it's just not the
+  // front door any more
+  setRailTab('templates', true);
+  const card=$(which==='wall'? '#tplWallCard' : '#tplRoomCard');
+  if(card){ card.scrollIntoView({ block:'nearest' });
+    card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+  return true;
 }
 
 /* ================= tape measure ================= */
@@ -4821,6 +4922,7 @@ function updateBuildDragGhost(){
   $('#roHover').textContent='Release to place the line — or press Esc to cancel';
 }
 function buildDragStart(e, cell){
+  freezeOrbit();   // round 17: same damping-tail drift as the marquee
   buildDrag={ anchor:[...cell], cur:[...cell] };
   controls.enabled=false;
   updateBuildDragGhost();
@@ -5065,7 +5167,61 @@ function updateBoxDrag(e){
   if(now-boxCountAt>60){ boxCountAt=now; boxCountCache=boxCountInRect(x0,y0,x0+w,y0+h); }
   const lab=$('#selBoxLabel');
   lab.textContent=(w>6||h>6)? boxCountCache+' block'+(boxCountCache===1?'':'s') : '';
-  lab.classList.toggle('below', y0<30);   // near the top of the screen the label hangs below the box
+  placeMarqueeLabel(x0,y0,w,h);
+}
+/* round 17: the marquee "N blocks" label used to sit 26px above the box's
+   top edge and could land right on top of a wall dimension label when the
+   box was drawn next to a wall. Now it tries placements in order — above,
+   below, above right-aligned, below right-aligned, then above/below nudged
+   right past the clashing tag — and takes the first one that is fully on
+   screen and at least ~24px clear of every visible dimension label. */
+function marqueeLabelRects(){
+  const rects=[];
+  if(!labelsOn) return rects;
+  const halfH=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  for(const grp of [wallLabelGroup, roomLabelGroup]){
+    if(!grp || !grp.visible) continue;
+    for(const sp of grp.children){
+      if(!sp.isSprite || !sp.visible) continue;
+      const dist=camera.position.distanceTo(sp.position);
+      if(dist<0.01) continue;
+      const v=new THREE.Vector3().copy(sp.position).project(camera);
+      if(v.z>1) continue;   // behind the camera
+      const pxPerUnit=(innerHeight/2)/halfH/dist;
+      const hw=11*pxPerUnit/2, hh=2.75*pxPerUnit/2;
+      const cx=(v.x+1)/2*innerWidth, cy=(1-v.y)/2*innerHeight;
+      rects.push({ left:cx-hw, top:cy-hh, right:cx+hw, bottom:cy+hh });
+    }
+  }
+  return rects;
+}
+function placeMarqueeLabel(x0,y0,w,h){
+  const lab=$('#selBoxLabel');
+  lab.classList.remove('below');
+  if(!lab.textContent){ lab.style.left='0px'; lab.style.top='-26px'; return; }
+  const lw=lab.offsetWidth, lh=lab.offsetHeight;
+  const GAP=24;   // keep this much clear air between the label and any dimension tag
+  const tags=marqueeLabelRects().map(r=>({ left:r.left-GAP, top:r.top-GAP, right:r.right+GAP, bottom:r.bottom+GAP }));
+  const cands=[
+    { left:0, top:-(lh+6) },                 // above, left-aligned (the old spot)
+    { left:0, top:h+4 },                     // below, left-aligned
+    { left:Math.max(0, w-lw), top:-(lh+6) }, // above, right-aligned
+    { left:Math.max(0, w-lw), top:h+4 },     // below, right-aligned
+  ];
+  for(const t of tags){   // above / below, nudged right past the clashing tag
+    const nx=t.right-x0+8;
+    if(nx>0 && nx+lw<=w+160) cands.push({ left:nx, top:-(lh+6) }, { left:nx, top:h+4 });
+  }
+  for(const c of cands){
+    const sx=x0+c.left, sy=y0+c.top;
+    if(sx<4 || sy<4 || sx+lw>innerWidth-4 || sy+lh>innerHeight-4) continue;
+    const clash=tags.some(t=> sx<t.right && sx+lw>t.left && sy<t.bottom && sy+lh>t.top);
+    if(clash) continue;
+    lab.style.left=c.left+'px'; lab.style.top=c.top+'px';
+    return;
+  }
+  // nothing clear — fall back to the old spot (above, or below near the top)
+  lab.style.left='0px'; lab.style.top=(y0<30? h+4 : -(lh+6))+'px';
 }
 function cancelBoxDrag(){
   if(!boxDrag) return;
@@ -5135,6 +5291,7 @@ function bindPointer(){
     // Space = the hand tool (Figma-style): drag pans the view instead of
     // orbiting or starting a tool drag — it wins over Shift+drag building too
     if(e.button===0 && spaceHeld && !(touchMode && e.pointerType==='touch')){
+      freezeOrbit();   // round 17: a leftover orbit tail must not fight the pan
       panDrag={ x:e.clientX, y:e.clientY, moved:0 };
       controls.enabled=false;
       renderer.domElement.style.cursor='grabbing';
@@ -5160,6 +5317,9 @@ function bindPointer(){
     if(e.button===0 && tool==='select' && e.isPrimary!==false){
       const hit=raycastVoxel(e);
       if(!hit || !hit.block){
+        // round 17: freeze any leftover orbit damping tail first — the
+        // camera must not move at all while the marquee is active
+        freezeOrbit();
         boxDrag={ x0:e.clientX, y0:e.clientY, x1:e.clientX, y1:e.clientY, add:!!e.shiftKey };
         controls.enabled=false;
       }
@@ -5287,6 +5447,7 @@ function bindPointer(){
   // untouched, it goes through OrbitControls' touch handlers.
   window.addEventListener('wheel', e=>{
     if(e.target!==renderer.domElement) return;
+    if(boxDrag) return;   // round 17: no zoom while a marquee is active
     e.preventDefault();
     e.stopPropagation();
     if(WALK.active || TOUR.active) return;
@@ -5516,6 +5677,22 @@ function flushOrbitDrift(){
   // OrbitControls keeps applying a decaying rotation after a drag; flush it
   // so a snapped view lands exactly where asked instead of drifting away
   if(controls.enableDamping){ controls.enableDamping=false; controls.update(); controls.enableDamping=true; }
+}
+/* round 17: stop a leftover OrbitControls damping tail DEAD, without moving
+   the camera. controls.enabled=false only blocks NEW pointer input — the
+   render loop's controls.update() keeps applying the decaying sphericalDelta
+   from the orbit you just finished. So a marquee started right after an
+   orbit kept swinging the view ~11 degrees while you selected (measured in
+   probe17_tail.py: azimuth 0.603 -> 0.407 across the drag). Disabling
+   damping and updating once applies + zeroes the delta; restoring the saved
+   position/target first means the camera freezes exactly where it is
+   instead of jumping to where the tail was heading. */
+function freezeOrbit(){
+  if(!controls || !controls.enableDamping) return;
+  const pos=camera.position.clone(), tgt=controls.target.clone();
+  controls.enableDamping=false; controls.update();   // applies + zeroes the leftover delta
+  controls.enableDamping=true;
+  camera.position.copy(pos); controls.target.copy(tgt); camera.lookAt(tgt); controls.update();
 }
 function setCam(name){
   if(WALK.active) return;
@@ -6015,15 +6192,24 @@ function init(){
   $('#btnMaterials').onclick=()=>toggleMaterialsPanel();
   $('#btnCopyMaterials').onclick=()=>copyMaterialsList();
   $('#matClose').onclick=()=>toggleMaterialsPanel(false);
-  $('#btnBuildRoom').onclick=()=>toggleBuildRoomPanel();
+  $('#btnBuildRoom').onclick=()=>openPresetCard('room');
   $('#btnSelectFloor').onclick=()=>selectFloorBlocks();
   $('#buildRoomClose').onclick=()=>toggleBuildRoomPanel(false);
   $('#btnBuildRoomGo').onclick=()=>buildRoomFromPanel();
   $('#btnBuildWallGo').onclick=()=>buildWallFromPanel();
-  $$('#buildRoomPanel button[data-bgap]').forEach(b=>b.onclick=()=>{ brGap=b.dataset.bgap; updateBuildRoomPanel(); });
+  $$('#buildRoomPanel button[data-bgap]').forEach(b=>b.onclick=()=>{ brGap=b.dataset.bgap; updateBuildRoomPanel(); updatePresetCards(); });
   ['#brWft','#brWin','#brDft','#brDin','#brHft','#brHin','#brLft','#brLin','#brWHft','#brWHin'].forEach(s=>$(s).addEventListener('change', updateBuildRoomPanel));
   $('#brMat').addEventListener('change', updateBuildRoomPanel);
   buildRoomMatSelect();
+  // round 17: preset cards in the Templates tab
+  $('#pcRoomGo').onclick=()=>buildRoomFromCard();
+  $('#pcWallGo').onclick=()=>buildWallFromCard();
+  $$('#tplWallCard button[data-pcgap]').forEach(b=>b.onclick=()=>{ brGap=b.dataset.pcgap; updatePresetCards(); updateBuildRoomPanel(); });
+  ['#pcRWft','#pcRWin','#pcRDft','#pcRDin','#pcRHft','#pcRHin','#pcWLft','#pcWLin','#pcWHft','#pcWHin'].forEach(s=>$(s).addEventListener('change', updatePresetCards));
+  $('#pcRMat').addEventListener('change', updatePresetCards);
+  $('#pcWMat').addEventListener('change', updatePresetCards);
+  buildPresetCardMatSelects();
+  updatePresetCards();
   $('#confirmYes').onclick=()=>closeConfirmBox(true);
   $('#confirmNo').onclick=()=>closeConfirmBox(false);
   $('#bpNameSave').onclick=commitBpNameBox;
@@ -6821,6 +7007,19 @@ window.__mc = {
     set(m){ return setView(m); },
     mode(){ return viewMode; },
     rendered(){ let n=0; for(const s of instMeshes) n+=s.mesh.count; return n; },
+    /* round 17: camera state for tests — azimuth/elevation of the view
+       direction, distance, target and position, so a test can prove the
+       camera did (or did not) move across a drag */
+    cam(){ const off=camera.position.clone().sub(controls.target);
+      const sp=new THREE.Spherical().setFromVector3(off);
+      return { az:+sp.theta.toFixed(6), el:+(Math.PI/2-sp.phi).toFixed(6),
+        dist:+sp.radius.toFixed(4),
+        tx:+controls.target.x.toFixed(4), ty:+controls.target.y.toFixed(4), tz:+controls.target.z.toFixed(4),
+        px:+camera.position.x.toFixed(4), py:+camera.position.y.toFixed(4), pz:+camera.position.z.toFixed(4) }; },
+    controlsEnabled(){ return controls.enabled; },
+    /* round 17: reset the camera to a named view (same as the Home / Top /
+       Front / Eye buttons) — lets a test start from a known camera */
+    setCam(name){ setCam(name); return true; },
   },
   cheat:{
     open(){ toggleCheatPanel(true); return true; },
@@ -6833,6 +7032,10 @@ window.__mc = {
     total(){ return wallLabelGroup? [...wallLabelGroup.children].filter(c=>c.isSprite).length : 0; },
     visible(){ if(!wallLabelGroup || !wallLabelGroup.visible) return 0;
       return [...wallLabelGroup.children].filter(c=>c.isSprite && c.visible).length; },
+    /* round 17: on-screen rects of the visible dimension labels, so a test
+       can prove the marquee label never sits on one */
+    screenRects(){ return marqueeLabelRects().map(r=>({ left:Math.round(r.left), top:Math.round(r.top),
+      right:Math.round(r.right), bottom:Math.round(r.bottom) })); },
   },
   sun:{
     hour(){ return sunHour; },
@@ -6991,6 +7194,24 @@ window.__mc = {
     isOpen(){ return $('#materialsPanel').classList.contains('on'); },
     listText(){ return $('#matList').textContent; },
     totalText(){ return $('#matTotal').textContent; },
+  },
+  presetCards:{
+    /* round 17: the Templates-tab cards. open() jumps to a card; room/wall
+       set the card's own fields and build through the card's own buttons. */
+    open(which){ return openPresetCard(which||'room'); },
+    room(wFt,wIn,dFt,dIn,hFt,hIn,mat){
+      $('#pcRWft').value=wFt; $('#pcRWin').value=wIn; $('#pcRDft').value=dFt; $('#pcRDin').value=dIn;
+      $('#pcRHft').value=hFt; $('#pcRHin').value=hIn; if(mat!=null) $('#pcRMat').value=mat;
+      updatePresetCards(); return buildRoomFromCard(); },
+    wall(lenFt,lenIn,hFt,hIn,gap,mat){
+      $('#pcWLft').value=lenFt; $('#pcWLin').value=lenIn; $('#pcWHft').value=hFt; $('#pcWHin').value=hIn;
+      if(gap!=null){ brGap=gap; updatePresetCards(); updateBuildRoomPanel(); }
+      if(mat!=null) $('#pcWMat').value=mat;
+      updatePresetCards(); return buildWallFromCard(); },
+    roomNote(){ return $('#pcRoomNote').textContent; },
+    wallNote(){ return $('#pcWallNote').textContent; },
+    visible(){ return document.querySelector('#tab-templates').classList.contains('on'); },
+    roomCardFlash(){ return document.querySelector('#tplRoomCard').classList.contains('flash'); },
   },
   presets:{
     room(wFt,wIn,dFt,dIn,hFt,hIn,mat){ return buildRoomPreset(wFt,wIn,dFt,dIn,hFt,hIn,mat); },
@@ -7283,7 +7504,7 @@ Object.assign(window.__mc, {
   marquee:{
     active(){ return !!boxDrag; },
     box(){ return boxDrag? { ...boxDrag } : null; },
-    start(x,y,add){ boxDrag={ x0:x, y0:y, x1:x, y1:y, add:!!add }; controls.enabled=false;
+    start(x,y,add){ freezeOrbit(); boxDrag={ x0:x, y0:y, x1:x, y1:y, add:!!add }; controls.enabled=false;
       updateBoxDrag({ clientX:x, clientY:y, isPrimary:true }); return true; },
     dragTo(x,y){ if(!boxDrag) return null; updateBoxDrag({ clientX:x, clientY:y, isPrimary:true });
       return { count:boxCountCache, label:document.querySelector('#selBoxLabel').textContent }; },
