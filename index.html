@@ -816,7 +816,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
 </div>
 
 <div id="blueprintPanel">
-  <div class="pp-title">Blueprints — save a selection, place it again anywhere · saved in this browser only</div>
+  <div class="pp-title">Blueprints — save a selection, place it again anywhere · R rotates the ghost · saved in this browser only</div>
   <div class="pp-row"><button id="btnSaveBlueprint">💾 Save selection as blueprint…</button>
     <span id="bpHint" class="pp-note"></span></div>
   <div class="pp-row"><button id="btnImportBlueprint" title="Open a .json blueprint file exported from this app">⬆ Import blueprint…</button>
@@ -901,7 +901,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
     <b>S · X · M</b><span>Select · Expand · Move</span>
     <b>F · L · T · U</b><span>Fill a box · Line · Tape measure · Flood fill</span>
     <b>Alt + click</b><span>Pick the clicked block's type (in Build)</span>
-    <b>R</b><span>Rotate the selection 90° (or the preset ghost)</span>
+    <b>R</b><span>Rotate the selection 90° (or the preset / paste ghost — R turns a blueprint too)</span>
     <b>Ctrl + C / V</b><span>Copy / paste the selection</span>
     <b>Ctrl + X</b><span>Cut the selection — paste it somewhere else with Ctrl + V</span>
     <b>Ctrl + D</b><span>Duplicate the selection one block over</span>
@@ -1162,19 +1162,20 @@ T.slab = texCanvas((g,S,R)=>{ g.fillStyle='#b5b5b5'; g.fillRect(0,0,S,S);
 T.leaf = texCanvas((g,S,R)=>{ g.fillStyle='#3f7a26'; g.fillRect(0,0,S,S);
   speckle(g,S,R,['#2f5e1c','#4c8f30','#5da33c'],520); }, 19);
 T.shutter = texCanvas((g,S,R)=>{ // Indian rolling shutter: horizontal metallic slats.
-  // round 18: the old low-contrast slats read as a plain grey slab from far
-  // away. Each slat now has a bright top edge, a light face and a 2px
-  // near-black groove, so the stripes survive at distance.
-  for(let y=0;y<S;y+=8){
-    const alt=(((y/8)|0)%2===0);
-    const grad=g.createLinearGradient(0,y,0,y+8);
-    grad.addColorStop(0, alt?'#dcebf5':'#c9dbe8');
-    grad.addColorStop(0.5, alt?'#a9c2d4':'#97b1c4');
-    grad.addColorStop(0.75, alt?'#7e9bb2':'#6e8ba2');
-    grad.addColorStop(1,'#22384c');
-    g.fillStyle=grad; g.fillRect(0,y,S,8);
-    g.fillStyle='rgba(255,255,255,0.7)'; g.fillRect(0,y,S,1);
-    g.fillStyle='#16283a'; g.fillRect(0,y+6,S,2);
+  // round 22: the 8px slats still blurred into a flat grey slab from far
+  // away at a glancing angle. Four bold 16px slats now, with a much
+  // darker groove and a brighter top edge, so the stripes survive at
+  // distance; the close-up look is the same slatted shutter, bolder.
+  for(let y=0;y<S;y+=16){
+    const alt=(((y/16)|0)%2===0);
+    const grad=g.createLinearGradient(0,y,0,y+16);
+    grad.addColorStop(0, alt?'#e8f2fa':'#b9cfe0');
+    grad.addColorStop(0.45, alt?'#aec6d8':'#8aa8bf');
+    grad.addColorStop(0.8, alt?'#6d8aa3':'#57708a');
+    grad.addColorStop(1,'#0e2233');
+    g.fillStyle=grad; g.fillRect(0,y,S,16);
+    g.fillStyle='rgba(255,255,255,0.85)'; g.fillRect(0,y,S,2);
+    g.fillStyle='#0a1a28'; g.fillRect(0,y+13,S,3);
   }
   speckle(g,S,R,['rgba(255,255,255,0.10)','rgba(0,0,0,0.10)'],100); }, 20);
 
@@ -1219,6 +1220,8 @@ let groundVisible = true;
 let selection = new Set();         // block keys
 let clipboard = [];                // [{dx,dy,dz,t,r}] relative to the copied min corner
 let pasteMode = false;             // ghost of the clipboard follows the mouse, click stamps it
+let pasteRot = 0;                  // round 22: R rotates the paste ghost 90° at a time (0-3)
+let pasteIsBlueprint = false;      // round 22: this paste came from a blueprint (for the toast wording)
 let presetMode = null;             // 'stairs' | 'shutter' | null
 let presetRot = 0;                 // 0..3, R rotates the preset ghost
 let expandDrag = null;             // {anchor:[x,y,z], run, mode, len, cells:[]}
@@ -1965,11 +1968,9 @@ function toggleMaterialsPanel(show){
   p.classList.toggle('on',on);
   $('#btnMaterials').classList.toggle('on',on);
   if(on){ updateMaterialsPanel();
-    // round 21: on a phone the side panel is a full-width bottom sheet
-    // (z-index 12) that would paint over this panel (z-index 11) —
-    // the panel would be open but invisible. Close the sheet while
-    // the panel is open; a rail tap brings it back.
-    if(window.innerWidth<=820) setRailTab(null);
+    // round 22: the centred-panel watcher closes the phone sheet while
+    // any panel is open and brings it back when the panel closes, so
+    // no toggle has to do it by hand any more.
     $('#presetPanel').classList.remove('on'); $('#fillPanel').classList.remove('on');
 $('#blueprintPanel').classList.remove('on');
     $('#mirrorPanel').classList.remove('on'); $('#replacePanel').classList.remove('on');
@@ -1981,25 +1982,103 @@ $('#blueprintPanel').classList.remove('on');
   }
   fixReadoutOverlap();
 }
-/* round 21: the open Materials panel used to cover the status readout's
-   right edge — both sit at the bottom of the screen, and the panel is
-   centred on the visible canvas (max-width 640px) so its left edge
-   reaches well past the readout's right edge; on a phone the panel is
-   a full-width bottom sheet sitting directly over the readout. While
-   the panel is open and would cover the readout, the readout lifts to
-   sit just above the panel; otherwise it stays where the CSS puts it.
-   Measured live every time, so panel height, phone width and a
-   collapsed side panel are all handled. */
-function fixReadoutOverlap(){
-  const ro=$('#readout'), mat=$('#materialsPanel');
-  if(!ro||!mat) return;
-  const open=mat.classList.contains('on') && getComputedStyle(mat).display!=='none';
-  if(!open){ if(ro.style.bottom) ro.style.bottom=''; return; }
-  ro.style.bottom='';   // measure the readout where it sits by default
-  const rr=ro.getBoundingClientRect(), mr=mat.getBoundingClientRect();
-  const hit=!(mr.right<=rr.left||mr.left>=rr.right||mr.bottom<=rr.top||mr.top>=rr.bottom);
-  ro.style.bottom = hit ? Math.round(innerHeight-mr.top+10)+'px' : '';
+/* round 22: EVERY bottom-centre panel can cover the status readout, not
+   just Materials — Blueprints, Mirror, Replace, Build-a-room, Fill, Wall,
+   the stair presets, the cheat sheet, warnings and the little inline
+   boxes all sit in the same bottom-centre spot (and on a phone they are
+   full-width bottom sheets sitting directly over the readout). While ANY
+   of them is open and would cover the readout, the readout lifts to sit
+   just above the highest one; otherwise it stays where the CSS puts it.
+   Measured live every time, so panel height, phone width and a collapsed
+   side panel are all handled. A MutationObserver + ResizeObserver call
+   this whenever a panel opens, closes or changes height, so no toggle
+   has to remember to. */
+const CENTRE_PANEL_IDS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','fillPanel','wallPanel','materialsPanel','buildRoomPanel','renameBox','confirmBox','bpNameBox'];
+function centrePanelOpen(){
+  return CENTRE_PANEL_IDS.some(id=>{ const e=document.getElementById(id);
+    return e && e.classList.contains('on') && getComputedStyle(e).display!=='none'; });
 }
+function fixReadoutOverlap(){
+  const ro=$('#readout'); if(!ro) return;
+  const open=CENTRE_PANEL_IDS.map(id=>document.getElementById(id))
+    .filter(e=>e && e.classList.contains('on') && getComputedStyle(e).display!=='none');
+  if(!open.length){ if(ro.style.bottom) ro.style.bottom=''; return; }
+  ro.style.bottom='';   // measure the readout where it sits by default
+  const rr=ro.getBoundingClientRect();
+  let top=null;
+  for(const p of open){
+    const mr=p.getBoundingClientRect();
+    const hit=!(mr.right<=rr.left||mr.left>=rr.right||mr.bottom<=rr.top||mr.top>=rr.bottom);
+    if(hit && (top===null || mr.top<top)) top=mr.top;
+  }
+  ro.style.bottom = top===null ? '' : Math.round(innerHeight-top+10)+'px';
+}
+/* round 22: on a phone the side panel is a bottom sheet (z-index 12) that
+   would paint over any centred panel (z-index 11) — the panel would be
+   open but invisible. While a centred panel is open the sheet steps
+   aside; when the last one closes, the sheet comes back exactly as it
+   was (same tab, same peek/expanded state), with no extra tap. */
+let sheetBeforePanel=null;   // {tab, peek} remembered while a panel is open on a phone
+function noteSheetBeforePanel(){
+  if(window.innerWidth>820 || sheetBeforePanel) return;
+  if(!railTab) return;   // the sheet is already closed — nothing to bring back
+  sheetBeforePanel={ tab:railTab, peek:sheetPeek };
+  setRailTab(null);
+}
+function restoreSheetAfterPanel(){
+  if(!sheetBeforePanel) return;
+  const sv=sheetBeforePanel; sheetBeforePanel=null;
+  if(window.innerWidth<=820){ setRailTab(sv.tab); setSheetPeek(sv.peek); }
+}
+/* round 22: one big panel at a time in the bottom-centre spot — the
+   toggles each close SOME of the others, but not all of them, so
+   Materials + Blueprints could both stay open with one bleeding through
+   the other (both are translucent). The watcher is the backstop: when a
+   big panel opens, every other big panel closes. The little inline
+   dialogs (rename, confirm, name-a-blueprint) are NOT big panels —
+   they legitimately sit over a panel, e.g. the confirm box over the
+   Blueprints list, so they are left alone. */
+const BIG_CENTRE_PANELS=['presetPanel','blueprintPanel','mirrorPanel','replacePanel','cheatPanel','warnPanel','fillPanel','wallPanel','materialsPanel','buildRoomPanel'];
+let lastBigPanelOpened=null;
+function enforceOneBigPanel(){
+  const open=BIG_CENTRE_PANELS.map(id=>document.getElementById(id))
+    .filter(e=>e && e.classList.contains('on') && getComputedStyle(e).display!=='none');
+  if(open.length<=1) return;
+  const keep=lastBigPanelOpened && open.some(e=>e.id===lastBigPanelOpened)
+    ? lastBigPanelOpened : open[open.length-1].id;
+  for(const e of open) if(e.id!==keep) e.classList.remove('on');
+}
+function onCentrePanelChange(){
+  enforceOneBigPanel();
+  fixReadoutOverlap();
+  if(window.innerWidth>820) return;
+  if(centrePanelOpen()) noteSheetBeforePanel();
+  else restoreSheetAfterPanel();
+}
+(function watchCentrePanels(){
+  const els=CENTRE_PANEL_IDS.map(id=>document.getElementById(id)).filter(Boolean);
+  if(!els.length || !window.MutationObserver) return;
+  let queued=false;
+  const kick=(newly)=>{
+    if(newly) lastBigPanelOpened=newly;
+    if(queued) return; queued=true;
+    requestAnimationFrame(()=>{ queued=false; onCentrePanelChange(); }); };
+  const mo=new MutationObserver(recs=>{
+    let newly=null;
+    for(const r of recs){
+      const wasOn=r.oldValue && r.oldValue.split(/\s+/).includes('on');
+      const isOn=r.target.classList.contains('on');
+      if(isOn && !wasOn && BIG_CENTRE_PANELS.includes(r.target.id)) newly=r.target.id;
+    }
+    kick(newly);
+  });
+  for(const el of els) mo.observe(el,{ attributes:true, attributeFilter:['class'], attributeOldValue:true });
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(()=>kick(null));
+    for(const el of els) ro.observe(el);
+  }
+  onCentrePanelChange();
+})();
 function copyMaterialsList(){
   const text=materialText();
   const done=()=>toast('Materials list copied');
@@ -3657,9 +3736,10 @@ function updateHover(e){
     showMultiGhost(cells);
     ghost.visible=false;
     const tag=$('#hoverTag');
-    tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):currentPresetLabel())+'</b> · click to place';
+    tag.innerHTML='<b>'+(pasteMode?'Paste '+clipboard.length+' block'+(clipboard.length>1?'s':''):currentPresetLabel())+'</b> · click to place'
+      +(pasteMode && pasteRot? ' · rotated '+(pasteRot*90)+'°' : '');
     placeHoverTag(e);
-    $('#roHover').innerHTML = pasteMode ? 'Click to paste <b>'+cells.length+'</b> blocks here — Esc to stop'
+    $('#roHover').innerHTML = pasteMode ? 'Click to paste <b>'+cells.length+'</b> blocks here — R rotates, Esc to stop'
       : 'Click to place <b>'+currentPresetLabel()+'</b> ('+cells.length+' blocks) — R rotates, Esc stops';
     return;
   }
@@ -3848,13 +3928,28 @@ function copySelection(){
 }
 function pasteCells(origin){
   const cells=[];
-  for(const c of clipboard){
-    const x=origin[0]+c.dx, y=origin[1]+c.dy, z=origin[2]+c.dz;
+  // round 22: rotate the clipboard by pasteRot*90° about its corner, then
+  // re-anchor so the smallest dx/dz is 0 — the ghost stays under the
+  // cursor's corner at every rotation, and stair steps turn with it
+  const rotated=clipboard.map(c=>rotOffset(c, pasteRot));
+  let mx=0, mz=0;
+  for(const c of rotated){ mx=Math.min(mx,c.dx); mz=Math.min(mz,c.dz); }
+  for(const c of rotated){
+    const x=origin[0]+c.dx-mx, y=origin[1]+c.dy, z=origin[2]+c.dz-mz;
     if(getBlock(x,y,z)) continue;            // never overwrite
     if(!inBounds(x,y,z)) continue;
     cells.push({ x,y,z, t:c.t, r:c.r });
   }
   return cells;
+}
+function rotatePaste(){
+  // round 22: R turns the paste ghost (blueprint or plain copy) 90°
+  // clockwise — ghost and placed cells both rotate, one undo step a stamp
+  if(!pasteMode) return false;
+  pasteRot=(pasteRot+1)%4;
+  toast((pasteIsBlueprint?'Blueprint':'Paste')+' rotated '+(pasteRot*90)+'°');
+  refreshHover();   // the ghost under a still pointer must turn at once
+  return pasteRot;
 }
 let pasteLabel=null;   // round 15: a blueprint paste is labelled as one
 function pasteAt(origin){
@@ -3866,8 +3961,10 @@ function pasteAt(origin){
 function setPasteMode(on){
   if(on && !clipboard.length){ toast('Nothing copied yet — select blocks and press Ctrl+C'); return; }
   pasteMode = !!on;
+  if(pasteMode) pasteRot=0;   // round 22: every paste starts unrotated
+  if(!pasteMode) pasteIsBlueprint=false;
   $('#btnPaste').classList.toggle('on', pasteMode);
-  if(pasteMode) toast('Paste mode — click to place, Esc to stop');
+  if(pasteMode) toast('Paste mode — click to place, R rotates, Esc to stop');
   if(!pasteMode){ hideMultiGhost(); $('#hoverTag').style.display='none';
     $('#roHover').textContent='Hover a block to see its spot — 1 block = 6 in'; }
 }
@@ -4135,6 +4232,7 @@ function placeBlueprint(name){
   if(!bp||!bp.cells.length) return false;
   clipboard=bp.cells.map(c=>({ ...c }));
   pasteLabel='Placed blueprint "'+name+'"';
+  pasteIsBlueprint=true;   // round 22: R rotates a blueprint, toast says so
   setPasteMode(true);
   return true;
 }
@@ -6369,6 +6467,7 @@ function bindKeys(){
       if(k==='KeyW' && !e.repeat){ setTool('wall'); return; }
       if(k==='KeyR'){
         if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); }
+        else if(pasteMode){ rotatePaste(); }
         else rotateSelection();
       }
       if(k>='Digit1'&&k<='Digit8') selectHotbarSlot(+k.slice(5)-1);   // hotbar slots: Floor · Wall · Window · Door · Roof · Stairs · Tree · Eraser (round 10)
@@ -6453,7 +6552,7 @@ function init(){
   new MutationObserver(()=>updateSelPanel()).observe(document.body,{attributes:true,attributeFilter:['class'],subtree:true});
   $('#btnCopy').onclick=()=>copySelection();
   $('#btnPaste').onclick=()=>setPasteMode(!pasteMode);
-  $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else rotateSelection(); };
+  $('#btnRotate').onclick=()=>{ if(presetMode){ presetRot=(presetRot+1)%4; toast('Preset rotated 90°'); } else if(pasteMode){ rotatePaste(); } else rotateSelection(); };
   $('#btnPresets').onclick=()=>togglePresetPanel();
   $('#btnTemplates').onclick=()=>setRailTab('templates', true);   // More-menu entry always opens Templates (round 14)
   $('#btnBlueprints').onclick=()=>toggleBlueprintPanel();
@@ -7572,6 +7671,20 @@ window.__mc = {
     fillOpacity(){ return multiGhostMat.opacity; },
     hasOutline(){ return !!(multiGhostEdges && multiGhostEdges.children.length); },
     cells(){ return multiGhost.children.length; },
+  },
+  paste:{   // round 22: rotation state + a deterministic rotate/stamp
+    on(){ return pasteMode; },
+    set(on){ setPasteMode(!!on); return pasteMode; },
+    rot(){ return pasteRot; },
+    rotate(){ return rotatePaste(); },
+    isBlueprint(){ return pasteIsBlueprint; },
+    cellsAt(x,y,z){ return pasteCells([x,y,z]); },
+    stamp(x,y,z){ return pasteAt([x,y,z]); },
+  },
+  panels:{   // round 22: open/close every bottom-centre panel, for tests
+    open(id){ const f={ materials:()=>toggleMaterialsPanel(true), blueprints:()=>toggleBlueprintPanel(true), mirror:()=>toggleMirrorPanel(true), replace:()=>toggleReplacePanel(true), buildRoom:()=>toggleBuildRoomPanel(true), preset:()=>togglePresetPanel(true), cheat:()=>toggleCheatPanel(true), warn:()=>toggleWarnPanel(true), fill:()=>setTool('fill'), wall:()=>setTool('wall') }[id]; if(!f) return false; f(); return true; },
+    close(id){ const f={ materials:()=>toggleMaterialsPanel(false), blueprints:()=>toggleBlueprintPanel(false), mirror:()=>toggleMirrorPanel(false), replace:()=>toggleReplacePanel(false), buildRoom:()=>toggleBuildRoomPanel(false), preset:()=>togglePresetPanel(false), cheat:()=>toggleCheatPanel(false), warn:()=>toggleWarnPanel(false), fill:()=>setTool('build'), wall:()=>setTool('build') }[id]; if(!f) return false; f(); return true; },
+    isOpen(id){ const map={ blueprints:'blueprintPanel' }; const el=document.getElementById(map[id]||(id+'Panel')); return !!el && el.classList.contains('on'); },
   },
   photo(){ return savePicture(); },
   presetNames(){ return ['straight','L','U','shutter']; },
