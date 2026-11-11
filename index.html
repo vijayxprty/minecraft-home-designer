@@ -517,6 +517,9 @@ body.panel-collapsed #sidePanel{ display:none; }
 .ss-primary:hover{ background:#276a2b; }
 .ss-sec{ font-size:12px; font-weight:800; color:#666; text-transform:uppercase; letter-spacing:.4px; margin:12px 0 8px; text-align:left; }
 #ssProjects{ display:flex; flex-direction:column; gap:8px; text-align:left; }
+.ss-tools{ display:flex; gap:8px; margin:0 0 8px; text-align:left; }
+.ss-tools input{ flex:1; min-width:0; padding:9px 10px; border:3px solid #1e4d16; border-radius:8px; font:inherit; font-weight:700; font-size:14px; background:#fff; color:#222; }
+.ss-tools select{ padding:9px 8px; border:3px solid #1e4d16; border-radius:8px; font:inherit; font-weight:700; font-size:14px; background:#fff; color:#222; cursor:pointer; }
 /* ---------- touch mode: bigger shell targets ---------- */
 body.touch #topbar button{ font-size:14px; padding:6px 9px; }
 body.touch .el-card{ padding:14px 6px; }
@@ -699,6 +702,8 @@ body.dark .ss-home h2{ color:#f0f0f0; }
 body.dark .ss-home p{ color:#bbb; }
 body.dark .ss-home .ss-size{ color:#9be36d; }
 body.dark .ss-sec{ color:#aaa; }
+body.dark .ss-tools input, body.dark .ss-tools select{ background:#2c2c2c; color:#f0f0f0; border-color:#555; }
+body.dark .ss-tools input::placeholder{ color:#999; }
 </style>
 <script type="importmap">
 {"imports":{
@@ -1088,6 +1093,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <b>Shift + drag</b><span>Draw a straight line of blocks (Build tool)</span>
     <b>Drag (Select)</b><span>Box-select a whole area on the floor you are on — Shift adds to the selection, Esc cancels</span>
     <b>0</b><span>Fit the whole build in view (or the empty plot when nothing is built)</span>
+    <b>O</b><span>Turntable — slowly spin the camera around the build (drag to take over)</span>
     <b>↔ Flip</b><span>Flip the selection left-right or front-back — buttons when blocks are selected</span>
     <b>🧱 Materials</b><span>What the build is made of — counts per material (More menu)</span>
     <b>🏠 Build a room</b><span>Type a size in feet and inches, build a room or a wall (More menu)</span>
@@ -1228,6 +1234,14 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <button id="ssTheme" class="ss-theme" title="Switch between light and dark">🌙 Dark theme</button>
     <div class="ss-sub">Pick a build to continue, or start something new. No sign-up — builds are saved on this device.</div>
     <button id="ssNewBuild" class="ss-primary">＋ New build</button>
+    <div class="ss-tools" id="ssTools">
+      <input id="ssSearch" type="search" placeholder="🔍 Search your builds…" aria-label="Search your builds" autocomplete="off">
+      <select id="ssSort" aria-label="Sort your builds">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="name">Name A–Z</option>
+      </select>
+    </div>
     <div id="ssProjects"></div>
     <div class="ss-sec">Start from a template</div>
     <div class="ss-homes" id="ssHomes"></div>
@@ -4586,6 +4600,20 @@ function placeBlueprint(name){
   setPasteMode(true);
   return true;
 }
+/* round 28: duplicate a blueprint — the copy gets " (copy)" (numbered
+   when needed) and identical cells, so it places exactly like the
+   original. */
+function duplicateBlueprint(name){
+  const bps=loadBlueprints();
+  const bp=bps.find(b=>b.name===name);
+  if(!bp) return null;
+  let copyName=name+' (copy)', n=2;
+  while(bps.some(b=>b.name===copyName)){ copyName=name+' (copy) ('+(n++)+')'; }
+  const copy={ name:copyName, cells:bp.cells.map(c=>({ ...c })), w:bp.w, d:bp.d, h:bp.h };
+  bps.push(copy); saveBlueprints(bps); renderBlueprintPanel();
+  toast('Duplicated "'+name+'" as "'+copyName+'"');
+  return copyName;
+}
 function deleteBlueprint(name){
   saveBlueprints(loadBlueprints().filter(b=>b.name!==name));
   renderBlueprintPanel();
@@ -4704,10 +4732,14 @@ function renderBlueprintPanel(){
     const rn=document.createElement('button'); rn.textContent='✎';
     rn.title='Rename this blueprint';
     rn.onclick=()=>openBpRenameBox(bp.name);
+    // round 28: duplicate — same cells, " (copy)" name
+    const dup=document.createElement('button'); dup.textContent='⧉';
+    dup.title='Duplicate this blueprint';
+    dup.onclick=()=>duplicateBlueprint(bp.name);
     const del=document.createElement('button'); del.textContent='✕';
     del.title='Delete this blueprint';
     del.onclick=()=>{ askConfirm('Delete blueprint "'+bp.name+'"?', ok=>{ if(ok) deleteBlueprint(bp.name); }); };
-    row.append(nm,ds,sz,place,exp,rn,del); list.appendChild(row);
+    row.append(nm,ds,sz,place,exp,rn,dup,del); list.appendChild(row);
   }
 }
 function toggleBlueprintPanel(show){
@@ -6407,8 +6439,21 @@ function updateSelPanel(){
 /* ================= start screen: pick a house, never an empty grid (round 10) ================= */
 const START_IDS=['cottage','flat','house'];
 const START_ICONS={ cottage:'🏠', flat:'🏡', house:'🏘️' };
+/* ---- round 28: search + sort on the home screen ---- */
+/* The search text is session-only (cleared on reload); the sort choice
+   is remembered, like the theme. Template cards are never filtered —
+   only the user's own builds. */
+const HOME_SORT_KEY='home-designer-minecraft-home-sort-v1';
+let homeSearch='', homeSort='newest';
+try{ const hs=localStorage.getItem(HOME_SORT_KEY); if(hs==='oldest'||hs==='name') homeSort=hs; }catch(e){}
 function renderStartScreen(){
   renderHomeProjects();   // Figma-style: your saved builds first (round 13)
+  // keep the search box + sort control in sync with the state, and hide
+  // them entirely when there are no saved builds to search through
+  const tools=$('#ssTools');
+  if(tools){ tools.style.display=loadProjects().length? 'flex':'none';
+    const si=$('#ssSearch'); if(si) si.value=homeSearch;
+    const so=$('#ssSort'); if(so) so.value=homeSort; }
   const wrap=$('#ssHomes'); wrap.innerHTML='';
   for(const id of START_IDS){
     const t=TEMPLATES.find(t=>t.id===id); if(!t) continue;
@@ -6857,6 +6902,10 @@ function bindKeys(){
       }
       if(k>='Digit1'&&k<='Digit8') selectHotbarSlot(+k.slice(5)-1);   // hotbar slots: Floor · Wall · Window · Door · Roof · Stairs · Tree · Eraser (round 10)
       if(k==='Digit0') zoomFit();   // round 16: fit the build in view
+      // round 28: O toggles the turntable (KeyO was unused). Not on the
+      // home screen — the turntable spins the editor camera, which is
+      // behind the start screen there.
+      if(k==='KeyO' && !$('#startScreen').classList.contains('on')){ TURN.active?turntableStop():turntableStart(); return; }
     }
     if(k==='Space' && !WALK.active && !TOUR.active) setHand(true);
     window.__keys.add(k);
@@ -7031,6 +7080,13 @@ function init(){
   $('#elSearch').addEventListener('input', filterElementCards);
   $('#btnNewBuild2').onclick=()=>createNewProject();
   $('#ssNewBuild').onclick=()=>createNewProject();
+  // round 28: typing filters the list live; the global keydown handler
+  // already returns early for INPUT targets, so tool keys never fire
+  // while the user is typing in the search box
+  $('#ssSearch').addEventListener('input', e=>{ homeSearch=e.target.value; renderHomeProjects(); });
+  $('#ssSort').addEventListener('change', e=>{ homeSort=e.target.value;
+    try{ localStorage.setItem(HOME_SORT_KEY, homeSort); }catch(err){}
+    renderHomeProjects(); });
   $('#btnHelpShortcuts').onclick=()=>toggleCheatPanel(true);
   $('#btnProjName').onclick=()=>startProjRename();
   $('#projNameInput').addEventListener('keydown', e=>{
@@ -7366,8 +7422,19 @@ function startRowRename(row, p){
 }
 function renderHomeProjects(){
   const wrap=$('#ssProjects'); if(!wrap) return;
-  const list=loadProjects().slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  let list=loadProjects().slice();
+  // round 28: filter by the search box, then sort by the sort control
+  const q=(homeSearch||'').trim().toLowerCase();
+  if(q) list=list.filter(p=>p.name.toLowerCase().includes(q));
+  if(homeSort==='oldest') list.sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0));
+  else if(homeSort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else list.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   wrap.innerHTML='';
+  if(!list.length && q){
+    const d=document.createElement('div'); d.className='tpl-empty';
+    d.textContent='No builds match "'+homeSearch.trim()+'" — try a different search.';
+    wrap.appendChild(d); return;
+  }
   for(const p of list){
     const row=document.createElement('div'); row.className='proj-row'+(p.id===currentProjectId?' current':'');
     const info=document.createElement('div'); info.className='pr-info';
@@ -8417,6 +8484,8 @@ window.__mc = {
     place(name){ return placeBlueprint(name); },
     delete(name){ return deleteBlueprint(name); },
     rename(oldName,newName){ return renameBlueprint(oldName,newName); },
+    duplicate(name){ return duplicateBlueprint(name); },
+    cells(name){ const b=loadBlueprints().find(x=>x.name===name); return b? b.cells.map(c=>({ ...c })) : null; },
     openRename(name){ return openBpRenameBox(name); },
     count(){ return loadBlueprints().length; },
     exportJson(name){ return exportBlueprint(name); },
@@ -8670,6 +8739,15 @@ Object.assign(window.__mc, {
     go(){ goHome(); return true; },   // round 24: back to the home screen from the editor
     projects(){ return loadProjects().map(p=>p.name); },
     open(id){ return openProject(id); },
+    // round 28: home search + sort helpers
+    rowNames(){ return [...document.querySelectorAll('#ssProjects .proj-row .pr-name')].map(e=>e.textContent); },
+    search(q){ const s2=$('#ssSearch'); s2.value=q; s2.dispatchEvent(new Event('input'));
+      return [...document.querySelectorAll('#ssProjects .proj-row .pr-name')].map(e=>e.textContent); },
+    searchValue(){ return $('#ssSearch').value; },
+    sort(v){ const s2=$('#ssSort'); s2.value=v; s2.dispatchEvent(new Event('change')); return $('#ssSort').value; },
+    sortValue(){ return $('#ssSort').value; },
+    toolsVisible(){ const t=$('#ssTools'); return !!t && getComputedStyle(t).display!=='none'; },
+    emptyText(){ const e=document.querySelector('#ssProjects .tpl-empty'); return e? e.textContent : ''; },
   },
   dragGhost:{
     cells(id,x,y,z){ return elementCells(id,x,y,z); },
