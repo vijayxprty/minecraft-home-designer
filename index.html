@@ -444,7 +444,7 @@ body.panel-collapsed #sidePanel{ display:none; }
 .pr-thumb{ width:44px; height:34px; flex:none; border-radius:8px; overflow:hidden; background:#e8f5e9;
   display:flex; align-items:center; justify-content:center; font-size:22px; }
 .pr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-.layer-row{ display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #d8d8d8;
+.layer-row{ display:flex; align-items:center; gap:6px; background:#fff; border:1px solid #d8d8d8;
   border-radius:8px; padding:9px 10px; margin-bottom:6px; cursor:pointer; color:#1a1a1a; }
 .layer-row:hover{ border-color:#2e7d32; }
 .layer-row.on{ border-color:#2e7d32; background:#e8f5e9; }
@@ -454,6 +454,11 @@ body.panel-collapsed #sidePanel{ display:none; }
 .layer-row .ly-dup{ background:none; border:0; font-size:15px; padding:2px 4px; cursor:pointer; color:#2e7d32; line-height:1; }
 .layer-row .ly-dup:hover{ background:#e8f5e9; border-radius:4px; }
 .layer-row .ly-dup:disabled{ opacity:.35; cursor:default; background:none; }
+.layer-row .ly-btn{ background:none; border:0; font-size:14px; padding:2px 3px; cursor:pointer; color:#555; line-height:1; }
+.layer-row .ly-btn:hover{ background:#eee; border-radius:4px; }
+.layer-row .ly-btn:disabled{ opacity:.3; cursor:default; background:none; }
+.layer-row .ly-clear{ color:#c62828; }
+.layer-row .ly-clear:hover{ background:#fdecea; }
 .layer-row.hidden .ly-name{ color:#999; }
 /* ---------- tools tab ---------- */
 #toolsList{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
@@ -648,6 +653,10 @@ body.dark .layer-row .ly-name{ color:#f0f0f0; }
 body.dark .layer-row .ly-count{ color:#aaa; }
 body.dark .layer-row .ly-dup{ color:#8fd694; }
 body.dark .layer-row .ly-dup:hover{ background:#1b3a1e; }
+body.dark .layer-row .ly-btn{ color:#ccc; }
+body.dark .layer-row .ly-btn:hover{ background:#333; }
+body.dark .layer-row .ly-clear{ color:#ef9a9a; }
+body.dark .layer-row .ly-clear:hover{ background:#3a1d1d; }
 body.dark .layer-row.hidden .ly-name{ color:#777; }
 body.dark #toolsList button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
 body.dark #toolsList button:hover{ background:#383838; }
@@ -2678,22 +2687,59 @@ function closeConfirmBox(answer){
   if(cb) cb(!!answer);
   return true;
 }
+/* round 27: the blueprint name box also renames — openBpRenameBox sets
+   bpRenameTarget, and the Save button then renames instead of saving a
+   new blueprint. Enter saves, Esc cancels, exactly like the save flow. */
+let bpRenameTarget=null;
 function openBpNameBox(){
   if(!selection.size){ toast('Select some blocks first — then save a blueprint'); return false; }
+  bpRenameTarget=null;
+  $('#bpNameBox .pp-title').textContent='Name this blueprint';
   $('#bpNameInput').value='Blueprint '+(loadBlueprints().length+1);
   $('#bpNameBox').classList.add('on');
   const inp=$('#bpNameInput');
   setTimeout(()=>{ inp.focus(); inp.select(); }, 0);
   return true;
 }
+function openBpRenameBox(name){
+  bpRenameTarget=name;
+  $('#bpNameBox .pp-title').textContent='Rename blueprint';
+  $('#bpNameInput').value=name;
+  $('#bpNameBox').classList.add('on');
+  const inp=$('#bpNameInput');
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 0);
+  return true;
+}
 function closeBpNameBox(){
+  bpRenameTarget=null;
   $('#bpNameBox').classList.remove('on');
   return true;
 }
 function commitBpNameBox(){
+  if(bpRenameTarget){
+    const old=bpRenameTarget, name=$('#bpNameInput').value.trim();
+    if(!name){ toast('Give the blueprint a name'); return false; }
+    if(name!==old && loadBlueprints().some(b=>b.name===name)){
+      toast('There is already a blueprint called "'+name+'"'); return false; }
+    bpRenameTarget=null; closeBpNameBox();
+    renameBlueprint(old, name);
+    return true;
+  }
   const name=$('#bpNameInput').value;
   closeBpNameBox();
   if(!saveSelectionAsBlueprint(name)) toast('Select some blocks first — then save a blueprint');
+  return true;
+}
+function renameBlueprint(oldName, newName){
+  newName=(newName||'').trim();
+  if(!newName){ toast('Give the blueprint a name'); return false; }
+  const list=loadBlueprints();
+  const bp=list.find(b=>b.name===oldName);
+  if(!bp){ toast('That blueprint is gone'); return false; }
+  if(newName!==oldName && list.some(b=>b.name===newName)){
+    toast('There is already a blueprint called "'+newName+'"'); return false; }
+  bp.name=newName; saveBlueprints(list); renderBlueprintPanel();
+  toast('Renamed to "'+newName+'"');
   return true;
 }
 /* click on a room label (raycast the sprites) — null when nothing hit */
@@ -4655,10 +4701,13 @@ function renderBlueprintPanel(){
     const exp=document.createElement('button'); exp.textContent='Export';
     exp.title='Download this blueprint as a .json file';
     exp.onclick=()=>exportBlueprint(bp.name);
+    const rn=document.createElement('button'); rn.textContent='✎';
+    rn.title='Rename this blueprint';
+    rn.onclick=()=>openBpRenameBox(bp.name);
     const del=document.createElement('button'); del.textContent='✕';
     del.title='Delete this blueprint';
     del.onclick=()=>{ askConfirm('Delete blueprint "'+bp.name+'"?', ok=>{ if(ok) deleteBlueprint(bp.name); }); };
-    row.append(nm,ds,sz,place,exp,del); list.appendChild(row);
+    row.append(nm,ds,sz,place,exp,rn,del); list.appendChild(row);
   }
 }
 function toggleBlueprintPanel(show){
@@ -7448,7 +7497,16 @@ function buildLayersPanel(){
     const dp=document.createElement('button'); dp.className='ly-dup'; dp.textContent='⧉';
     dp.title='Duplicate this floor onto the floor above';
     dp.onclick=e=>{ e.stopPropagation(); duplicateFloor(i); };
-    row.append(eye,nm,ct,dp);
+    const up=document.createElement('button'); up.className='ly-btn ly-up'; up.textContent='↑';
+    up.title='Move this floor up one floor';
+    up.onclick=e=>{ e.stopPropagation(); moveFloor(i, +1); };
+    const dn=document.createElement('button'); dn.className='ly-btn ly-down'; dn.textContent='↓';
+    dn.title='Move this floor down one floor';
+    dn.onclick=e=>{ e.stopPropagation(); moveFloor(i, -1); };
+    const cl=document.createElement('button'); cl.className='ly-btn ly-clear'; cl.textContent='✕';
+    cl.title='Clear this floor — remove all its blocks';
+    cl.onclick=e=>{ e.stopPropagation(); askClearFloor(i); };
+    row.append(eye,nm,ct,dp,up,dn,cl);
     row.onclick=()=>setFloor(i,true);
     list.appendChild(row);
   }
@@ -7472,6 +7530,24 @@ function updateLayersPanel(){
           : 'The floor above is the Rooftop — a copy would land on the roof')
         : counts[i]===0 ? 'This floor is empty — nothing to copy'
         : 'Duplicate the '+FLOORS[i].name+' floor onto the '+dst.name+' floor';
+    }
+    const up=row.querySelector('.ly-up'), dn=row.querySelector('.ly-down'), cl=row.querySelector('.ly-clear');
+    if(up){
+      const above=FLOORS[i+1], below=FLOORS[i-1];
+      const upBlocked=!above || above.name==='Rooftop';
+      up.disabled = upBlocked || counts[i]===0;
+      up.title = upBlocked ? (i===FLOORS.length-1 ? 'Nothing above the Rooftop to move onto'
+          : 'The floor above is the Rooftop — a move would land on the roof')
+        : counts[i]===0 ? 'This floor is empty — nothing to move'
+        : 'Move the '+FLOORS[i].name+' floor up to the '+above.name+' floor';
+      const downBlocked=!below;
+      dn.disabled = downBlocked || counts[i]===0;
+      dn.title = downBlocked ? 'Nothing below the Basement to move onto'
+        : counts[i]===0 ? 'This floor is empty — nothing to move'
+        : 'Move the '+FLOORS[i].name+' floor down to the '+below.name+' floor';
+      cl.disabled = counts[i]===0;
+      cl.title = counts[i]===0 ? 'This floor is already empty'
+        : 'Clear the '+FLOORS[i].name+' floor — remove all '+counts[i].toLocaleString('en-IN')+' blocks';
     }
   });
   const vn=$('#btnViewNormal'), vi=$('#btnViewIsolate'), vd=$('#btnViewDoll');
@@ -7519,6 +7595,74 @@ function duplicateFloor(i){
   const pb=n=>n.toLocaleString('en-IN')+' block'+(n>1?'s':'');
   toast('Duplicated '+src.name+' floor — '+pb(placed)+' placed on the '+dst.name+' floor'+(skipped? ', '+pb(skipped)+' skipped (already there)':''));
   return placed;
+}
+
+/* ================= move a whole floor up / down (round 27) ================= */
+/* shifts every block on floor i one floor up (+1) or down (-1), skipping
+   cells that are already occupied or outside the target floor. The source
+   cells are erased and the target cells placed in ONE undo step, via
+   applyBatch — removals first, then placements (the bands never overlap,
+   so the order is only belt-and-braces). Blocks that were selected stay
+   selected at their new spot. */
+function moveFloor(i, dir){
+  const src=FLOORS[i], dst=FLOORS[i+dir];
+  if(!dst || (dir>0 && dst.name==='Rooftop')){
+    toast(dir>0 ? (i>=FLOORS.length-1 ? 'Nothing above the Rooftop to move onto'
+        : 'The floor above is the Rooftop — a move would land on the roof')
+      : 'Nothing below the Basement to move onto');
+    return 0;
+  }
+  const list=[]; const remap=new Map(); let skipped=0, total=0;
+  for(const [k,v] of blocks){
+    const p=parseKey(k);
+    if(p[1]>=src.base && p[1]<src.base+FLOOR_H){
+      total++;
+      const ty=p[1]+dir*FLOOR_H;
+      if(ty>=dst.base && ty<dst.base+FLOOR_H && !blocks.has(key3(p[0],ty,p[2]))){
+        list.push({ x:p[0], y:p[1], z:p[2], t:null });   // erase the old cell
+        list.push({ x:p[0], y:ty, z:p[2], t:v.t, r:v.r||0 });
+        remap.set(k, key3(p[0],ty,p[2]));
+      } else skipped++;
+    }
+  }
+  if(!total){ toast(src.name+' floor is empty — nothing to move'); return 0; }
+  if(!list.length){ toast('Nothing moved — every block on the '+src.name+' floor is blocked on the '+dst.name+' floor'); return 0; }
+  const verb=dir>0?'up':'down';
+  applyBatch(list, 'Moved '+src.name+' floor '+verb+' to '+dst.name+' floor');
+  for(const k of [...selection]){
+    if(remap.has(k)){ selection.delete(k); selection.add(remap.get(k)); }
+    else if(!blocks.has(k)) selection.delete(k);
+  }
+  updateSelectionHighlight();
+  const pb=n=>n.toLocaleString('en-IN')+' block'+(n>1?'s':'');
+  toast('Moved '+src.name+' floor '+verb+' — '+pb(remap.size)+' placed on the '+dst.name+' floor'+(skipped? ', '+pb(skipped)+' skipped (already there)':''));
+  return remap.size;
+}
+
+/* ================= clear a whole floor (round 27) ================= */
+/* asks first (the inline confirm box, never a browser dialog), naming
+   the floor and its block count, then deletes every block on that floor
+   in one undo step. */
+function askClearFloor(i){
+  const n=floorBlockCounts()[i];
+  if(!n){ toast(FLOORS[i].name+' floor is already empty'); return false; }
+  askConfirm('Clear the '+FLOORS[i].name+' floor? '+n.toLocaleString('en-IN')+' blocks will be removed.',
+    ok=>{ if(ok) clearFloor(i); });
+  return true;
+}
+function clearFloor(i){
+  const src=FLOORS[i];
+  const list=[];
+  for(const [k] of blocks){
+    const p=parseKey(k);
+    if(p[1]>=src.base && p[1]<src.base+FLOOR_H) list.push({ x:p[0], y:p[1], z:p[2], t:null });
+  }
+  if(!list.length){ toast(src.name+' floor is already empty'); return 0; }
+  const n=applyBatch(list, 'Cleared '+src.name+' floor');
+  for(const k of [...selection]) if(!blocks.has(k)) selection.delete(k);
+  updateSelectionHighlight();
+  toast('Cleared the '+src.name+' floor — '+n.toLocaleString('en-IN')+' blocks removed');
+  return n;
 }
 
 /* ---- element cards: click selects, drag drops (Canva) ---- */
@@ -8272,6 +8416,8 @@ window.__mc = {
     list(){ return loadBlueprints().map(b=>({ name:b.name, n:b.cells.length, w:b.w, d:b.d, h:b.h })); },
     place(name){ return placeBlueprint(name); },
     delete(name){ return deleteBlueprint(name); },
+    rename(oldName,newName){ return renameBlueprint(oldName,newName); },
+    openRename(name){ return openBpRenameBox(name); },
     count(){ return loadBlueprints().length; },
     exportJson(name){ return exportBlueprint(name); },
     open(){ toggleBlueprintPanel(true); return true; },
@@ -8433,6 +8579,15 @@ Object.assign(window.__mc, {
     set(i,on){ return setLayerVisible(i,on); },
     toggle(i){ return toggleLayer(i); },
     duplicate(i){ return duplicateFloor(i); },
+    move(i,dir){ return moveFloor(i,dir); },
+    clear(i){ return clearFloor(i); },
+    askClear(i){ return askClearFloor(i); },
+    upDisabled(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-up'); return b? b.disabled : null; },
+    downDisabled(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-down'); return b? b.disabled : null; },
+    clearDisabled(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-clear'); return b? b.disabled : null; },
+    upTitle(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-up'); return b? b.title : ''; },
+    downTitle(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-down'); return b? b.title : ''; },
+    clearTitle(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-clear'); return b? b.title : ''; },
     rowText(i){ const r=document.querySelector('#layersList .layer-row[data-floor="'+i+'"]'); return r? r.textContent : ''; },
     dupDisabled(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-dup'); return b? b.disabled : null; },
     dupTitle(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-dup'); return b? b.title : ''; },
