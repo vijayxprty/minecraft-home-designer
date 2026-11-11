@@ -451,6 +451,9 @@ body.panel-collapsed #sidePanel{ display:none; }
 .layer-row .ly-eye{ background:none; border:0; font-size:16px; padding:2px 4px; }
 .layer-row .ly-name{ flex:1; font-weight:800; font-size:13px; color:#1a1a1a; }
 .layer-row .ly-count{ font-size:11px; color:#666; font-weight:700; }
+.layer-row .ly-dup{ background:none; border:0; font-size:15px; padding:2px 4px; cursor:pointer; color:#2e7d32; line-height:1; }
+.layer-row .ly-dup:hover{ background:#e8f5e9; border-radius:4px; }
+.layer-row .ly-dup:disabled{ opacity:.35; cursor:default; background:none; }
 .layer-row.hidden .ly-name{ color:#999; }
 /* ---------- tools tab ---------- */
 #toolsList{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
@@ -643,6 +646,8 @@ body.dark .layer-row:hover{ border-color:#2e7d32; }
 body.dark .layer-row.on{ background:#1b3a1e; border-color:#2e7d32; }
 body.dark .layer-row .ly-name{ color:#f0f0f0; }
 body.dark .layer-row .ly-count{ color:#aaa; }
+body.dark .layer-row .ly-dup{ color:#8fd694; }
+body.dark .layer-row .ly-dup:hover{ background:#1b3a1e; }
 body.dark .layer-row.hidden .ly-name{ color:#777; }
 body.dark #toolsList button{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
 body.dark #toolsList button:hover{ background:#383838; }
@@ -842,6 +847,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
       <button id="btnPresets" title="Stair presets + shutter door">🪜 Stairs</button>
       <button id="btnWalk" title="Walk around like in the game (V)">🚶 Walk</button>
       <button id="btnTour" title="Fly a slow cinematic tour around the build — Esc stops">🎥 Tour</button>
+      <button id="btnTurntable" title="Slowly spin the camera around the build — drag to take over, or tap Turntable to stop">🔄 Turntable</button>
     </div>
   </div>
   <div class="sp-tab" id="tab-history">
@@ -1763,6 +1769,7 @@ function tourTarget(){
 }
 function tourStart(){
   if(TOUR.active) return false;
+  turntableStop();   // round 26: a tour takes over from the turntable
   if(WALK.active) walkStop();
   setTool('build');   // a tour is a viewing mode: clear any half-built tool state (wall drag, panels) so nothing sits under the tour bar
   const t=tourTarget();
@@ -1792,6 +1799,39 @@ function tourTick(dt){
   TOUR.angle += TOUR.speed*dt;
   camera.position.set(TOUR.cx + Math.cos(TOUR.angle)*TOUR.radius, TOUR.height, TOUR.cz + Math.sin(TOUR.angle)*TOUR.radius);
   camera.lookAt(TOUR.cx, TOUR.cy, TOUR.cz);
+}
+
+/* ================= turntable (round 26) ================= */
+/* a slow continuous spin around the build — same camera distance and
+   height, only the azimuth moves. Stops when toggled off, when the user
+   presses on the canvas, or when Walk / Tour starts. */
+const TURN = { active:false, speed:Math.PI*2/30 };   // one full turn in 30 s
+function turntableStart(){
+  if(TURN.active) return false;
+  if(TOUR.active) tourStop();
+  if(WALK.active) walkStop();
+  freezeOrbit();   // zero the damping tail so it doesn't fight the spin
+  TURN.active=true;
+  $('#btnTurntable').textContent='🔄 Turntable ✓';
+  $('#btnTurntable').classList.add('on');
+  toast('Turntable — slowly spinning around the build · drag to take over, or tap Turntable to stop');
+  return true;
+}
+function turntableStop(){
+  if(!TURN.active) return false;
+  TURN.active=false;
+  $('#btnTurntable').textContent='🔄 Turntable';
+  $('#btnTurntable').classList.remove('on');
+  return true;
+}
+function turntableTick(dt){
+  if(!TURN.active) return;
+  const off=camera.position.clone().sub(controls.target);
+  const a=TURN.speed*dt, c=Math.cos(a), sn=Math.sin(a);
+  const nx=off.x*c+off.z*sn, nz=-off.x*sn+off.z*c;   // standard Y rotation: the azimuth grows, like the tour's
+  off.x=nx; off.z=nz;
+  camera.position.copy(controls.target).add(off);
+  camera.lookAt(controls.target);
 }
 function updateTourRecBtn(){
   const b=$('#btnTourRec');
@@ -6517,6 +6557,7 @@ function buildWalker(){
 }
 function walkStart(){
   if(WALK.active) return;
+  turntableStop();   // round 26: walking takes over from the turntable
   cancelMove();
   if(viewMode!=='normal') setView('normal');   // walking needs the whole build visible
   WALK.active=true;
@@ -6801,6 +6842,7 @@ function tick(dt){
   if(WALK.active) walkStep(dt);
   if(WALK.active) return;
   tourTick(dt);
+  turntableTick(dt);
   // keep the floor band under the active floor
   floorBand.position.y = FLOORS[activeFloor].base + 1.03;
   updateLabelVisibility();   // two white tags must never cover each other
@@ -6918,6 +6960,7 @@ function init(){
   $('#btnClear').onclick=()=>{ askConfirm('Delete every placed block? This cannot be undone.', ok=>{ if(ok){ clearBlocks(); scheduleSave(); toast('Cleared — empty plot again'); } }); };
   $('#btnWalk').onclick=()=>WALK.active?walkStop():walkStart();
   $('#btnTour').onclick=()=>TOUR.active?tourStop():tourStart();
+  $('#btnTurntable').onclick=()=>TURN.active?turntableStop():turntableStart();
   $('#btnTourStop').onclick=tourStop;
   $('#btnTourRec').onclick=()=>TOUR.recording?tourStopRecord():tourStartRecord();
   $('#btnGrid').onclick=()=>setGrid(!gridOn);
@@ -7032,6 +7075,8 @@ function init(){
   $('#btnNew').onclick=()=>{ askConfirm('Clear everything and start a new empty plot?', ok=>{ if(ok){ clearAllAction(); projectName='Untitled plot'; $('#projName').textContent=projectName; toast('New empty plot'); } }); };
   // wheel zoom in walk mode changes follow distance
   renderer.domElement.addEventListener('wheel', e=>{ if(WALK.active){ WALK.dist=clamp(WALK.dist+e.deltaY*0.02, 12, 45); } }, { passive:true });
+  // round 26: any press on the canvas takes over from the turntable
+  renderer.domElement.addEventListener('pointerdown', ()=>{ if(TURN.active) turntableStop(); });
   // round 14: HTML5 drag from an element card — live ghost while hovering
   // the canvas, drop places exactly where the ghost was
   renderer.domElement.addEventListener('dragover', e=>{ if(!html5DragEl) return;
@@ -7400,7 +7445,10 @@ function buildLayersPanel(){
     eye.onclick=e=>{ e.stopPropagation(); toggleLayer(i); };
     const nm=document.createElement('span'); nm.className='ly-name'; nm.textContent=FLOORS[i].name;
     const ct=document.createElement('span'); ct.className='ly-count'; ct.textContent='empty';
-    row.append(eye,nm,ct);
+    const dp=document.createElement('button'); dp.className='ly-dup'; dp.textContent='⧉';
+    dp.title='Duplicate this floor onto the floor above';
+    dp.onclick=e=>{ e.stopPropagation(); duplicateFloor(i); };
+    row.append(eye,nm,ct,dp);
     row.onclick=()=>setFloor(i,true);
     list.appendChild(row);
   }
@@ -7415,6 +7463,16 @@ function updateLayersPanel(){
     const eye=row.querySelector('.ly-eye'); if(eye) eye.textContent=layerVisible[i]?'👁':'🚫';
     const ct=row.querySelector('.ly-count');
     if(ct) ct.textContent=counts[i]? counts[i].toLocaleString('en-IN')+' block'+(counts[i]>1?'s':'') : 'empty';
+    const dp=row.querySelector('.ly-dup');
+    if(dp){
+      const dst=FLOORS[i+1];
+      const noTarget=!dst || dst.name==='Rooftop';
+      dp.disabled = noTarget || counts[i]===0;
+      dp.title = noTarget ? (i===FLOORS.length-1 ? 'Nothing above the Rooftop to copy onto'
+          : 'The floor above is the Rooftop — a copy would land on the roof')
+        : counts[i]===0 ? 'This floor is empty — nothing to copy'
+        : 'Duplicate the '+FLOORS[i].name+' floor onto the '+dst.name+' floor';
+    }
   });
   const vn=$('#btnViewNormal'), vi=$('#btnViewIsolate'), vd=$('#btnViewDoll');
   if(vn){ vn.classList.toggle('on', viewMode==='normal');
@@ -7431,6 +7489,36 @@ function setLayerVisible(i,on){
   layerVisible[i]=!!on;
   saveLayerPref(); rebuild(); updateLayersPanel(); updateStats();
   return layerVisible[i];
+}
+
+/* ================= duplicate a whole floor (round 26) ================= */
+/* copies every block on floor i one floor up (20 blocks higher), skipping
+   cells that are already occupied or outside the floor above. One undo
+   step, via applyBatch. */
+function duplicateFloor(i){
+  const src=FLOORS[i], dst=FLOORS[i+1];
+  if(!dst || dst.name==='Rooftop'){
+    toast(i>=FLOORS.length-1 ? 'Nothing above the Rooftop to copy onto'
+      : 'The floor above is the Rooftop — a copy would land on the roof');
+    return 0;
+  }
+  const list=[]; let skipped=0, total=0;
+  for(const [k,v] of blocks){
+    const p=parseKey(k);
+    if(p[1]>=src.base && p[1]<src.base+FLOOR_H){
+      total++;
+      const ty=p[1]+FLOOR_H;
+      if(ty>=dst.base && ty<dst.base+FLOOR_H && !blocks.has(key3(p[0],ty,p[2])))
+        list.push({ x:p[0], y:ty, z:p[2], t:v.t, r:v.r||0 });
+      else skipped++;
+    }
+  }
+  if(!total){ toast(src.name+' floor is empty — nothing to copy'); return 0; }
+  if(!list.length){ toast(total===1 ? 'Nothing new — the 1 block is already on the '+dst.name+' floor' : 'Nothing new — all '+total.toLocaleString('en-IN')+' blocks are already on the '+dst.name+' floor'); return 0; }
+  const placed=applyBatch(list, 'Duplicated '+src.name+' floor onto '+dst.name+' floor');
+  const pb=n=>n.toLocaleString('en-IN')+' block'+(n>1?'s':'');
+  toast('Duplicated '+src.name+' floor — '+pb(placed)+' placed on the '+dst.name+' floor'+(skipped? ', '+pb(skipped)+' skipped (already there)':''));
+  return placed;
 }
 
 /* ---- element cards: click selects, drag drops (Canva) ---- */
@@ -8293,6 +8381,16 @@ window.__mc = {
     recording(){ return TOUR.recording; },
     lastRecording(){ return TOUR.lastRecording? { ...TOUR.lastRecording } : null; },
   },
+  turntable:{
+    start(){ return turntableStart(); },
+    stop(){ return turntableStop(); },
+    active(){ return TURN.active; },
+    azimuth(){ const o=camera.position.clone().sub(controls.target); return Math.atan2(o.x, o.z); },
+    dist(){ return camera.position.distanceTo(controls.target); },
+    target(){ return { x:controls.target.x, y:controls.target.y, z:controls.target.z }; },
+    btnText(){ return $('#btnTurntable').textContent; },
+    btnOn(){ return $('#btnTurntable').classList.contains('on'); },
+  },
   projectToScreen(x,y,z){ return projectToScreenPoint(x,y,z); },
 };
 
@@ -8334,6 +8432,10 @@ Object.assign(window.__mc, {
     visible(i){ return layerVisible[i]; },
     set(i,on){ return setLayerVisible(i,on); },
     toggle(i){ return toggleLayer(i); },
+    duplicate(i){ return duplicateFloor(i); },
+    rowText(i){ const r=document.querySelector('#layersList .layer-row[data-floor="'+i+'"]'); return r? r.textContent : ''; },
+    dupDisabled(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-dup'); return b? b.disabled : null; },
+    dupTitle(i){ const b=document.querySelector('#layersList .layer-row[data-floor="'+i+'"] .ly-dup'); return b? b.title : ''; },
   },
   props:{
     visible(){ return $('#selPanel').classList.contains('on'); },
