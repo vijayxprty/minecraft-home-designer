@@ -467,7 +467,11 @@ body.panel-collapsed #sidePanel{ display:none; }
 /* ---------- status pill (was the bottom-left readout) ---------- */
 #readout{ left:calc(var(--shell-left) + 10px); bottom:10px; background:#fff; color:#1a1a1a;
   border:1px solid #e0e0e0; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.12);
-  font-size:12px; line-height:1.5; padding:8px 12px; max-width:380px; }
+  font-size:12px; line-height:1.5; padding:8px 12px; max-width:500px; }
+  /* round 25: 500px, not 380px — the "N blocks on this floor" count made
+     line 1 longer, and at 380px it ellipsised ("· …") whenever a selection
+     was active. 464px is the longest realistic line (house + First floor
+     selected, measured live); phones keep the 100vw cap below. */
 #readout b{ color:#1b5e20; }
 #readout .dim{ color:#2e7d32; }
 #roWarn{ color:#b45309 !important; }
@@ -922,7 +926,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
 </div>
 
 <div id="readout">
-  <div id="roLine1">🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roSel"></span></div>
+  <div id="roLine1">🧱 Blocks: <b id="roBlocks">0</b> · Floor: <b id="roFloor">Ground</b><span id="roFloorCount"></span><span id="roSel"></span></div>
   <div id="roBuilt">📐 Built so far: <b id="roFoot">nothing yet</b> · Area: <b id="roArea">0 sq ft</b></div>
   <div id="roSelSize" class="dim" style="display:none"></div>
   <div id="roSym" class="dim" style="display:none"></div>
@@ -1095,8 +1099,9 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
 </div>
 
 <div id="materialsPanel">
-  <div class="pp-title">Materials — what this build is made of · counts update as you build · tap a material to select all of it</div>
+  <div class="pp-title">Materials — what this build is made of · counts update as you build · tap a material to select all of it · tap a floor to select the whole floor</div>
   <div id="matList" style="flex-basis:100%;display:flex;flex-direction:column;gap:4px"></div>
+  <div id="matFloors" style="flex-basis:100%;display:flex;flex-direction:column;gap:4px"></div>
   <div class="pp-row"><span id="matTotal" class="pp-note"></span></div>
   <button id="btnCopyMaterials">📋 Copy list</button>
   <button id="matClose">✕ Close</button>
@@ -1262,6 +1267,14 @@ function parseFtIn(str){
   return null;
 }
 function floorOfY(y){ let fi=0; for(let i=0;i<FLOORS.length;i++) if(y>=FLOORS[i].base) fi=i; return fi; }
+/* round 25: blocks per floor (each floor is a 20-block band) — the
+   Materials panel's per-floor breakdown, the Layers tab and the
+   readout's "on this floor" count all read the same numbers */
+function floorBlockCounts(){
+  const counts=[0,0,0,0,0];
+  for(const [k] of blocks){ const y=parseKey(k)[1]; counts[floorOfY(y)]++; }
+  return counts;
+}
 
 /* ================= seeded random for textures ================= */
 function rng(seed){ let s=seed>>>0; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
@@ -1365,6 +1378,34 @@ let groundVisible = true;
 /* ---- selection / copy-paste / presets / expand ---- */
 let selection = new Set();         // block keys
 let clipboard = [];                // [{dx,dy,dz,t,r}] relative to the copied min corner
+/* round 25: copy-paste across projects — Copy also writes the selection
+   to localStorage, so it survives switching projects (and a reload).
+   The in-memory clipboard still wins while it lasts; pasting with an
+   empty in-memory clipboard pulls the shared one back in. A copy too
+   big for the key just stays in memory for this build. */
+const CLIP_KEY='home-designer-minecraft-clipboard-v1';
+function saveSharedClipboard(){
+  if(!clipboard.length) return false;
+  try{
+    const s=JSON.stringify(clipboard);
+    if(s.length>2000000){ toast('Copied for this build only — too big to keep for other builds'); return false; }
+    localStorage.setItem(CLIP_KEY, s);
+    return true;
+  }catch(e){ return false; }   // quota or private mode — the in-memory copy still works
+}
+function loadSharedClipboard(){
+  if(clipboard.length) return clipboard.length;
+  try{
+    const raw=localStorage.getItem(CLIP_KEY); if(!raw) return 0;
+    const arr=JSON.parse(raw);
+    if(!Array.isArray(arr) || !arr.length || arr.length>100000) return 0;
+    const ok=arr.every(c=>c && Number.isInteger(c.dx) && Number.isInteger(c.dy) && Number.isInteger(c.dz)
+      && Number.isInteger(c.t) && c.t>=0 && c.t<TYPES.length && (c.r===undefined || (Number.isInteger(c.r) && c.r>=0 && c.r<4)));
+    if(!ok) return 0;
+    clipboard=arr.map(c=>({ dx:c.dx, dy:c.dy, dz:c.dz, t:c.t, r:c.r||0 }));
+    return clipboard.length;
+  }catch(e){ return 0; }
+}
 let pasteMode = false;             // ghost of the clipboard follows the mouse, click stamps it
 let pasteRot = 0;                  // round 22: R rotates the paste ghost 90° at a time (0-3)
 let pasteIsBlueprint = false;      // round 22: this paste came from a blueprint (for the toast wording)
@@ -2017,6 +2058,7 @@ function updateFloorBand(){
 function updateStats(){
   $('#roBlocks').textContent = blocks.size.toLocaleString('en-IN');
   $('#roFloor').textContent = FLOORS[activeFloor].name;
+  $('#roFloorCount').textContent=' · '+floorBlockCounts()[activeFloor].toLocaleString('en-IN')+' blocks on this floor';
   const b=buildBBox();
   $('#roFoot').textContent = b? ftin(b.w*FT)+' × '+ftin(b.d*FT) : 'nothing yet';
   const a=b? b.w*b.d*FT*FT : 0;
@@ -2068,10 +2110,12 @@ function materialText(){
    works on that selection (Change colour, Delete, Move, Copy…). Tapping
    the same row again, or tapping empty grass as usual, clears it. */
 let lastMaterialSelect=null;   // the material the last tap selected, so its row stays highlighted
+let lastFloorSelect=null;      // round 25: the floor the last tap selected, same idea
 function selectByMaterial(ti){
   const keys=[]; for(const [k,v] of blocks) if(v.t===ti) keys.push(k);
   const same = keys.length>0 && keys.length===selection.size && keys.every(k=>selection.has(k));
   selection.clear();
+  lastFloorSelect=null;   // round 25: a material tap clears the floor highlight
   if(same){
     lastMaterialSelect=null;
     updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
@@ -2083,6 +2127,28 @@ function selectByMaterial(ti){
   updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
   if(keys.length) toast('Selected '+keys.length+' '+TYPES[ti].name+' block'+(keys.length>1?'s':''));
   else toast('No '+TYPES[ti].name+' blocks in this build');
+  return keys.length;
+}
+/* round 25: tap a floor row in the Materials panel to select every block
+   on that floor — the mirror of selectByMaterial, same toggle-off, same
+   toast, same Properties panel afterwards. */
+function selectByFloor(fi){
+  const y0=FLOORS[fi].base, y1=y0+FLOOR_H;
+  const keys=[]; for(const [k] of blocks){ const p=parseKey(k); if(p[1]>=y0&&p[1]<y1) keys.push(k); }
+  const same = keys.length>0 && keys.length===selection.size && keys.every(k=>selection.has(k));
+  selection.clear();
+  lastMaterialSelect=null;   // a floor tap clears the material highlight
+  if(same){
+    lastFloorSelect=null;
+    updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
+    toast('Selection cleared');
+    return 0;
+  }
+  for(const k of keys) selection.add(k);
+  lastFloorSelect = keys.length? fi : null;
+  updateSelectionHighlight(); updateSelPanel(); updateMaterialsPanel();
+  if(keys.length) toast('Selected '+keys.length.toLocaleString('en-IN')+' blocks on the '+FLOORS[fi].name+' floor');
+  else toast('No blocks on the '+FLOORS[fi].name+' floor yet');
   return keys.length;
 }
 function updateMaterialsPanel(){
@@ -2102,6 +2168,32 @@ function updateMaterialsPanel(){
     const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=c.name;
     const ct=document.createElement('span'); ct.className='tpl-desc'; ct.textContent='× '+c.n.toLocaleString('en-IN');
     row.append(nm,ct); list.appendChild(row);
+  }
+  // round 25: per-floor breakdown under the materials — only floors that
+  // have blocks, so an empty plot stays one line. Same tap-to-select rows
+  // as the materials above, in their own container so #matList row counts
+  // and the copied list text are untouched.
+  const fl=$('#matFloors');
+  if(fl){
+    fl.innerHTML='';
+    const fc=floorBlockCounts();
+    if(fc.some(n=>n>0)){
+      const lbl=document.createElement('div'); lbl.className='pp-row';
+      const sp=document.createElement('span'); sp.className='pp-note';
+      sp.textContent='By floor — tap a floor to select all of it';
+      lbl.appendChild(sp); fl.appendChild(lbl);
+      for(let i=0;i<FLOORS.length;i++){
+        if(!fc[i]) continue;
+        const row=document.createElement('div'); row.className='tpl-item mat-floor'+(lastFloorSelect===i?' on':'');
+        row.title='Tap to select all '+fc[i].toLocaleString('en-IN')+' blocks on the '+FLOORS[i].name+' floor';
+        row.setAttribute('role','button');
+        row.dataset.floor=i;
+        row.onclick=()=>selectByFloor(i);
+        const nm=document.createElement('span'); nm.className='tpl-name'; nm.textContent=FLOORS[i].name+' floor';
+        const ct=document.createElement('span'); ct.className='tpl-desc'; ct.textContent='× '+fc[i].toLocaleString('en-IN');
+        row.append(nm,ct); fl.appendChild(row);
+      }
+    }
   }
   $('#matTotal').textContent = blocks.size
     ? 'Total: '+blocks.size.toLocaleString('en-IN')+' blocks · '+buildAreaSqFt()+' sq ft'
@@ -4093,6 +4185,7 @@ function copySelection(){
   const bb=bboxOfKeys(keys);
   clipboard = keys.map(k=>{ const [x,y,z]=parseKey(k); const b=blocks.get(k);
     return { dx:x-bb.x0, dy:y-bb.y0, dz:z-bb.z0, t:b.t, r:b.r||0 }; });
+  saveSharedClipboard();   // round 25: the same copy is kept for other builds
   toast('Copied '+clipboard.length+' block'+(clipboard.length>1?'s':'')+' — Ctrl+V to paste');
   return clipboard.length;
 }
@@ -4129,6 +4222,7 @@ function pasteAt(origin){
   return n;
 }
 function setPasteMode(on){
+  if(on && !clipboard.length) loadSharedClipboard();   // round 25: pull the cross-project copy back in
   if(on && !clipboard.length){ toast('Nothing copied yet — select blocks and press Ctrl+C'); return; }
   pasteMode = !!on;
   if(pasteMode) pasteRot=0;   // round 22: every paste starts unrotated
@@ -6637,7 +6731,9 @@ function bindKeys(){
     if((e.ctrlKey||e.metaKey)&&k==='KeyX'){ e.preventDefault(); if(!WALK.active) cutSelection(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyD'){ e.preventDefault(); if(!WALK.active) duplicateSelection(); return; }
     if((e.ctrlKey||e.metaKey)&&k==='KeyV'){ e.preventDefault();
-      if(!WALK.active){ if(clipboard.length) setPasteMode(!pasteMode); else toast('Nothing copied yet — select blocks and press Ctrl+C'); }
+      if(!WALK.active){
+        if(!clipboard.length) loadSharedClipboard();   // round 25: a copy from another build lives in localStorage
+        if(clipboard.length) setPasteMode(!pasteMode); else toast('Nothing copied yet — select blocks and press Ctrl+C'); }
       return; }
     /* round 24: Ctrl+A / Cmd+A selects the whole build. The handler
        returns here, before KeyA reaches the fly-keys set, so holding
@@ -7311,8 +7407,7 @@ function buildLayersPanel(){
   updateLayersPanel();
 }
 function updateLayersPanel(){
-  const counts=[0,0,0,0,0];
-  for(const [k] of blocks){ const y=parseKey(k)[1]; counts[floorOfY(y)]++; }
+  const counts=floorBlockCounts();   // round 25: one shared per-floor count
   $$('#layersList .layer-row').forEach(row=>{
     const i=+row.dataset.floor;
     row.classList.toggle('on', i===activeFloor);
@@ -7695,6 +7790,7 @@ function zoomToSelection(){
 window.__mc = {
   get blocks(){ return blocks; },
   count(){ return blocks.size; },
+  floorCounts(){ return floorBlockCounts(); },
   projectName(){ return projectName; },
   footprint(){ let xs=[],zs=[]; for(const [k] of blocks){ const p=parseKey(k); xs.push(p[0]); zs.push(p[2]); }
     return xs.length? { x0:Math.min(...xs), x1:Math.max(...xs), z0:Math.min(...zs), z1:Math.max(...zs), w:Math.max(...xs)-Math.min(...xs)+1, d:Math.max(...zs)-Math.min(...zs)+1 } : null; },
@@ -7865,6 +7961,12 @@ window.__mc = {
   clearSel(){ clearSelection(); },
   copy(){ return copySelection(); },
   clipboardSize(){ return clipboard.length; },
+  sharedClipboard:{   // round 25: the cross-project copy in localStorage
+    has(){ try{ return !!localStorage.getItem(CLIP_KEY); }catch(e){ return false; } },
+    count(){ try{ const s=localStorage.getItem(CLIP_KEY); return s? (JSON.parse(s)||[]).length : 0; }catch(e){ return 0; } },
+    load(){ return loadSharedClipboard(); },
+    clear(){ try{ localStorage.removeItem(CLIP_KEY); }catch(e){} return true; },
+  },
   pasteAt(x,y,z){ return pasteAt([x,y,z]); },
   setPasteMode(on){ setPasteMode(on); },
   pasteModeOn(){ return pasteMode; },
@@ -7963,6 +8065,11 @@ window.__mc = {
     isOpen(){ return $('#materialsPanel').classList.contains('on'); },
     select(ti){ return selectByMaterial(ti); },
     selectedType(){ return lastMaterialSelect; },
+    floors(){ return floorBlockCounts().map((n,i)=>({ i, name:FLOORS[i].name, n })); },
+    selectFloor(fi){ return selectByFloor(fi); },
+    selectedFloor(){ return lastFloorSelect; },
+    floorRowCount(){ return document.querySelectorAll('#matFloors .tpl-item').length; },
+    floorsText(){ const el=document.querySelector('#matFloors'); return el? el.textContent : ''; },
     rowCount(){ return document.querySelectorAll('#matList .tpl-item').length; },
     listText(){ return $('#matList').textContent; },
     totalText(){ return $('#matTotal').textContent; },
