@@ -757,6 +757,13 @@ body.dark .ss-tools input::placeholder{ color:#999; }
   /* the dropdown opens UPWARD, over the canvas — never under the sheet,
      which would hide it behind the panel it came from */
   #gsResults{ top:auto; bottom:calc(100% + 4px); max-height:52vh; }
+  /* round 31: on a phone a result's sub-text wraps onto its own line
+     instead of ellipsising — at real-phone font metrics the 45% cap
+     could eat the closing quote of "1,124 blocks · 9' 0\" × 7' 0\"".
+     The name + block count are always fully visible. */
+  .gs-item{ flex-wrap:wrap; }
+  .gs-item .gs-sub{ flex:1 1 100%; max-width:100%; white-space:normal;
+    overflow:visible; text-overflow:clip; }
 }
 body.dark #gsBar{ background:#1f1f1f; border-bottom-color:#333; }
 body.dark #gsInput{ background:#2c2c2c; color:#f0f0f0; border-color:#444; }
@@ -3822,8 +3829,11 @@ function planPixel(px,py){
 /* ================= share link: the whole build in the URL hash ================= */
 /* Compact bit-packed encoding, no dependency: version, name, blocks sorted
    by (y,z,x) with zigzag-varint deltas, then tape measures. Base64url, so
-   it can live in a URL hash. A small house is a few hundred characters;
-   a big one gets a warning above ~1,800. */
+   it can live in a URL hash. Version 3 (round 31) adds run-length encoding:
+   each entry carries how many further cells continue the row (same y/z,
+   x+1, same type and rotation), which roughly halves a house link — the
+   cottage went from ~5,646 to ~2,350 characters. Old v1/v2 links still
+   decode. A big build gets a warning above ~1,800. */
 function BitW(){
   const bytes=[]; let cur=0, n=0;
   function bit(b){ cur=(cur<<1)|(b?1:0); n++; if(n===8){ bytes.push(cur); cur=0; n=0; } }
@@ -3858,18 +3868,30 @@ function encodeShare(){
   const cells=[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return { x:p[0], y:p[1], z:p[2], t:v.t, r:v.r||0 }; })
     .sort((a,b)=> a.y-b.y || a.z-b.z || a.x-b.x);
   const w=BitW();
-  w.varint(2); // version 2: blocks + measures + room names (v1 links still decode)
+  /* round 31, version 3: run-length encoding on top of the v2 layout.
+     The next entry's delta is measured from the LAST cell of the run,
+     so a run of N cells costs one entry plus a varint instead of N. */
+  w.varint(3);
   const nameBytes=new TextEncoder().encode(projectName||'My Build');
   w.varint(Math.min(nameBytes.length,64));
   for(let i=0;i<Math.min(nameBytes.length,64);i++) w.bits(nameBytes[i],8);
   w.varint(cells.length);
   let px=0, py=0, pz=0;
-  cells.forEach((c,i)=>{
+  for(let i=0;i<cells.length;){
+    const c=cells[i];
     if(i===0){ w.bits(c.x+40,7); w.bits(c.y+30,7); w.bits(c.z+40,8); }
     else { w.zigzag(c.x-px); w.zigzag(c.y-py); w.zigzag(c.z-pz); }
     w.bits(c.t,4); w.bits(c.r,2);
-    px=c.x; py=c.y; pz=c.z;
-  });
+    let run=0;
+    while(i+1+run<cells.length){
+      const nx=cells[i+1+run];
+      if(nx.y!==c.y||nx.z!==c.z||nx.x!==c.x+1+run||nx.t!==c.t||nx.r!==c.r) break;
+      run++;
+    }
+    w.varint(run);
+    px=c.x+run; py=c.y; pz=c.z;
+    i+=1+run;
+  }
   w.varint(measures.length);
   for(const m of measures){
     w.bits(m.a[0]+40,7); w.bits(m.a[1]+30,7); w.bits(m.a[2]+40,8);
@@ -3890,19 +3912,32 @@ function decodeShare(str){
     const bytes=b64urlDecode(str);
     const r=BitR(bytes);
     const ver=r.varint();
-    if(ver!==1 && ver!==2) return null;
+    if(ver!==1 && ver!==2 && ver!==3) return null;
     const nlen=r.varint(); if(nlen>64) return null;
     const nb=[]; for(let i=0;i<nlen;i++) nb.push(r.bits(8));
     const name=new TextDecoder().decode(new Uint8Array(nb))||'Shared build';
     const n=r.varint(); if(n>200000) return null;
     const cells=[]; let px=0, py=0, pz=0;
-    for(let i=0;i<n;i++){
+    /* round 31: v3 entries carry a run length after the type/rotation —
+       that many further cells continue the row (x+1, same y/z/type).
+       v1/v2 entries have no run field and read exactly as before. */
+    while(cells.length<n){
       let x,y,z;
-      if(i===0){ x=r.bits(7)-40; y=r.bits(7)-30; z=r.bits(8)-40; }
+      if(cells.length===0){ x=r.bits(7)-40; y=r.bits(7)-30; z=r.bits(8)-40; }
       else { x=px+r.zigzag(); y=py+r.zigzag(); z=pz+r.zigzag(); }
       const t=r.bits(4), rr=r.bits(2);
       if(t>=TYPES.length||!inBounds(x,y,z)) return null;
-      cells.push({ x,y,z,t,r:rr }); px=x; py=y; pz=z;
+      cells.push({ x,y,z,t,r:rr });
+      let run=0;
+      if(ver===3){
+        run=r.varint();
+        if(run>200000||cells.length+run>n) return null;
+        for(let j=1;j<=run;j++){
+          if(!inBounds(x+j,y,z)) return null;
+          cells.push({ x:x+j, y, z, t, r:rr });
+        }
+      }
+      px=x+run; py=y; pz=z;
     }
     const nm=r.varint(); if(nm>1000) return null;
     const ms=[];
@@ -3912,7 +3947,7 @@ function decodeShare(str){
       ms.push({ a, b, ft:Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])*FT });
     }
     const rms=[];
-    if(ver===2){
+    if(ver>=2){
       const nr=r.varint(); if(nr>100) return null;
       for(let i=0;i<nr;i++){
         const kl=r.varint(); if(kl>32) return null;
@@ -3941,7 +3976,7 @@ function shareBuild(){
   const payload=encodeShare();
   const url=location.origin+location.pathname+'#s='+payload;
   const done=()=>{
-    if(payload.length>1800) toast('Share link copied — it is long ('+payload.length.toLocaleString('en-IN')+' chars); it works best for smaller builds');
+    if(payload.length>1800) toast('Share link copied — '+payload.length.toLocaleString('en-IN')+' characters; it works best for smaller builds');
     else toast('Share link copied — anyone opening it sees this build');
   };
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, ()=>fallbackCopy(url,done));
