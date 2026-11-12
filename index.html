@@ -327,6 +327,13 @@ body.panel-closed{ --shell-left:64px; }
   box-shadow:none; font-weight:700; font-size:13px; padding:6px 10px; }
 #topbar .actions button:hover{ background:#f0f4f0; }
 #topbar .actions button.on{ background:#e8f5e9; color:#1b5e20; border-color:#2e7d32; }
+/* round 34b: eyeball toggle for the wall fade — eye open = fade ON (green,
+   same highlight as the other .on buttons); eye slashed + greyed = fade OFF */
+#topbar #btnEye{ font-size:15px; padding:4px 8px; position:relative; }
+#topbar #btnEye:not(.on){ opacity:.55; }
+#topbar #btnEye:not(.on)::after{ content:""; position:absolute; left:5px; right:5px; top:50%;
+  height:2px; margin-top:-1px; background:#c62828; transform:rotate(-45deg);
+  border-radius:1px; pointer-events:none; }
 /* round 24: back to Your builds — same look as the other top-bar buttons */
 #topbar #btnHome{ background:#fff; color:#1a1a1a; border:1px solid #d8d8d8; border-radius:6px;
   box-shadow:none; font-weight:700; font-size:13px; padding:6px 10px; white-space:nowrap; }
@@ -594,6 +601,10 @@ body.touch #zoomBar button{ padding:6px 12px; }
   :root{ --shell-left:64px; }
   #topbar .brand{ display:none; }
   #savePill{ display:none; }
+  /* round 34b: the eyeball does not fit the crowded phone top bar — it
+     pushed the More button onto a second row. Phones keep the More-menu
+     "Fade front walls" toggle as the control; the eyeball is desktop only. */
+  #btnEye{ display:none; }
   #panelCollapse{ display:none; }   /* phones use the bottom-sheet panel, not collapse */
   #topbar .proj-name{ max-width:120px; }
   #topbar #btnHome .hb-full{ display:none; }
@@ -846,6 +857,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <button id="btnUndo" title="Ctrl+Z">↩ <span class="tb-txt">Undo</span></button>
     <button id="btnRedo" title="Ctrl+Y">↪ <span class="tb-txt">Redo</span></button>
     <span id="savePill">✓ Saved on this device</span>
+    <button id="btnEye" class="on" title="See through walls — the walls facing you are transparent" aria-label="See through walls — walls are transparent" aria-pressed="true">👁️</button>
     <button id="btnMore" title="More tools and view options">▾ More</button>
   </div>
 </div>
@@ -2197,10 +2209,22 @@ function rebuild(){
    when the camera and the build centre sit on opposite sides of it.
    Never fades: the selected wall, any wall holding a selected block,
    Walk mode (camera inside), Isolate / Dollhouse views. */
+/* round 34b: the eyeball in the top bar and the More-menu toggle are the
+   same setting — keep both showing the same state, always. */
+function syncFadeButtons(){
+  const b=$('#btnFadeWalls'); if(b) b.classList.toggle('on', wallFadeOn);
+  const e=$('#btnEye'); if(!e) return;
+  e.classList.toggle('on', wallFadeOn);
+  e.setAttribute('aria-pressed', wallFadeOn?'true':'false');
+  e.title = wallFadeOn ? 'See through walls — the walls facing you are transparent'
+                       : 'Walls solid — click to see through the walls';
+  e.setAttribute('aria-label', wallFadeOn ? 'See through walls — walls are transparent'
+                                          : 'Walls solid — see-through is off');
+}
 function setWallFade(on){
   wallFadeOn=!!on;
   try{ localStorage.setItem(WALLFADE_KEY, wallFadeOn?'1':'0'); }catch(e){}
-  const b=$('#btnFadeWalls'); if(b) b.classList.toggle('on', wallFadeOn);
+  syncFadeButtons();
   fadeDirty=true; refreshWallFade(true);
   return wallFadeOn;
 }
@@ -7736,7 +7760,8 @@ function init(){
   $('#btnPhoto').onclick=savePicture;
   $('#btnRender').onclick=renderView;
   $('#btnFadeWalls').onclick=()=>setWallFade(!wallFadeOn);
-  $('#btnFadeWalls').classList.toggle('on', wallFadeOn);
+  $('#btnEye').onclick=()=>setWallFade(!wallFadeOn);
+  syncFadeButtons();
   $('#btnPlan').onclick=()=>{ downloadPlan(); };
   $('#btnGLB').onclick=()=>{ exportGLB(); };
   $('#btnExport').onclick=exportJSON;
