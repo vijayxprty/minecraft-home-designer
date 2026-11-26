@@ -180,17 +180,18 @@
   #bpImportErr{ color:#ffb84d; font-weight:800; }
   .tpl-empty{flex-basis:100%;color:#fff;font-size:12px;font-weight:700;padding:4px 2px}
   /* ---------- fill mode panel + exact-size bar ---------- */
-  #fillPanel,#wallPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
+  #fillPanel,#wallPanel,#digPanel{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
     background:rgba(0,0,0,.6);border:3px solid #1e4d16;border-radius:8px;padding:8px;gap:6px;flex-wrap:wrap;max-width:640px}
-  #fillPanel.on,#wallPanel.on{display:flex}
-  #fillPanel .pp-title,#wallPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
-  #fillPanel button,#wallPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
+  #fillPanel.on,#wallPanel.on,#digPanel.on{display:flex}
+  #fillPanel .pp-title,#wallPanel .pp-title,#digPanel .pp-title{flex-basis:100%;color:#ffd83d;font-weight:800;font-size:12px}
+  #fillPanel button,#wallPanel button,#digPanel button{background:#d8d8d8;border:3px solid #555;border-radius:4px;font-weight:800;font-size:12px;
     padding:7px 10px;color:#222}
-  #fillPanel button.on,#wallPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
-  #fillPanel .pp-note,#wallPanel .pp-note{flex-basis:100%;color:#fff;font-size:12px;font-weight:700}
-  #wallPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
+  #fillPanel button.on,#wallPanel button.on,#digPanel button.on{background:#ffd83d;border-color:#7a5b00;box-shadow:0 0 0 2px #fff}
+  #fillPanel .pp-note,#wallPanel .pp-note,#digPanel .pp-note{flex-basis:100%;color:#fff;font-size:12px;font-weight:700}
+  #wallPanel .pp-row,#digPanel .pp-row{flex-basis:100%;display:flex;gap:6px;align-items:center;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap}
   #wallPanel .pp-row input{border:2px solid #555;border-radius:4px;padding:5px 6px;font-weight:800;font-size:12px;width:56px;color:#222;background:#fff}
   #wallPanel .pp-row .pp-note{flex-basis:auto;color:#ffd83d;font-weight:800}
+  #digPanel .pp-row .pp-note{flex-basis:auto;color:#ffd83d;font-weight:800}
   #wallPanel .pp-row b{color:#ffd83d}
   /* ---------- camera tour bar ---------- */
   #tourBar{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;z-index:11;display:none;
@@ -576,7 +577,7 @@ body.dark .sp-wall-row .mini{ background:#2b2b2b; color:#f0f0f0; border-color:#5
 #selPanel input{ background:#fff; color:#1a1a1a; }
 /* ---------- floating tool panels centre on the visible canvas, not the window ---------- */
 #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
-#buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
+#buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#digPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
   /* round 33: lifted above the bottom-centre toolbar (10px + ~76px tall),
      so a panel never hides under it; the toast is transient and
      pointer-events-none, so it may still float over a panel briefly, as before */
@@ -631,7 +632,7 @@ body.touch #zoomBar button{ padding:6px 12px; }
   #gizmo{ display:none; }
   #sizeBar{ left:10px; }
   #presetPanel,#blueprintPanel,#mirrorPanel,#replacePanel,#cheatPanel,#materialsPanel,
-  #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
+  #buildRoomPanel,#warnPanel,#fillPanel,#wallPanel,#digPanel,#renameBox,#confirmBox,#bpNameBox,#dupFloorBox,#tourBar,#walkHint{
     left:0; right:0; transform:none; bottom:58px; max-width:none; border-radius:14px 14px 0 0;
     /* round 21: on a phone the zoom bar (bottom 68px) sits over the
        bottom row of these sheets — the Materials panel's Close button
@@ -965,6 +966,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <div id="toolsList">
       <button data-tool="build" class="on" title="Click a face to place a block — Shift+drag draws a straight line (B)">🧱 Build</button>
       <button data-tool="erase" title="Click a block to remove it (E)">⛏ Erase</button>
+      <button data-tool="dig" title="Dig into the grass — click to dig one layer down, drag a rectangle for a pit, basement floor is 10 ft down (G)">🕳️ Dig</button>
       <button data-tool="pick" title="Click a block to pick its type (P)">🎯 Pick</button>
       <button data-tool="select" title="Click a block to select it, Shift-click adds its whole row, double-click selects all connected, drag a box to select many (S)">⬚ Select</button>
       <button data-tool="expand" title="Click a wall and drag to make it longer, taller or deeper (X)">↔ Expand</button>
@@ -1052,6 +1054,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <button id="btnImport" title="Open a project JSON">⬆ Import</button>
   <div class="msep"></div>
   <button id="btnGround" title="Show / hide the ground around the plot">🌍 Ground</button>
+  <button id="btnPlotSize" title="Grow the grass plot — Small 51' × 75', Medium 71' × 95', Large 91' × 115'">↔️ Plot size: Small · 51' × 75'</button>
   <button id="btnPhoto" title="Save a PNG photo of this view">📷 Save a picture (PNG)</button>
   <button id="btnRender" title="A polished, high-quality PNG of this view — soft shadows, warm light">✨ Render this view</button>
   <button id="btnPlan" title="Download a top-down 2D plan of the active floor as a PNG">🗺️ Plan PNG</button>
@@ -1098,6 +1101,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <div id="roWall" class="dim" style="display:none"></div>
   <div id="roTool" class="dim" style="display:none"></div>
   <div id="roWarn" class="dim" style="display:none"></div>
+  <div id="roDug" class="dim" style="display:none"></div>
   <div id="roHover" class="dim">Hover a block to see its spot — 1 block = 6 in</div>
   <div id="roSaved" class="dim"></div>
   <div id="roFps" class="dim"></div>
@@ -1167,6 +1171,20 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <button id="btnBuildWall">🧱 Build wall</button>
   <button id="wallClose">✕ Close</button>
 </div>
+<div id="digPanel">
+  <div class="pp-title">🕳️ Dig into the soil</div>
+  <div class="pp-row">
+    <span>Dig depth per drag:</span>
+    <button data-depth="2">1 layer</button>
+    <button data-depth="10">5 ft</button>
+    <button data-depth="20" class="on">10 ft</button>
+  </div>
+  <div class="pp-row">
+    <button id="digRefill">↩ Refill dug ground</button>
+    <span class="pp-note">Click grass to dig one layer · drag a rectangle for a pit · basement floor is 10 ft down.</span>
+  </div>
+  <button id="digClose">✕ Close</button>
+</div>
 
 <div id="mirrorPanel">
   <div class="pp-title">Mirror — flip the whole build or a selection across a plane · live Symmetry mirrors every Build / Line placement</div>
@@ -1213,6 +1231,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
     <b>B · E · P · I</b><span>Build · Erase · Pick · Dropper (pick a type)</span>
     <b>S · X · M</b><span>Select · Expand · Move</span>
     <b>F · L · T · U</b><span>Fill a box · Line · Tape measure · Flood fill</span>
+    <b>G</b><span>Dig — click grass to dig one layer down, drag a rectangle for a pit (basement floor 10 ft down)</span>
     <b>Alt + click</b><span>Pick the clicked block's type (in Build)</span>
     <b>R</b><span>Rotate the selection 90° (or the preset / paste ghost — R turns a blueprint too)</span>
     <b>Ctrl + C / V</b><span>Copy / paste the selection</span>
@@ -1344,6 +1363,7 @@ try{ if(localStorage.getItem('home-designer-minecraft-theme-v1')==='dark') docum
   <div class="cm-title">Switch tool</div>
   <button data-tool="build">🧱 Build</button>
   <button data-tool="erase">⛏ Erase</button>
+  <button data-tool="dig">🕳️ Dig</button>
   <button data-tool="pick">🎯 Pick</button>
   <button data-tool="select">⬚ Select</button>
   <button data-tool="expand">↔ Expand</button>
@@ -1436,6 +1456,60 @@ const FLOORS = [
   { name:'Rooftop',  base:60 },
 ];
 const FLOOR_H = 20;                   // blocks per floor (10 ft)
+
+/* ================= ROUND 35 — plot sizes + diggable soil ================= */
+/* Plot sizes, all centred on (11, 35) like the original grass. Small is
+   the plot the app shipped with (102 x 150 blocks = 51' x 75'); Medium and
+   Large grow the grass the user can build and dig on. */
+const PLOT_SIZES = [
+  { name:'Small',  w:102, d:150, label:"Small · 51' × 75'" },
+  { name:'Medium', w:142, d:190, label:"Medium · 71' × 95'" },
+  { name:'Large',  w:182, d:230, label:"Large · 91' × 115'" },
+];
+let plotIdx = 0;                          // which PLOT_SIZES entry the open project uses
+/* the grass slab: x0..x1, z0..z1 are the block columns of grass, top y=1.
+   (x,z) here are block coordinates — the slab spans [x0, x1+1) x [z0, z1+1). */
+function plotGeom(idx){
+  const s = PLOT_SIZES[idx==null? plotIdx : idx];
+  const x0 = 11 - Math.floor(s.w/2), z0 = 35 - Math.floor(s.d/2);
+  return { w:s.w, d:s.d, x0, x1:x0+s.w-1, z0, z1:z0+s.d-1, name:s.name, label:s.label };
+}
+/* bounds for a given plot index (the share codec validates a link's cells
+   against the link's own plot, not whatever plot this browser is on) */
+function plotBoundsFor(idx){ const g=plotGeom(idx); return { x0:g.x0+10, x1:g.x1-10, z0:g.z0+10, z1:g.z1-10 }; }
+/* the build area: the grass inset by 10 blocks (5 ft) per side — Small
+   is x -30..51, z -30..99 (the old hardcoded z bound ran one cell
+   further, to 100). Round 35c: this was expanding by 10, which let
+   blocks and digs land 10 cells past the grass edge, in the void. */
+function plotBounds(){ return plotBoundsFor(plotIdx); }
+/* how far the camera may pull back — grows with the plot so Fit can frame it */
+function fitCap(){ const g=plotGeom(); return Math.max(320, Math.ceil(Math.hypot(g.w, g.d)*1.6)); }
+
+/* The soil: a column is dug when it is in this map. The value is the depth
+   in layers, 1..DUG_MAX. Soil cells are y -19..0; a column of depth d has
+   its cells y 0..-(d-1) removed, so the pit floor is the y=-20 plane — the
+   basement floor blocks sit at y=-20 (top -19). Dug cells are NOT build
+   blocks: they never count in blocks.size, the readout, or the share link's
+   block list, so the plot stays fast and links stay short. */
+const DUG_MAX = 20;                       // 20 layers = 10 ft down to the basement floor
+const dug = new Map();                    // key "x,z" -> depth 1..20
+function dugKey(x,z){ return x+','+z; }
+function dugDepth(x,z){ return dug.get(dugKey(x,z)) || 0; }
+/* top of the soil in a column: 1 on undug grass, 1-depth in a pit */
+function soilTopY(x,z){ return 1 - dugDepth(x,z); }
+/* is (x,y,z) solid soil? y -20 is the pit floor slab, y -19..-depth the walls */
+function soilSolid(x,y,z){
+  const g=plotGeom(); if(x<g.x0||x>g.x1||z<g.z0||z>g.z1) return false;
+  const d=dugDepth(x,z);
+  // undug soil is the whole column y -20..0; a dug column keeps only
+  // y -20..-d. Round 35d: undug used to return false, so the walker
+  // clipped through pit walls and fell under the grass to respawn.
+  return y>=-20 && y<=-d;
+}
+function setDugDepth(x,z,depth){
+  if(depth<=0) dug.delete(dugKey(x,z)); else dug.set(dugKey(x,z), Math.min(DUG_MAX, depth));
+}
+function dugCount(){ let n=0; for(const d of dug.values()) n+=d; return n; }
 /* round 33: the build height cap. The Rooftop band is y 60-79, and a
    stair standing on the highest roof slab starts at y=80 — the old cap
    (79) made that click say "Outside the build area". One full band
@@ -1712,7 +1786,8 @@ const instMeshes = [];             // per type: {mesh, keys[]}
 const fadeMeshes = [];              // round 34: translucent twins, one per type, for faded walls
 let fadedKeys = new Set();          // round 34: block keys currently faded
 let fadedWallKeys = new Set();      // round 34: wall keys currently faded
-const groundMeshes = [];
+const groundMeshes = [];                  // kept for the old reference; round 35 ground lives in the instanced meshes below
+let groundInst=null, pitInst=null;      // round 35: the soil as instanced 1-block cubes (grass top + exposed pit dirt)
 let ghost, multiGhost, multiGhostEdges, selGroup;
 const multiGhostMat = new THREE.MeshBasicMaterial({ color:0x7CFC00, transparent:true, opacity:0.8, depthWrite:false });
 const selBoxGeo = new THREE.BoxGeometry(1.04, 1.04, 1.04);
@@ -1754,7 +1829,7 @@ function initScene(){
   controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(11, 10, 35);
   controls.enableDamping = true; controls.dampingFactor = 0.12;
-  controls.maxDistance = 320; controls.minDistance = 4;
+  controls.maxDistance = fitCap(); controls.minDistance = 4;
   controls.maxPolarAngle = Math.PI*0.96;
   controls.update();
 
@@ -1892,27 +1967,98 @@ function resize(){
     const gz=$('#gizmo'); if(gz) gz.style.top=top;
     $('#sizeBar').style.top=top; }
 }
+/* Round 35: the ground is no longer one slab — it is soil you can dig.
+   The grass top is one InstancedMesh of 1-block cubes, one per undug
+   column (a dug column simply has no grass cube, so the hole is real and
+   you can see into it). Exposed pit dirt is a second InstancedMesh, rebuilt
+   only from dug columns. Neither counts as a build block. */
 function buildGroundScenery(){
-  // one plain grass base to build on — no plot, no hole, no road.
-  // 1 block thick (y 0..1) so the basement can be seen from a low angle
-  // or by hiding the ground.
+  rebuildGroundMesh();
+  buildGrid();
+}
+let _groundMats=null;   // round 35: mint the ground materials once — rebuildPitMesh runs per block change
+function groundMaterials(){
+  if(_groundMats) return _groundMats;
   const grassTop = new THREE.MeshLambertMaterial({ map:T.grassTop });
   const grassSide = new THREE.MeshLambertMaterial({ map:T.grassSide });
   const dirtM = new THREE.MeshLambertMaterial({ map:T.dirt });
-  const grassMats = [grassSide,grassSide,grassTop,dirtM,grassSide,grassSide];
-  const m=new THREE.Mesh(new THREE.BoxGeometry(102,1,150), grassMats);
-  m.position.set(11, 0.5, 35); m.receiveShadow=true; m.userData.ground=true;
-  scene.add(m); groundMeshes.push(m);
-  buildGrid();
+  _groundMats={ grass:[grassSide,grassSide,grassTop,dirtM,grassSide,grassSide], dirt:dirtM };
+  return _groundMats;
+}
+/* rebuild the whole grass top — only on dig / plot change / load, never per block */
+function rebuildGroundMesh(){
+  if(!scene) return;
+  const g=plotGeom();
+  if(groundInst){ scene.remove(groundInst.mesh); groundInst.mesh.geometry.dispose(); groundInst=null; }
+  const mats=groundMaterials();
+  const total=g.w*g.d;
+  const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), mats.grass, total);
+  im.receiveShadow=true; im.userData.ground=true; im.userData.isGrass=true;
+  const m4=new THREE.Matrix4(), col=new THREE.Color();
+  let n=0;
+  for(let x=g.x0;x<=g.x1;x++) for(let z=g.z0;z<=g.z1;z++){
+    if(dugDepth(x,z)) continue;                       // dug: no grass cube, the hole is real
+    m4.makeTranslation(x+0.5, 0.5, z+0.5);
+    im.setMatrixAt(n, m4);
+    /* a seeded tint per column breaks up the per-block texture repetition */
+    const h=Math.abs(Math.sin(x*127.1+z*311.7)*43758.5453)%1;
+    col.setHSL(0.29, 0.42, 0.5 + (h-0.5)*0.09);
+    im.setColorAt(n, col);
+    n++;
+  }
+  im.count=n; im.instanceMatrix.needsUpdate=true;
+  if(im.instanceColor) im.instanceColor.needsUpdate=true;
+  im.visible=groundVisible;
+  scene.add(im); groundInst={ mesh:im };
+  rebuildPitMesh();
+}
+/* rebuild the exposed pit dirt — called from rebuild(), cheap no-op when nothing is dug */
+function rebuildPitMesh(){
+  if(!scene) return;
+  if(pitInst){ scene.remove(pitInst.mesh); pitInst.mesh.geometry.dispose(); pitInst=null; }
+  if(!dug.size) return;
+  const g=plotGeom();
+  const mats=groundMaterials();
+  /* pit dirt cubes: the floor of each dug column (the top of its
+     remaining soil) + the wall cubes where a shallower neighbour leaves
+     soil exposed beside a deeper column. Deduped by key, skipped where
+     a build block already sits. */
+  const cells=new Map();
+  const add=(x,y,z)=>{ if(getBlock(x,y,z)) return; cells.set(x+','+y+','+z, [x,y,z]); };
+  for(const [k,d] of dug){
+    const p=k.split(','), x=+p[0], z=+p[1];
+    add(x, -d, z);                                    // pit floor: top of the remaining soil
+    const nb=[[1,0],[-1,0],[0,1],[0,-1]];
+    for(const [dx,dz] of nb){
+      const nd=dugDepth(x+dx, z+dz);
+      if(nd<d){
+        // the neighbour's soil exposed beside this deeper column — from
+        // the neighbour's top (-nd, or -1 for undug grass, whose y=0
+        // cube already shows its side) down to -d+1
+        const yTop = nd===0 ? -1 : -nd;
+        for(let y=yTop; y>=-d+1; y--) add(x+dx, y, z+dz);
+      }
+    }
+  }
+  const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1), mats.dirt, Math.max(1,cells.size));
+  im.receiveShadow=true; im.userData.ground=true; im.userData.isPit=true;
+  const m4=new THREE.Matrix4();
+  let n=0;
+  for(const c of cells.values()){ m4.makeTranslation(c[0]+0.5, c[1]+0.5, c[2]+0.5); im.setMatrixAt(n++, m4); }
+  im.count=n; im.instanceMatrix.needsUpdate=true;
+  im.visible=groundVisible;
+  scene.add(im); pitInst={ mesh:im };
 }
 
 /* ================= 1-ft grid + whole-foot snap (round 9) ================= */
 /* the grass base spans x -40..62, z -40..110; minor lines every block (6 in),
    major lines every 2 blocks (1 ft) so a room's feet read off the ground */
 function buildGrid(){
+  if(gridGroup){ scene.remove(gridGroup); gridGroup=null; }
   gridGroup = new THREE.Group();
   const minor=[], major=[];
-  const Y=1.02, X0=-40, X1=62, Z0=-40, Z1=110;
+  const g=plotGeom();
+  const Y=1.02, X0=g.x0, X1=g.x1+1, Z0=g.z0, Z1=g.z1+1;
   for(let x=X0;x<=X1;x++){ const a=(x%2===0)?major:minor; a.push(x,Y,Z0, x,Y,Z1); }
   for(let z=Z0;z<=Z1;z++){ const a=(z%2===0)?major:minor; a.push(X0,Y,z, X1,Y,z); }
   const mk=(arr,op)=>{ const g=new THREE.BufferGeometry();
@@ -1923,6 +2069,180 @@ function buildGrid(){
   gridGroup.add(minorLines, majorLines);
   gridGroup.visible=gridOn;
   scene.add(gridGroup);
+}
+
+/* ================= ROUND 35 — dig + plot size ================= */
+/* Analytic ray vs soil: the ground is tens of thousands of columns, so
+   raycasting them per hover would be slow. Instead walk the ray over the
+   2D grid (DDA): the soil in a column is the solid box
+   [x,x+1] x [-20, 1-depth] x [z,z+1]. Returns { point, normal, col:[x,z],
+   topY, dist } or null — null when the ground is hidden, the ray misses
+   the plot, or the camera is inside the soil. */
+function rayGroundHit(origin, dir, maxDist){
+  if(!groundVisible) return null;
+  const g=plotGeom();
+  const ox=origin.x, oy=origin.y, oz=origin.z, dx=dir.x, dy=dir.y, dz=dir.z;
+  const tMax=(maxDist===Infinity)? 1e9 : maxDist;
+  // 2D slab test over the plot footprint [x0, x1+1) x [z0, z1+1)
+  let t0=0, t1=tMax;
+  if(Math.abs(dx)<1e-12){ if(ox<g.x0||ox>=g.x1+1) return null; }
+  else { let ta=(g.x0-ox)/dx, tb=(g.x1+1-ox)/dx; if(ta>tb){ const t=ta; ta=tb; tb=t; } t0=Math.max(t0,ta); t1=Math.min(t1,tb); if(t0>t1) return null; }
+  if(Math.abs(dz)<1e-12){ if(oz<g.z0||oz>=g.z1+1) return null; }
+  else { let ta=(g.z0-oz)/dz, tb=(g.z1+1-oz)/dz; if(ta>tb){ const t=ta; ta=tb; tb=t; } t0=Math.max(t0,ta); t1=Math.min(t1,tb); if(t0>t1) return null; }
+  // first column the ray enters (nudged off an exact boundary into the cell it travels in)
+  let cx=Math.floor(ox+dx*t0), cz=Math.floor(oz+dz*t0);
+  if(Math.abs(dx)>1e-12){ const px=ox+dx*t0; if(Math.abs(px-Math.round(px))<1e-9 && dx<0) cx=Math.round(px)-1; }
+  if(Math.abs(dz)>1e-12){ const pz=oz+dz*t0; if(Math.abs(pz-Math.round(pz))<1e-9 && dz<0) cz=Math.round(pz)-1; }
+  // the camera itself is inside the soil — there is no ground hit to find
+  if(cx>=g.x0&&cx<=g.x1&&cz>=g.z0&&cz<=g.z1 && oy<soilTopY(cx,cz)) return null;
+  // which face the ray entered the first cell through (plot boundary, or none if it starts inside)
+  const epx=ox+dx*t0, epz=oz+dz*t0;
+  let enteredFrom = Math.abs(epx-g.x0)<1e-9||Math.abs(epx-(g.x1+1))<1e-9 ? 'x'
+    : Math.abs(epz-g.z0)<1e-9||Math.abs(epz-(g.z1+1))<1e-9 ? 'z' : null;
+  const stepX=dx>0?1:-1, stepZ=dz>0?1:-1;
+  const tDeltaX=Math.abs(dx)<1e-12?Infinity:Math.abs(1/dx);
+  const tDeltaZ=Math.abs(dz)<1e-12?Infinity:Math.abs(1/dz);
+  let tNextX=Math.abs(dx)<1e-12?Infinity:(dx>0?(cx+1-ox)/dx:(cx-ox)/dx);
+  let tNextZ=Math.abs(dz)<1e-12?Infinity:(dz>0?(cz+1-oz)/dz:(cz-oz)/dz);
+  let t=t0;
+  for(let i=0;i<20000;i++){
+    if(t>t1) return null;
+    if(cx<g.x0||cx>g.x1||cz<g.z0||cz>g.z1) return null;
+    const topY=soilTopY(cx,cz);
+    const tCellEnd=Math.min(tNextX,tNextZ,t1);
+    let hit=null;
+    if(Math.abs(dy)<1e-12){
+      // horizontal ray at a height inside this column's soil band: it
+      // enters through the side face it crossed at t
+      if(oy>=-20 && oy<=topY){
+        const p=new THREE.Vector3(ox+dx*t, oy, oz+dz*t);
+        const n=enteredFrom==='z'? new THREE.Vector3(0,0,-stepZ) : new THREE.Vector3(-stepX,0,0);
+        hit={ point:p, normal:n, col:[cx,cz], topY, dist:t };
+      }
+    } else {
+      const tY1=(-20-oy)/dy, tY2=(topY-oy)/dy;
+      const lo=Math.min(tY1,tY2), hi=Math.max(tY1,tY2);
+      const ta=Math.max(t,lo), tb=Math.min(tCellEnd,hi);
+      if(ta<=tb){
+        const p=new THREE.Vector3(ox+dx*ta, oy+dy*ta, oz+dz*ta);
+        let n;
+        if(Math.abs(ta-lo)<1e-9) n=new THREE.Vector3(0, Math.abs(ta-tY2)<1e-9?1:-1, 0);
+        else n=enteredFrom==='z'? new THREE.Vector3(0,0,-stepZ) : new THREE.Vector3(-stepX,0,0);
+        hit={ point:p, normal:n, col:[cx,cz], topY, dist:ta };
+      }
+    }
+    if(hit) return hit;
+    // step to the next column
+    if(tNextX<tNextZ){ cx+=stepX; t=tNextX; tNextX+=tDeltaX; enteredFrom='x'; }
+    else { cz+=stepZ; t=tNextZ; tNextZ+=tDeltaZ; enteredFrom='z'; }
+  }
+  return null;
+}
+/* ground hit from a pointer event (clientX/clientY) */
+function groundHitFromEvent(e){
+  const rect=renderer.domElement.getBoundingClientRect();
+  const ndc=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1, -((e.clientY-rect.top)/rect.height)*2+1);
+  const ray=new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  return rayGroundHit(ray.ray.origin, ray.ray.direction, Infinity);
+}
+
+/* ---- plot size ---- */
+function updatePlotSizeBtn(){
+  const b=$('#btnPlotSize'); if(!b) return;
+  b.textContent='↔️ Plot size: '+plotGeom().label;
+}
+function applyPlotScene(){
+  if(!scene) return;
+  rebuildGroundMesh();
+  buildGrid();
+  if(mirrorLine) mirrorLine.scale.set(1,1,plotGeom().d/130);
+  // widen the sun shadow so the bigger plot still gets shadows
+  if(sunLight){ const half=Math.max(plotGeom().w, plotGeom().d)/2+60;
+    sunLight.shadow.camera.left=-half; sunLight.shadow.camera.right=half;
+    sunLight.shadow.camera.top=half; sunLight.shadow.camera.bottom=-half;
+    sunLight.shadow.camera.updateProjectionMatrix(); }
+  if(controls) controls.maxDistance=fitCap();
+  updatePlotSizeBtn();
+}
+function setPlotSize(i){
+  plotIdx=((i%PLOT_SIZES.length)+PLOT_SIZES.length)%PLOT_SIZES.length;
+  applyPlotScene(); scheduleSave(); updateStats();
+  toast('Plot size: '+plotGeom().label+' — your build stays where it is');
+}
+function cyclePlotSize(){ setPlotSize(plotIdx+1); }
+
+/* ---- digging ---- */
+let digDrag=null, digDepth=20, digGhost=null;
+function ensureDigGhost(){ if(digGhost) return;
+  digGhost=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+    new THREE.MeshBasicMaterial({ color:0x8a5f3c, transparent:true, opacity:0.45, depthWrite:false }));
+  digGhost.visible=false; scene.add(digGhost);
+}
+function digColumn(x,z,layers){
+  const b=plotBounds();
+  if(x<b.x0||x>b.x1||z<b.z0||z>b.z1){ toast('Outside the build area'); return 0; }
+  const cur=dugDepth(x,z), next=Math.min(DUG_MAX, cur+layers);
+  if(next===cur){ toast('Already at the basement floor — 10 ft down is as deep as it goes'); return 0; }
+  setDugDepth(x,z,next);
+  pushUndo([{ dug:true, x, z, prevDepth:cur, nextDepth:next }], next>=DUG_MAX? 'Dug to the basement floor' : 'Dug one layer down');
+  rebuildGroundMesh(); rebuild(); scheduleSave(); updateStats();
+  return 1;
+}
+function digRect(x0,z0,x1,z1,depth){
+  const b=plotBounds();
+  const cols=[];
+  for(let x=x0;x<=x1;x++) for(let z=z0;z<=z1;z++){
+    if(x<b.x0||x>b.x1||z<b.z0||z>b.z1) continue;
+    const cur=dugDepth(x,z), next=Math.min(DUG_MAX, cur+depth);
+    if(next>cur) cols.push({ dug:true, x, z, prevDepth:cur, nextDepth:next });
+  }
+  if(!cols.length){ toast('Nothing to dig there — the ground is already at the basement floor'); return 0; }
+  if(cols.length>20000){ toast('That area is too big to dig at once — try a smaller rectangle'); return 0; }
+  for(const o of cols) setDugDepth(o.x,o.z,o.nextDepth);
+  pushUndo(cols, 'Dug a pit — '+cols.length.toLocaleString('en-IN')+' cells');
+  rebuildGroundMesh(); rebuild(); scheduleSave(); updateStats();
+  toast('Dug '+cols.length.toLocaleString('en-IN')+' cells'+(depth>1?' — '+ftin(depth*FT)+' deep':''));
+  return cols.length;
+}
+function digClick(e){
+  const gh=groundHitFromEvent(e);
+  if(!gh) return;
+  digColumn(gh.col[0], gh.col[1], 1);
+}
+function digDragUpdate(e){
+  if(!digDrag) return;
+  const gh=groundHitFromEvent(e);
+  if(!gh) return;
+  digDrag.x1=gh.col[0]; digDrag.z1=gh.col[1]; digDrag.moved++;
+  ensureDigGhost();
+  const x0=Math.min(digDrag.x0,digDrag.x1), x1=Math.max(digDrag.x0,digDrag.x1);
+  const z0=Math.min(digDrag.z0,digDrag.z1), z1=Math.max(digDrag.z0,digDrag.z1);
+  const d=digDepth;
+  digGhost.visible=true;
+  digGhost.scale.set(x1-x0+1, d, z1-z0+1);
+  digGhost.position.set((x0+x1+1)/2, 1-d/2, (z0+z1+1)/2);
+}
+function digFinish(){
+  if(!digDrag) return;
+  const drag=digDrag; digDrag=null;
+  controls.enabled=true;
+  if(digGhost) digGhost.visible=false;
+  if(drag.moved<=0){ digColumn(drag.x0, drag.z0, 1); return; }
+  const x0=Math.min(drag.x0,drag.x1), x1=Math.max(drag.x0,drag.x1);
+  const z0=Math.min(drag.z0,drag.z1), z1=Math.max(drag.z0,drag.z1);
+  digRect(x0,z0,x1,z1,digDepth);
+}
+function refillDug(){
+  if(!dug.size){ toast('Nothing dug — the ground is whole'); return 0; }
+  const ops=[...dug.entries()].map(([k,d])=>{ const p=k.split(','); return { dug:true, x:+p[0], z:+p[1], prevDepth:d, nextDepth:0 }; });
+  for(const o of ops) setDugDepth(o.x,o.z,0);
+  pushUndo(ops, 'Refilled the dug ground');
+  rebuildGroundMesh(); rebuild(); scheduleSave(); updateStats();
+  toast('Ground refilled');
+  return ops.length;
+}
+function updateDigPanel(){
+  document.querySelectorAll('#digPanel [data-depth]').forEach(b=>b.classList.toggle('on', +b.dataset.depth===digDepth));
 }
 function setGrid(on){
   gridOn=!!on;
@@ -2133,17 +2453,30 @@ function setBlock(x,y,z,t,r=0, record=true, label){
   return true;
 }
 /* apply a list of desired final states {x,y,z,t,r} as ONE undo step; skips no-ops */
-function applyBatch(list, label){
+function applyBatch(list, label, extraOps){
   const ops=[];
   for(const o of list){ const op=setBlockRaw(o.x,o.y,o.z, o.t, o.r||0); if(op) ops.push(op); }
-  if(ops.length){
-    if(typeof label==='function') label=label(ops.length);
-    if(!label) label = ops.every(o=>o.next==null)? 'Erased '+ops.length+' block'+(ops.length>1?'s':'')
-      : ops.every(o=>o.prev==null)? 'Placed '+ops.length+' block'+(ops.length>1?'s':'')
-      : 'Changed '+ops.length+' block'+(ops.length>1?'s':'');
-    pushUndo(ops, label); rebuild(); scheduleSave(); updateStats();
+  const blockN=ops.length;
+  /* round 35: extraOps ride in the same undo step — dug ops (refill on
+     template load / clear, auto-dig under a pasted basement) */
+  if(extraOps) for(const o of extraOps){
+    if(o.dug){ if(o.nextDepth!==o.prevDepth){ setDugDepth(o.x,o.z,o.nextDepth); ops.push(o); } }
+    else ops.push(o);
   }
-  return ops.length;
+  if(ops.length){
+    if(typeof label==='function') label=label(blockN);
+    if(!label){
+      const bops=ops.filter(o=>!o.dug);
+      label = bops.length&&bops.every(o=>o.next==null)? 'Erased '+nb(bops.length)
+        : bops.length&&bops.every(o=>o.prev==null)? 'Placed '+nb(bops.length)
+        : bops.length? 'Changed '+nb(bops.length)
+        : 'Dug '+ops.filter(o=>o.dug).length+' cells';
+    }
+    pushUndo(ops, label); rebuild();
+    if(extraOps&&extraOps.length) rebuildGroundMesh();
+    scheduleSave(); updateStats();
+  }
+  return blockN;
 }
 function getBlock(x,y,z){ return blocks.get(key3(x,y,z)) || null; }
 function isSolid(x,y,z){ return blocks.has(key3(x,y,z)); }
@@ -2195,6 +2528,7 @@ function writeAllMeshes(){
 function rebuild(){
   fadeDirty=true;   // round 34: the build changed — the faded set may too
   writeAllMeshes();
+  rebuildPitMesh();   // round 35: a block placed over a pit hides that pit's dirt cube (cheap no-op when nothing is dug)
   updateWallLabels();
   updateRoomLabels();
   updateClearance();
@@ -2283,6 +2617,7 @@ function pushUndo(op, label){
   if(undoStack.length>500) undoStack.shift();
   redoStack.length=0; updateUndoBtns(); renderHistory(); }
 function applySingle(op, useNext){
+  if(op.dug){ setDugDepth(op.x, op.z, useNext? op.nextDepth : op.prevDepth); return; }
   const v = useNext ? op.next : op.prev;
   if(v) blocks.set(key3(op.x,op.y,op.z), { t:v.t, r:v.r||0 });
   else blocks.delete(key3(op.x,op.y,op.z));
@@ -2291,8 +2626,9 @@ function applyOp(op, useNext){
   if(op.batch){ op.batch.forEach(o=>applySingle(o,useNext)); return; }
   applySingle(op,useNext);
 }
-function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
-function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
+function opHasDug(op){ return !!op.dug || (op.batch && op.batch.some(o=>o.dug)); }
+function doUndo(){ const op=undoStack.pop(); if(!op) return; applyOp(op,false); redoStack.push(op); if(opHasDug(op)) rebuildGroundMesh(); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
+function doRedo(){ const op=redoStack.pop(); if(!op) return; applyOp(op,true); undoStack.push(op); if(opHasDug(op)) rebuildGroundMesh(); rebuild(); scheduleSave(); updateStats(); updateUndoBtns(); renderHistory(); }
 function updateUndoBtns(){
   const u=$('#btnUndo'), r=$('#btnRedo');
   u.style.opacity=undoStack.length?1:.45; r.style.opacity=redoStack.length?1:.45;
@@ -2356,15 +2692,16 @@ function clearTransient(){ cancelMove(); cancelFillDrag(); cancelLine(); cancelW
   measures.length=0; renderMeasures(); updateMeasuresBtn();
   selection.clear(); updateSelectionHighlight(); }
 function clearBlocks(){ clearTransient();
-  blocks.clear(); undoStack.length=0; redoStack.length=0; rebuild(); updateStats(); renderHistory(); }
+  blocks.clear(); dug.clear(); rebuildGroundMesh(); undoStack.length=0; redoStack.length=0; rebuild(); updateStats(); renderHistory(); }
 /* round 15: clearing the build is one history step — "Cleared everything" —
    so jumping back to it (or one Ctrl+Z) brings the whole build back */
 function clearAllAction(){
   const cells=[...blocks.keys()].map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
   clearTransient(); roomNames.clear();
-  const n=applyBatch(cells, 'Cleared everything');
+  const dugOps=[...dug.entries()].map(([k,d])=>{ const p=k.split(','); return { dug:true, x:+p[0], z:+p[1], prevDepth:d, nextDepth:0 }; });
+  const n=applyBatch(cells, 'Cleared everything', dugOps);
   rebuild(); updateStats(); scheduleSave();
-  if(n) toast('Cleared everything — Ctrl+Z brings it back');
+  if(n||dugOps.length) toast('Cleared everything — Ctrl+Z brings it back');
   return n;
 }
 function buildEmpty(){ clearBlocks(); roomNames.clear(); rebuild(); updateStats(); scheduleSave(); }
@@ -2430,6 +2767,11 @@ function updateStats(){
     rb.style.display='none';
     largeWarned=false;
   }
+  const rd=$('#roDug');
+  if(dug.size){ let mx=0; for(const d of dug.values()) if(d>mx) mx=d;
+    rd.style.display='block';
+    rd.textContent='⛏ Dug: '+dugCount().toLocaleString('en-IN')+' cells · deepest '+ftin(mx*FT)+' deep · basement floor is 10 ft down';
+  } else rd.style.display='none';
   updateSymmetryReadout();
   positionToolBar();   // round 33: the readout's width moves the toolbar's gap
   updateLayersPanel();   // floor block counts in the Layers tab (round 13)
@@ -3665,7 +4007,9 @@ function projectData(){
   return { version:2, name:projectName,
     blocks:[...blocks.entries()].map(([k,v])=>{ const p=parseKey(k); return [p[0],p[1],p[2],v.t,v.r||0]; }),
     measures: measures.map(m=>({ a:m.a, b:m.b })),
-    rooms: [...roomNames.entries()] };
+    rooms: [...roomNames.entries()],
+    dug: [...dug.entries()].map(([k,d])=>{ const p=k.split(','); return [+p[0],+p[1],d]; }),
+    plot: plotIdx };
 }
 function validMeasure(m){
   return m&&Array.isArray(m.a)&&Array.isArray(m.b)&&m.a.length===3&&m.b.length===3
@@ -3674,6 +4018,14 @@ function validMeasure(m){
 function loadProjectData(p){
   if(!p||!Array.isArray(p.blocks)) throw new Error('bad file');
   blocks.clear();
+  // round 35: dug columns + plot size. Old saves have neither — they load
+  // as an undug Small plot, exactly as before.
+  if(Number.isInteger(p.plot) && p.plot>=0 && p.plot<PLOT_SIZES.length) plotIdx=p.plot; else plotIdx=0;
+  dug.clear();
+  if(Array.isArray(p.dug)) for(const c of p.dug){
+    if(Array.isArray(c)&&c.length>=3){ const x=+c[0], z=+c[1], d=Math.floor(+c[2]);
+      if(Number.isFinite(x)&&Number.isFinite(z)&&d>=1&&d<=DUG_MAX) dug.set(dugKey(x,z), d); }
+  }
   for(const b of p.blocks){ if(Array.isArray(b)&&b.length>=4) blocks.set(key3(b[0],b[1],b[2]), { t:b[3], r:b[4]||0 }); }
   measures.length=0;
   if(Array.isArray(p.measures)) for(const m of p.measures){
@@ -3688,6 +4040,7 @@ function loadProjectData(p){
   $('#projName').textContent = projectName;
   undoStack.length=0; redoStack.length=0;
   clearSelection();
+  applyPlotScene();
   rebuild(); updateStats(); renderMeasures(); updateMeasuresBtn();
   return blocks.size;
 }
@@ -4139,7 +4492,7 @@ function encodeShare(){
   /* round 31, version 3: run-length encoding on top of the v2 layout.
      The next entry's delta is measured from the LAST cell of the run,
      so a run of N cells costs one entry plus a varint instead of N. */
-  w.varint(3);
+  w.varint(4);
   const nameBytes=new TextEncoder().encode(projectName||'My Build');
   w.varint(Math.min(nameBytes.length,64));
   for(let i=0;i<Math.min(nameBytes.length,64);i++) w.bits(nameBytes[i],8);
@@ -4147,7 +4500,7 @@ function encodeShare(){
   let px=0, py=0, pz=0;
   for(let i=0;i<cells.length;){
     const c=cells[i];
-    if(i===0){ w.bits(c.x+40,7); w.bits(c.y+30,7); w.bits(c.z+40,8); }
+    if(i===0){ w.bits(c.x+80,8); w.bits(c.y+30,7); w.bits(c.z+80,9); }
     else { w.zigzag(c.x-px); w.zigzag(c.y-py); w.zigzag(c.z-pz); }
     w.bits(c.t,4); w.bits(c.r,2);
     let run=0;
@@ -4162,8 +4515,8 @@ function encodeShare(){
   }
   w.varint(measures.length);
   for(const m of measures){
-    w.bits(m.a[0]+40,7); w.bits(m.a[1]+30,7); w.bits(m.a[2]+40,8);
-    w.bits(m.b[0]+40,7); w.bits(m.b[1]+30,7); w.bits(m.b[2]+40,8);
+    w.bits(m.a[0]+80,8); w.bits(m.a[1]+30,7); w.bits(m.a[2]+80,9);
+    w.bits(m.b[0]+80,8); w.bits(m.b[1]+30,7); w.bits(m.b[2]+80,9);
   }
   w.varint(roomNames.size);
   for(const [k,v] of roomNames){
@@ -4173,6 +4526,11 @@ function encodeShare(){
     w.varint(Math.min(nb.length,24));
     for(let i=0;i<Math.min(nb.length,24);i++) w.bits(nb[i],8);
   }
+  /* round 35, v4: dug columns + plot size, after the rooms. v1–v3 links
+     never had them, so they simply end here. */
+  w.varint(dug.size);
+  for(const [k,d] of dug){ const p=k.split(','); w.bits(+p[0]+80,8); w.bits(+p[1]+80,9); w.varint(d); }
+  w.varint(plotIdx);
   return b64urlEncode(w.bytes());
 }
 function decodeShare(str){
@@ -4180,7 +4538,7 @@ function decodeShare(str){
     const bytes=b64urlDecode(str);
     const r=BitR(bytes);
     const ver=r.varint();
-    if(ver!==1 && ver!==2 && ver!==3) return null;
+    if(ver!==1 && ver!==2 && ver!==3 && ver!==4) return null;
     const nlen=r.varint(); if(nlen>64) return null;
     const nb=[]; for(let i=0;i<nlen;i++) nb.push(r.bits(8));
     const name=new TextDecoder().decode(new Uint8Array(nb))||'Shared build';
@@ -4191,17 +4549,19 @@ function decodeShare(str){
        v1/v2 entries have no run field and read exactly as before. */
     while(cells.length<n){
       let x,y,z;
-      if(cells.length===0){ x=r.bits(7)-40; y=r.bits(7)-30; z=r.bits(8)-40; }
+      if(cells.length===0){ const xb=ver===4?8:7, xo=ver===4?80:40, zb=ver===4?9:8, zo=ver===4?80:40;
+        x=r.bits(xb)-xo; y=r.bits(7)-30; z=r.bits(zb)-zo; }
       else { x=px+r.zigzag(); y=py+r.zigzag(); z=pz+r.zigzag(); }
       const t=r.bits(4), rr=r.bits(2);
-      if(t>=TYPES.length||!inBounds(x,y,z)) return null;
+      if(t>=TYPES.length) return null;
+      if(ver!==4 && !inBounds(x,y,z)) return null;   // v4 validates against the link's own plot, below
       cells.push({ x,y,z,t,r:rr });
       let run=0;
-      if(ver===3){
+      if(ver>=3){   // round 35: v4 is built on the v3 layout, run-length included
         run=r.varint();
         if(run>200000||cells.length+run>n) return null;
         for(let j=1;j<=run;j++){
-          if(!inBounds(x+j,y,z)) return null;
+          if(ver!==4 && !inBounds(x+j,y,z)) return null;
           cells.push({ x:x+j, y, z, t, r:rr });
         }
       }
@@ -4210,8 +4570,9 @@ function decodeShare(str){
     const nm=r.varint(); if(nm>1000) return null;
     const ms=[];
     for(let i=0;i<nm;i++){
-      const a=[r.bits(7)-40, r.bits(7)-30, r.bits(8)-40];
-      const b=[r.bits(7)-40, r.bits(7)-30, r.bits(8)-40];
+      const xb=ver===4?8:7, xo=ver===4?80:40, zb=ver===4?9:8, zo=ver===4?80:40;
+      const a=[r.bits(xb)-xo, r.bits(7)-30, r.bits(zb)-zo];
+      const b=[r.bits(xb)-xo, r.bits(7)-30, r.bits(zb)-zo];
       ms.push({ a, b, ft:Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])*FT });
     }
     const rms=[];
@@ -4225,7 +4586,20 @@ function decodeShare(str){
         rms.push([new TextDecoder().decode(new Uint8Array(kb)), new TextDecoder().decode(new Uint8Array(nb2))]);
       }
     }
-    return { name, cells, measures:ms, rooms:rms };
+    /* round 35, v4: dug columns + plot size, after the rooms */
+    let dugCols=[], plotFromLink=null;
+    if(ver===4){
+      const nd=r.varint(); if(nd>200000) return null;
+      for(let i=0;i<nd;i++){ const dx=r.bits(8)-80, dz=r.bits(9)-80, dd=r.varint();
+        if(dd<1||dd>DUG_MAX) return null; dugCols.push({ x:dx, z:dz, depth:dd }); }
+      const pi=r.varint(); if(pi<0||pi>=PLOT_SIZES.length) return null; plotFromLink=pi;
+      // validate the cells + dug columns against the LINK's plot, not
+      // whatever plot this browser happens to be on
+      const b=plotBoundsFor(plotFromLink);
+      for(const c of cells) if(c.x<b.x0||c.x>b.x1||c.z<b.z0||c.z>b.z1) return null;
+      for(const d of dugCols) if(d.x<b.x0||d.x>b.x1||d.z<b.z0||d.z>b.z1) return null;
+    }
+    return { name, cells, measures:ms, rooms:rms, dug:dugCols, plot:plotFromLink };
   }catch(e){ return null; }
 }
 function applyShared(data){
@@ -4238,6 +4612,11 @@ function applyShared(data){
   projectName=data.name; $('#projName').textContent=projectName;
   undoStack.length=0; redoStack.length=0;
   clearSelection();
+  // round 35: v4 links carry the pit + plot; old links keep the current plot
+  dug.clear();
+  for(const d of data.dug||[]) if(Number.isFinite(d.x)&&Number.isFinite(d.z)&&d.depth>=1&&d.depth<=DUG_MAX) dug.set(dugKey(d.x,d.z), d.depth);
+  if(typeof data.plot==='number') plotIdx=data.plot;
+  applyPlotScene();
   rebuild(); updateStats(); renderMeasures(); updateMeasuresBtn(); saveLocal();
 }
 function shareBuild(){
@@ -4377,29 +4756,36 @@ function raycastVoxel(e){
   setNDC(e);
   raycaster.setFromCamera(pointerNDC, camera);
   raycaster.far = Infinity;
-  const targets=[...instMeshes.map(s=>s.mesh), ...fadeMeshes.map(s=>s.mesh), ...groundMeshes];
+  const targets=[...instMeshes.map(s=>s.mesh), ...fadeMeshes.map(s=>s.mesh)];
   const hits=raycaster.intersectObjects(targets, false);
-  if(!hits.length) return null;
-  const h=hits[0];
-  if(h.object.userData.ground){
-    // hit the ground scenery: cell just inside the box + face normal
-    const n=h.face.normal.clone();
-    const p=h.point.clone().addScaledVector(n, -0.01);
-    const cx=Math.floor(p.x), cy=Math.floor(p.y), cz=Math.floor(p.z);
-    return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)], type:null, dist:h.distance };
+  let blockHit=null;
+  if(hits.length){
+    const h=hits[0];
+    const ti=h.object.userData.type;
+    const slot=h.object.userData.fade? fadeMeshes[ti] : instMeshes[ti];
+    const k=slot.keys[h.instanceId];
+    if(k){
+      const bp=parseKey(k);
+      // face normal in world space (stair instances are rotated)
+      const m=new THREE.Matrix4(); h.object.getMatrixAt(h.instanceId, m);
+      const q=new THREE.Quaternion().setFromRotationMatrix(m);
+      const n=h.face.normal.clone().applyQuaternion(q).round();
+      blockHit={ block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti, dist:h.distance };
+    }
   }
-  const ti=h.object.userData.type;
-  const slot=h.object.userData.fade? fadeMeshes[ti] : instMeshes[ti];
-  const k=slot.keys[h.instanceId];
-  if(!k) return null;
-  const bp=parseKey(k);
-  // face normal in world space (stair instances are rotated)
-  const m=new THREE.Matrix4(); h.object.getMatrixAt(h.instanceId, m);
-  const q=new THREE.Quaternion().setFromRotationMatrix(m);
-  const n=h.face.normal.clone().applyQuaternion(q).round();
-  return { block:bp, cell:[bp[0]+n.x, bp[1]+n.y, bp[2]+n.z], type:ti, dist:h.distance };
+  /* round 35: the ground is soil, not scenery — the hit comes from the
+     analytic ray-vs-soil walk (rayGroundHit), not from raycasting tens of
+     thousands of ground instances. Whichever is nearer wins. */
+  const gh=rayGroundHit(raycaster.ray.origin, raycaster.ray.direction, Infinity);
+  if(gh && (!blockHit || gh.dist < blockHit.dist)){
+    const n=gh.normal, p=gh.point;
+    const cx=Math.floor(p.x - n.x*0.01), cy=Math.floor(p.y - n.y*0.01), cz=Math.floor(p.z - n.z*0.01);
+    return { block:null, cell:[cx+Math.round(n.x), cy+Math.round(n.y), cz+Math.round(n.z)],
+      type:null, dist:gh.dist, ground:true, digCol:gh.col, groundTop:gh.topY };
+  }
+  return blockHit;
 }
-function inBounds(x,y,z){ return x>=-30&&x<=51&&y>=-20&&y<=Y_MAX&&z>=-30&&z<=100; }
+function inBounds(x,y,z){ const b=plotBounds(); return x>=b.x0&&x<=b.x1&&y>=-20&&y<=Y_MAX&&z>=b.z0&&z<=b.z1; }
 /* round 19: the hover tooltip must never be covered by a panel or run
    off-screen. It used to sit at cursor+14/+12 whatever was there — near
    the right edge it slid under the Properties panel (the tag is z-index 9,
@@ -4552,6 +4938,24 @@ function updateHover(e){
       $('#roHover').innerHTML= reg? 'Flood — click to repaint '+reg.keys.length+' connected '+TYPES[reg.type].name+' blocks as '+TYPES[selType].name : 'Flood — click a block';
     }
     placeHoverTag(e);
+    return;
+  }
+  // Dig: the hover is the ground column under the cursor, even through
+  // blocks — that is how you dig a basement under a house already built
+  if(tool==='dig'){
+    const gh=groundHitFromEvent(e);
+    if(!gh){ ghost.visible=false; const tag=$('#hoverTag');
+      tag.innerHTML='<b>Dig</b> · '+(groundVisible?'click the grass to dig':'the ground is hidden — show it to dig');
+      placeHoverTag(e); $('#roHover').innerHTML='Dig — click grass to dig one layer down · drag a rectangle for a pit · G to switch';
+      return; }
+    const [dx,dz]=gh.col, dep=dugDepth(dx,dz);
+    ghost.visible=true;
+    ghost.position.set(dx+0.5, soilTopY(dx,dz)+0.5, dz+0.5);
+    ghost.material.color.set(0x8a5f3c);
+    const tag=$('#hoverTag');
+    tag.innerHTML='<b>Dig</b> · '+(dep? 'already '+ftin(dep*FT)+' deep — click to go deeper' : 'grass — click to dig one layer, drag for a pit');
+    placeHoverTag(e);
+    $('#roHover').innerHTML='Dig — click to dig one layer down · drag a rectangle for a pit · basement floor is 10 ft down';
     return;
   }
   const occupied=getBlock(cx,cy,cz)!==null;
@@ -4855,7 +5259,20 @@ function rotatePaste(){
 let pasteLabel=null;   // round 15: a blueprint paste is labelled as one
 function pasteAt(origin){
   const lbl=pasteLabel; pasteLabel=null;
-  const n=applyBatch(pasteCells(origin), lbl || (c=>'Pasted '+nb(c)));
+  const cells=pasteCells(origin);
+  /* round 35: auto-dig the ground under any pasted block that sits below
+     the grass, so a basement room is visible instead of buried in soil —
+     the dig rides in the same undo step as the paste */
+  const dugOps=[];
+  const seen=new Set();
+  for(const c of cells){
+    if(c.y>=1) continue;
+    const k=dugKey(c.x,c.z); if(seen.has(k)) continue; seen.add(k);
+    const need=Math.max(1, -c.y);
+    const cur=dugDepth(c.x,c.z);
+    if(need>cur) dugOps.push({ dug:true, x:c.x, z:c.z, prevDepth:cur, nextDepth:need });
+  }
+  const n=applyBatch(cells, lbl || (c=>'Pasted '+nb(c)), dugOps);
   if(n) toast('Pasted '+n+' block'+(n>1?'s':''));
   return n;
 }
@@ -5128,7 +5545,11 @@ function loadTemplate(id, force){
   const removals=[...blocks.keys()].filter(k=>!tplKeys.has(k))
     .map(k=>{ const [x,y,z]=parseKey(k); return { x,y,z, t:null }; });
   clearTransient();
-  applyBatch([...info.cells, ...removals], 'Loaded '+t.name);
+  // round 35: a template replaces the build, and the pit with it — the
+  // template's floor would float over a hole. The refill rides in the
+  // same undo step as the template, so one Ctrl+Z brings it all back.
+  const dugOps=[...dug.entries()].map(([k,d])=>{ const p=k.split(','); return { dug:true, x:+p[0], z:+p[1], prevDepth:d, nextDepth:0 }; });
+  applyBatch([...info.cells, ...removals], 'Loaded '+t.name, dugOps);
   if(!hadBlocks){ projectName=t.name; $('#projName').textContent=projectName; }
   scheduleSave();
   // round 20: the toast must show the build that was JUST loaded.
@@ -6544,6 +6965,10 @@ function cursorGroundPoint(sx,sy){
   const rect=renderer.domElement.getBoundingClientRect();
   const ndc=new THREE.Vector2(((sx-rect.left)/rect.width)*2-1, -((sy-rect.top)/rect.height)*2+1);
   const ray=new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  /* round 35: try the real soil first (it knows about dug pits); fall back
+     to the flat y=1 plane only where the ray misses the soil entirely */
+  const gh=rayGroundHit(ray.origin, ray.direction, Infinity);
+  if(gh) return gh.point;
   const plane=new THREE.Plane(new THREE.Vector3(0,1,0), -1);   // grass top, y=1
   const p=new THREE.Vector3();
   return ray.ray.intersectPlane(plane, p)? p : null;
@@ -6554,7 +6979,7 @@ function zoomToCursor(e){
   if(!hitP){
     // looking at the sky: plain dolly toward the target
     const dist=camera.position.distanceTo(controls.target);
-    const nd=clamp(dist*s, 8, 320);
+    const nd=clamp(dist*s, 8, fitCap());
     camera.position.sub(controls.target).multiplyScalar(nd/dist).add(controls.target);
     controls.update();
     return;
@@ -6566,7 +6991,7 @@ function zoomToCursor(e){
   // the cursor point drifts away.
   const off=camera.position.clone().sub(controls.target);
   controls.target.lerp(hitP, 1-s);
-  const nd=clamp(off.length()*s, 8, 320);
+  const nd=clamp(off.length()*s, 8, fitCap());
   camera.position.copy(controls.target).addScaledVector(off, nd/off.length());
   if(camera.position.y<2.5) camera.position.y=2.5;   // stay just above the grass
   controls.update();
@@ -6736,6 +7161,7 @@ function bindPointer(){
     if(expandDrag){ expandDragUpdate(e); return; }
     if(boxDrag){ updateBoxDrag(e); return; }
     if(fillDrag){ fillDragUpdate(e); return; }
+    if(digDrag){ digDragUpdate(e); return; }
     if(wallDrag && wallPlacing){ wallDragUpdate(e); return; }
     if(buildDrag){ buildDragUpdate(e); return; }
     if(lineStart){ updateLineAim(e); return; }
@@ -6772,6 +7198,10 @@ function bindPointer(){
       const hit=raycastVoxel(e);
       if(hit) wallStart(e, hit.cell);
     }
+    if(e.button===0 && tool==='dig' && !(touchMode && e.pointerType==='touch')){
+      const gh=groundHitFromEvent(e);
+      if(gh){ freezeOrbit(); digDrag={ x0:gh.col[0], z0:gh.col[1], x1:gh.col[0], z1:gh.col[1], moved:0 }; controls.enabled=false; }
+    }
     if(e.button===0 && e.shiftKey && tool==='build' && !(touchMode && e.pointerType==='touch')){
       const hit=raycastVoxel(e);
       if(hit) buildDragStart(e, hit.cell);
@@ -6802,6 +7232,7 @@ function bindPointer(){
     if(expandDrag){ expandFinish(); downPos=null; return; }
     if(boxDrag && e.isPrimary!==false){ finishBoxDrag(); downPos=null; return; }
     if(fillDrag){ fillFinish(); downPos=null; return; }
+    if(digDrag){ digFinish(); downPos=null; return; }
     if(wallDrag && wallPlacing){ wallFinish(); return; }
     if(buildDrag){ buildDragFinish(); downPos=null; return; }
     if(panDrag){
@@ -6874,11 +7305,13 @@ function bindPointer(){
       else toast('Click a block to flood-fill it');
       return;
     }
+    if(tool==='dig'){ digClick(e); return; }
     if(tool==='erase'){
       if(hit&&hit.block){
         if(e.shiftKey) eraseRun(hit.block[0],hit.block[1],hit.block[2]);
         else setBlock(hit.block[0],hit.block[1],hit.block[2],null);
       }
+      else if(hit&&hit.ground){ digColumn(hit.digCol[0], hit.digCol[1], 1); }
       return;
     }
     // Alt+click in Build picks the block's type instead of placing one
@@ -6912,7 +7345,7 @@ function bindPointer(){
   });
   // a fill drag released outside the canvas still has to finish, or the
   // controls stay disabled and the ghost stays on screen
-  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); if(wallDrag && wallPlacing) wallFinish(); if(buildDrag) buildDragFinish(); if(panDrag) endPanDrag(); if(boxDrag) finishBoxDrag(); });
+  window.addEventListener('pointerup', ()=>{ if(fillDrag) fillFinish(); if(digDrag) digFinish(); if(wallDrag && wallPlacing) wallFinish(); if(buildDrag) buildDragFinish(); if(panDrag) endPanDrag(); if(boxDrag) finishBoxDrag(); });
   window.addEventListener('pointercancel', ()=>{ if(fillDrag) cancelFillDrag(); if(wallDrag) cancelWallDrag(); if(buildDrag) cancelBuildDrag(); if(panDrag) endPanDrag(); if(boxDrag) cancelBoxDrag(); });
   // scroll zooms toward the cursor (Figma-style), not the screen centre.
   // Caught on window in the capture phase so OrbitControls' own wheel zoom
@@ -7195,6 +7628,8 @@ function setTool(t){
   // never show both at once
   $('#fillPanel').classList.toggle('on', t==='fill' && !$('#presetPanel').classList.contains('on'));
   $('#wallPanel').classList.toggle('on', t==='wall' && !$('#presetPanel').classList.contains('on'));
+  $('#digPanel').classList.toggle('on', t==='dig' && !$('#presetPanel').classList.contains('on'));
+  if(t==='dig') updateDigPanel();
   if(t==='fill'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); }
   if(t==='wall'){ toggleMirrorPanel(false); toggleReplacePanel(false); toggleCheatPanel(false); updateWallPanel(); }
 $('#blueprintPanel').classList.remove('on');
@@ -7324,7 +7759,7 @@ function walkCollides(x,y,z){
   const y0=Math.floor(y), y1=Math.floor(y+WALK.h-0.01);
   const z0=Math.floor(z-WALK.hw), z1=Math.floor(z+WALK.hw);
   for(let bx=x0;bx<=x1;bx++) for(let by=y0;by<=y1;by++) for(let bz=z0;bz<=z1;bz++)
-    if(isSolid(bx,by,bz)) return true;
+    if(isSolid(bx,by,bz) || soilSolid(bx,by,bz)) return true;
   return false;
 }
 function walkGround(x,z,feetY){
@@ -7332,8 +7767,10 @@ function walkGround(x,z,feetY){
   let best=-1e9;
   for(let bx=Math.floor(x-WALK.hw);bx<=Math.floor(x+WALK.hw);bx++)
     for(let bz=Math.floor(z-WALK.hw);bz<=Math.floor(z+WALK.hw);bz++){
-      // the grass base is solid ground: its top is y=1 inside its footprint
-      if(bx>=-40&&bx<62&&bz>=-40&&bz<110){ if(1<=feetY+0.6&&1>best) best=1; }
+      // round 35: the ground is soil, not a slab — its top is y=1 on
+      // undug grass and the pit floor (1-depth) where it has been dug
+      const g=plotGeom();
+      if(bx>=g.x0&&bx<g.x1&&bz>=g.z0&&bz<g.z1){ const top=soilTopY(bx,bz); if(top<=feetY+0.6&&top>best) best=top; }
       for(let by=Math.floor(feetY)+1;by>=-21;by--){
         if(isSolid(bx,by,bz)){ const top=by+1; if(top<=feetY+0.6&&top>best) best=top; }
       }
@@ -7412,10 +7849,14 @@ function walkStep(dt){
   const lookAt=head.clone().add(new THREE.Vector3(-Math.sin(WALK.camYaw)*10, 0, -Math.cos(WALK.camYaw)*10));
   const dir=desired.clone().sub(head); const len=dir.length();
   raycaster.set(head, dir.clone().normalize()); raycaster.far=len;
-  const hits=raycaster.intersectObjects([...instMeshes.map(s=>s.mesh), ...groundMeshes], false);
+  const hits=raycaster.intersectObjects([...instMeshes.map(s=>s.mesh)], false);
   raycaster.far=Infinity;
   let d=len;
   if(hits.length) d=Math.max(4, hits[0].distance-1.5);
+  // round 35: the soil is no longer a mesh to raycast — the analytic
+  // ground hit clamps the camera out of pit walls the same way
+  const gh=rayGroundHit(head, dir.clone().normalize(), len);
+  if(gh && gh.dist<d) d=Math.max(4, gh.dist-1.5);
   const camPos=head.clone().addScaledVector(dir.normalize(), d);
   camera.position.lerp(camPos, 1-Math.exp(-12*dt));
   camera.lookAt(lookAt);
@@ -7471,7 +7912,7 @@ function bindKeys(){
       else if(fillDrag){ cancelFillDrag(); }
       else if(buildDrag){ cancelBuildDrag(); }
       else if(wallDrag){ cancelWallDrag(); }
-      else if(tool==='wall'){ setTool('build'); }
+      else if(tool==='wall'||tool==='dig'){ setTool('build'); }
       else if(presetMode){ setPresetMode(null); togglePresetPanel(false); }
       else if($('#blueprintPanel').classList.contains('on')){ toggleBlueprintPanel(false); }
       else if($('#mirrorPanel').classList.contains('on')){ toggleMirrorPanel(false); }
@@ -7519,6 +7960,7 @@ function bindKeys(){
       if(k==='KeyX') setTool('expand');
       if(k==='KeyM') setTool('move');
       if(k==='KeyF') setTool('fill');
+      if(k==='KeyG') setTool('dig');
       if(k==='KeyL') setTool('line');
       if(k==='KeyT') setTool('tape');
       // W is also fly-forward: a tap switches to the Wall tool, holding it still flies
@@ -7756,7 +8198,13 @@ function init(){
     }
   });
   $('#btnGround').onclick=()=>{ groundVisible=!groundVisible;
-    groundMeshes.forEach(m=>m.visible=groundVisible); toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
+    if(groundInst) groundInst.mesh.visible=groundVisible;
+    if(pitInst) pitInst.mesh.visible=groundVisible;
+    toast(groundVisible?'Ground shown':'Ground hidden — see the basement'); };
+  $('#btnPlotSize').onclick=()=>cyclePlotSize();
+  $('#digRefill').onclick=()=>refillDug();
+  $('#digClose').onclick=()=>setTool('build');
+  document.querySelectorAll('#digPanel [data-depth]').forEach(b=>{ b.onclick=()=>{ digDepth=+b.dataset.depth; updateDigPanel(); }; });
   $('#btnPhoto').onclick=savePicture;
   $('#btnRender').onclick=renderView;
   $('#btnFadeWalls').onclick=()=>setWallFade(!wallFadeOn);
@@ -8867,11 +9315,12 @@ function frameBounds(b, turnedMsg){
     // grow until everything fits — the tightest fit that shows it all.
     // d=320 itself is tested too: a fit that needs 310–320 must not be
     // skipped by the ×1.12 step jumping straight past the cap
+    const cap=fitCap();
     let d=8;
     for(;;){
       if(fitsAt(off,d)) return d;
-      if(d>=320) return null;
-      d=Math.min(320, d*1.12);
+      if(d>=cap) return null;
+      d=Math.min(cap, d*1.12);
     }
   };
   let off=baseOff, d=tryAzimuth(off), turned=false;
@@ -8896,7 +9345,7 @@ function frameBounds(b, turnedMsg){
       }
     }
   }
-  if(d===null){ off=baseOff; d=320; }   // nothing fits — show as much as possible from the original angle
+  if(d===null){ off=baseOff; d=fitCap(); }   // nothing fits — show as much as possible from the original angle
   camera.position.copy(ctr).addScaledVector(off, d);
   controls.target.copy(ctr);
   controls.update(); updateZoomUI();
@@ -8909,7 +9358,8 @@ function zoomFit(){
     const bb=bboxOfKeys([...blocks.keys()]);
     b={ x0:bb.x0-0.5, x1:bb.x1+1.5, y0:bb.y0-0.5, y1:bb.y1+1.5, z0:bb.z0-0.5, z1:bb.z1+1.5 };
   } else {
-    b={ x0:-40, x1:62, y0:0, y1:1, z0:-40, z1:110 };   // the whole grass plot
+    const g=plotGeom();
+    b={ x0:g.x0, x1:g.x1, y0:0, y1:1, z0:g.z0, z1:g.z1 };   // the whole grass plot
   }
   const r=frameBounds(b, 'Fit — turned the view so the whole build fits');
   return { dist:r.dist, center:r.center, empty:!blocks.size, turned:r.turned };
@@ -9534,6 +9984,7 @@ function gsStaticItems(){
   tool('Dropper','I \u00B7 pick a type','dropper eyedropper colour color',()=>setTool('dropper'));
   tool('Flood','U \u00B7 repaint a run','flood fill paint bucket',()=>setTool('flood'));
   tool('Wall','W \u00B7 drag a wall','wall',()=>setTool('wall'));
+  tool('Dig','G \u00B7 dig a basement pit','dig basement pit hole soil excavate',()=>setTool('dig'));
   tool('Grid','Show / hide the 1-ft grid','grid lines',()=>setGrid(!gridOn));
   tool('Snap','Snap drags to whole feet','snap magnet feet',()=>setSnap(!snapOn));
   tool('Labels','H \u00B7 dimension labels','labels dimensions size',()=>setLabels(!labelsOn));
@@ -9577,6 +10028,8 @@ function gsStaticItems(){
   act(themeDark?'Light theme':'Dark theme','Switch the look','dark theme night black light',
     ()=>setTheme(themeDark?'light':'dark'));
   act('Save a picture','PNG of this view','picture photo png screenshot image',()=>savePicture());
+  act('Plot size','Grow the grass plot — Small, Medium, Large','expand land bigger plot grow',()=>cyclePlotSize());
+  act('Refill dug ground','Fill every dug pit back in','refill dig undo pit',()=>refillDug());
   act('Render this view','Polished PNG — soft shadows, warm light','render photo polished high quality',()=>renderView());
   act('Fade front walls','See through near walls','fade walls transparent see through',()=>setWallFade(!wallFadeOn));
   act('Export 3D (.glb)','For Blender & 3D tools','glb export 3d model blender',()=>exportGLB());
@@ -9686,6 +10139,29 @@ Object.assign(window.__mc, {
     search(q){ const s2=$('#elSearch'); s2.value=q; s2.dispatchEvent(new Event('input'));
       return [...document.querySelectorAll('#elGrid .el-card, #matGrid .el-card')]
         .filter(c=>c.style.display!=='none').length; },
+  },
+  dig:{
+    depth(x,z){ return dugDepth(x,z); },
+    columns(){ return dug.size; },
+    cells(){ return dugCount(); },
+    dig(x,z,layers){ return digColumn(x,z,layers||1); },
+    digRect(x0,z0,x1,z1,d){ return digRect(x0,z0,x1,z1,d||digDepth); },
+    refill(){ return refillDug(); },
+    soilTop(x,z){ return soilTopY(x,z); },
+    groundVisible(){ return groundVisible; },
+    setDepth(d){ digDepth=d; updateDigPanel(); return digDepth; },
+  },
+  plot:{
+    idx(){ return plotIdx; },
+    name(){ return plotGeom().name; },
+    label(){ return plotGeom().label; },
+    geom(){ return plotGeom(); },
+    bounds(){ return plotBounds(); },
+    set(i){ setPlotSize(i); return plotIdx; },
+    cycle(){ cyclePlotSize(); return plotIdx; },
+    sizes(){ return PLOT_SIZES.map(s=>({ name:s.name, label:s.label })); },
+    groundInstances(){ return groundInst? groundInst.mesh.count : 0; },
+    pitInstances(){ return pitInst? pitInst.mesh.count : 0; },
   },
   furniture:{
     list(){ return FURNITURE_DEFS.map(d=>({ id:d.id, name:d.name, group:d.group, sub:d.sub })); },
